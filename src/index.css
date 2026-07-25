@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bib-black: #0A0A0A;
+  --color-bib-dark: #141414;
+  --color-bib-card: #1C1C1C;
+  --color-bib-red: #C4A278;
+  --color-bib-white: #F5F5F0;
+  --color-bib-gray: #A8A8A0;
+
+  --font-sans: "Inter", "Helvetica Neue", sans-serif;
+   --font-heading: "Baloo 2", cursive;
+}
+
+@layer base {
+  body {
+    @apply bg-bib-black text-bib-white font-sans selection:bg-bib-red selection:text-bib-white;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  button {
+    @apply transition-all duration-300 active:scale-[0.98] cursor-pointer;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 25s linear infinite;
+  }
+}

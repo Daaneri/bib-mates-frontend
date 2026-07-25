@@ -1,9 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
 import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { siteConfig } from '../config/site';
 
 export default function ProductDetail() {
@@ -14,6 +13,7 @@ export default function ProductDetail() {
   const [cajaPresentacion, setCajaPresentacion] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [relacionados, setRelacionados] = useState([]);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -22,6 +22,7 @@ export default function ProductDetail() {
       if (!error) {
         setProduct(data);
         setSelectedImage(data.image_url);
+        fetchRelacionados(data);
       }
     }
     async function fetchCaja() {
@@ -32,6 +33,16 @@ export default function ProductDetail() {
         .limit(1)
         .maybeSingle();
       if (data) setCajaPresentacion(data);
+    }
+    async function fetchRelacionados(currentProduct) {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('category', currentProduct.category)
+        .neq('id', currentProduct.id)
+        .neq('archivado', true)
+        .limit(4);
+      if (!error) setRelacionados(data || []);
     }
     fetchProduct();
     fetchCaja();
@@ -153,6 +164,33 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {relacionados.length > 0 && (
+        <div className="mt-12 sm:mt-16 md:mt-20">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-bib-white mb-6 sm:mb-8 tracking-tight lowercase">también te puede interesar</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            {relacionados.map((p) => (
+              <Link
+                key={p.id}
+                to={`/producto/${p.id}`}
+                className="group bg-bib-dark rounded border border-bib-white/10 overflow-hidden hover:border-bib-red/40 transition-colors"
+              >
+                <div className="aspect-square overflow-hidden bg-bib-card">
+                  <img
+                    src={p.image_url}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-bib-white truncate">{p.name}</p>
+                  <p className="text-sm sm:text-base font-medium text-bib-red mt-1">${Number(p.price).toLocaleString('es-AR')}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded-full font-bold text-sm shadow-lg transition-all duration-300 ${

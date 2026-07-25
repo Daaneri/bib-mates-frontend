@@ -35,8 +35,10 @@ export default function Home() {
           Envíos a todo el país
         </p>
         <h1 className="text-5xl md:text-7xl font-heading font-bold text-bib-white tracking-tight mb-6 leading-tight lowercase">
-          {siteConfig.tagline}
-        </h1>
+  {siteConfig.tagline.split(',').map((linea, i) => (
+    <span key={i} className="block">{linea.trim()}{i === 0 ? ',' : ''}</span>
+  ))}
+</h1>
         <p className="text-xs md:text-sm text-bib-gray tracking-[0.2em] uppercase mb-10">
           Catálogo completo abajo
         </p>

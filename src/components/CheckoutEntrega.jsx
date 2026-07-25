@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { siteConfig } from "../config/site";
+import { Tag, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const PESO_ESTIMADO_POR_UNIDAD = 0.5;
 const ENVIO_GRATIS_DESDE = 120000;
+const COUPON_STORAGE_KEY = 'bib_coupon_code';
 
 const PROVINCIAS = [
   { code: "BA", name: "Buenos Aires" }, { code: "CT", name: "Catamarca" },
@@ -54,11 +56,45 @@ export default function CheckoutEntrega() {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount }
 
   const totalProductos = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const envioGratis = totalProductos >= ENVIO_GRATIS_DESDE;
   const costoEnvio = envioGratis ? 0 : (selectedRate?.totalPrice ?? 0);
-  const totalConEnvio = totalProductos + costoEnvio;
+  const totalConEnvio = totalProductos - (appliedCoupon?.discount || 0) + costoEnvio;
+
+  // Revalida el cupón que haya quedado guardado del paso anterior (carrito), contra el subtotal real
+  useEffect(() => {
+    const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
+    if (savedCode && totalProductos > 0) {
+      revalidarCupon(savedCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function revalidarCupon(code) {
+    try {
+      const res = await fetch(`${API_URL}/api/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal: totalProductos }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedCoupon({ code: code.trim().toUpperCase(), discount: data.discount });
+      } else {
+        setAppliedCoupon(null);
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+      }
+    } catch (err) {
+      console.error("Error revalidando cupón:", err);
+    }
+  }
+
+  function handleQuitarCupon() {
+    setAppliedCoupon(null);
+    localStorage.removeItem(COUPON_STORAGE_KEY);
+  }
 
   async function buscarPorCP(cp) {
     if (cp.length !== 4) return;
@@ -149,6 +185,7 @@ export default function CheckoutEntrega() {
           items: cart,
           shippingCost: costoEnvio,
           shippingDescription: selectedRate.customLabel || `${selectedRate.carrierDescription} - ${selectedRate.serviceDescription}`,
+          couponCode: appliedCoupon?.code || null,
           customer: {
             name: shippingData.name,
             dni: shippingData.dni,
@@ -170,6 +207,7 @@ export default function CheckoutEntrega() {
         return;
       }
 
+      localStorage.removeItem(COUPON_STORAGE_KEY);
       window.location.href = data.init_point;
     } catch (err) {
       console.error("Error iniciando pago:", err);
@@ -266,10 +304,31 @@ export default function CheckoutEntrega() {
 
         <div className="lg:col-span-5 bg-bib-dark p-6 sm:p-10 rounded border border-bib-white/10 lg:sticky lg:top-28 space-y-3 sm:space-y-4">
           <h2 className="text-sm font-medium text-bib-white mb-4 sm:mb-6 uppercase tracking-widest">Sumario de compra</h2>
+
+          {appliedCoupon && (
+            <div className="flex items-center justify-between gap-2 bg-bib-red/10 border border-bib-red/30 rounded px-4 py-2.5 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Tag size={14} className="text-bib-red shrink-0" />
+                <span className="text-xs sm:text-sm text-bib-white truncate">
+                  <span className="font-medium">{appliedCoupon.code}</span> aplicado
+                </span>
+              </div>
+              <button onClick={handleQuitarCupon} className="text-bib-gray hover:text-bib-white shrink-0">
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <div className="flex justify-between text-xs sm:text-sm text-bib-gray">
             <span>Subtotal</span>
             <span>${totalProductos.toLocaleString("es-AR")}</span>
           </div>
+          {appliedCoupon && (
+            <div className="flex justify-between text-xs sm:text-sm text-green-400">
+              <span>Descuento</span>
+              <span>-${appliedCoupon.discount.toLocaleString("es-AR")}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs sm:text-sm text-bib-gray">
             <span>Envío</span>
             <span>

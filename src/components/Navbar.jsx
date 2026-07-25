@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, Search, User, X } from 'lucide-react';
+import { ShoppingCart, Menu, Search, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { siteConfig } from '../config/site';
 import logo from '../assets/bib-mates-logo.png';
@@ -37,9 +37,6 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 sm:gap-5 flex-1 justify-end">
-          <Link to="/login" className="hidden sm:block text-bib-white hover:text-bib-red transition duration-300" aria-label="Cuenta">
-            <User className="w-5 h-5" />
-          </Link>
           <Link to="/cart" className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red">
             <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
             {cart.length > 0 && (

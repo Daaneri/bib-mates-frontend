@@ -10,7 +10,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-bib-black/95 backdrop-blur-md border-b border-bib-white/10">
+    <nav className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
       <div className="p-4 sm:p-6 flex justify-between items-center">
         <div className="flex items-center gap-4 sm:gap-5 flex-1">
           <button
@@ -29,7 +29,7 @@ export default function Navbar() {
           <img
             src={logo}
             alt={`${siteConfig.businessName} Logo`}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-bib-red/40 object-cover"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-bib-red/50 object-cover shadow-md shadow-black/50"
           />
           <span className="font-heading font-bold text-bib-white tracking-tight text-lg sm:text-xl hidden md:block truncate lowercase">
             {siteConfig.businessName}

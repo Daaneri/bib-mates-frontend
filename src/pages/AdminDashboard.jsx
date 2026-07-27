@@ -44,7 +44,6 @@ export default function AdminDashboard() {
 
   async function fetchData() {
     const { data: p } = await supabase.from('productos').select('*');
-    // NOTA: la tabla y columnas de pedidos todavía no están confirmadas contra el backend real.
     const { data: o } = await supabase.from('orders').select('*').order('creado_en', { ascending: false });
     const { data: r } = await supabase.from('resenas').select('*').order('created_at', { ascending: false });
     setProductos(p || []);
@@ -120,7 +119,6 @@ export default function AdminDashboard() {
   }
 
   async function handleUpdate(product) {
-    const idNumerico = parseInt(product.id, 10);
     const { error } = await supabase.from('productos')
       .update({
         name: editData.name,
@@ -132,7 +130,7 @@ export default function AdminDashboard() {
         image_urls: editData.image_urls,
         personalizable: editData.personalizable,
       })
-      .eq('id', idNumerico);
+      .eq('id', product.id);
 
     if (error) mostrarMensaje("Error al actualizar: " + error.message);
     else {

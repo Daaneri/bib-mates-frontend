@@ -5,11 +5,12 @@
   --color-bib-dark: #141414;
   --color-bib-card: #1C1C1C;
   --color-bib-red: #C4A278;
+  --color-bib-red-dark: #A8875E;
   --color-bib-white: #F5F5F0;
   --color-bib-gray: #A8A8A0;
 
   --font-sans: "Inter", "Helvetica Neue", sans-serif;
-   --font-heading: "Baloo 2", cursive;
+  --font-heading: "Baloo 2", cursive;
 }
 
 @layer base {

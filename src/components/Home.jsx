@@ -17,7 +17,7 @@ const MARQUEE_TEXT = "TOMAR MATE ES SIEMPRE UNA BUENA IDEA \u2022 ENVÍOS A TODO
 export default function Home() {
   return (
     <>
-      <div className="overflow-hidden bg-bib-red py-2 whitespace-nowrap">
+      <div className="overflow-hidden bg-bib-red-dark py-2 whitespace-nowrap">
         <div className="animate-marquee inline-block">
           <span className="text-[11px] font-medium text-bib-black tracking-widest">
             {MARQUEE_TEXT.repeat(2)}
@@ -34,15 +34,23 @@ export default function Home() {
         <p className="text-xs tracking-[0.3em] text-bib-red font-medium mb-3 uppercase">
           Envíos a todo el país
         </p>
-        <h1 className="text-5xl md:text-7xl font-heading font-bold text-bib-white tracking-tight mb-6 leading-tight lowercase">
-  {siteConfig.tagline.split(',').map((linea, i) => (
-    <span key={i} className="block">{linea.trim()}{i === 0 ? ',' : ''}</span>
-  ))}
+        <h1 className="text-4xl md:text-6xl font-heading font-bold text-bib-white tracking-tight mb-6 leading-tight">
+  {siteConfig.tagline.split(',').map((linea, i) => {
+    const texto = linea.trim();
+    const formateado = i === 0
+      ? texto.charAt(0).toUpperCase() + texto.slice(1)
+      : texto;
+    return (
+      <span key={i} className="block lowercase first-letter:uppercase">
+        {i === 0 ? formateado : texto}{i === 0 ? ',' : ''}
+      </span>
+    );
+  })}
 </h1>
         <p className="text-xs md:text-sm text-bib-gray tracking-[0.2em] uppercase mb-10">
           Catálogo completo abajo
         </p>
-        <a
+         <a
           href="#seleccion"
           className="inline-block bg-bib-red text-bib-white px-10 py-3 rounded text-xs tracking-[0.2em] uppercase font-medium hover:bg-bib-white hover:text-bib-black transition-colors duration-300"
         >
@@ -71,7 +79,7 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
           {FEATURED_CATEGORIES.map(({ name, icon: Icon }) => (
-            <a
+           <a 
               key={name}
               href="#seleccion"
               className="flex flex-col items-center gap-2 bg-bib-dark border border-bib-white/10 rounded p-4 hover:border-bib-red/50 transition-colors"

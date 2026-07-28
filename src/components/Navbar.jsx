@@ -10,7 +10,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
+    <nav className="sticky top-0 z-50 bg-[#3A2418] shadow-lg shadow-black/40 border-b border-bib-red/20">
       <div className="p-4 sm:p-6 flex justify-between items-center">
         <div className="flex items-center gap-4 sm:gap-5 flex-1">
           <button

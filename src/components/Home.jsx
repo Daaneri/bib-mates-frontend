@@ -79,9 +79,9 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
           {FEATURED_CATEGORIES.map(({ name, icon: Icon }) => (
-           <a 
+           <a
               key={name}
-              href="#seleccion"
+              href={`/?categoria=${encodeURIComponent(name)}#seleccion`}
               className="flex flex-col items-center gap-2 bg-bib-dark border border-bib-white/10 rounded p-4 hover:border-bib-red/50 transition-colors"
             >
               <Icon size={22} className="text-bib-red" />

@@ -26,7 +26,7 @@ app.post("/api/shipping/quote", async (req, res) => {
       carrierDescription: "Correo Argentino",
       serviceDescription: "Envío Estándar",
       deliveryEstimate: "3-5 días",
-      totalPrice: 13000
+      totalPrice: 10000
     },
     {
       carrierDescription: "Motomensajería",

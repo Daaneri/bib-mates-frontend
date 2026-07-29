@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Search, ImageOff } from 'lucide-react'
 
@@ -59,11 +59,18 @@ function ProductCard({ product }) {
 }
 
 export default function ProductGrid() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('default')
-  const [selectedCategory, setSelectedCategory] = useState('Todos')
+
+  // Si venimos de un link del Home tipo "?categoria=Termos", arrancamos ya filtrados en esa categoría
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const catParam = searchParams.get('categoria');
+    const match = CATEGORIES.find(c => c.toLowerCase() === catParam?.toLowerCase());
+    return match || 'Todos';
+  });
 
   useEffect(() => {
     async function fetchProducts() {
@@ -75,6 +82,17 @@ export default function ProductGrid() {
     }
     fetchProducts()
   }, [])
+
+  function handleSelectCategory(cat) {
+    setSelectedCategory(cat);
+    // Mantenemos la URL en sync, así el filtro se puede compartir o recargar sin perderse
+    if (cat === 'Todos') {
+      searchParams.delete('categoria');
+    } else {
+      searchParams.set('categoria', cat);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }
 
   const filteredProducts = products
     .filter(p => p.archivado !== true)
@@ -102,7 +120,7 @@ export default function ProductGrid() {
           {CATEGORIES.map(cat => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => handleSelectCategory(cat)}
               className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
                 selectedCategory === cat
                 ? 'bg-bib-red text-bib-black font-bold border-bib-red'

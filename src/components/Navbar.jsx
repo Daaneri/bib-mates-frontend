@@ -5,6 +5,8 @@ import { useCart } from '../context/CartContext';
 import { siteConfig } from '../config/site';
 import logo from '../assets/bib-mates-logo.png';
 
+const CATEGORIAS = ['Mates', 'Bombillas', 'Bombillones', 'Termos', 'Canastas', 'Yerbas', 'Kits', 'Latas', 'Accesorios'];
+
 export default function Navbar() {
   const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,10 +51,26 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="flex flex-col gap-4 px-6 pb-6 text-bib-gray uppercase tracking-widest text-sm border-t border-bib-white/10 pt-4">
+        <div className="flex flex-col gap-4 px-6 pb-6 text-bib-gray uppercase tracking-widest text-sm border-t border-bib-white/10 pt-4 max-h-[70vh] overflow-y-auto">
           <Link to="/" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Inicio</Link>
           <Link to="/about" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Nosotros</Link>
           <Link to="/opiniones" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Opiniones</Link>
+
+          <div className="border-t border-bib-white/10 pt-4 mt-1">
+            <p className="text-bib-white/40 text-[10px] mb-3 tracking-widest">Categorías</p>
+            <div className="flex flex-col gap-3">
+              {CATEGORIAS.map((cat) => (
+                <a
+                  key={cat}
+                  href={`/?categoria=${encodeURIComponent(cat)}#seleccion`}
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-bib-red transition duration-300"
+                >
+                  {cat}
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </nav>

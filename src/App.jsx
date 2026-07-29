@@ -15,6 +15,8 @@ import Opiniones from './components/Opiniones';
 import Footer from './components/Footer';
 import FloatingCart from './components/FloatingCart';
 import ProtectedRoute from './components/ProtectedRoute';
+import Favoritos from './components/Favoritos';
+import NotFound from './components/NotFound';
 
 // Componentes Administrativos
 import AdminDashboard from './pages/AdminDashboard';
@@ -42,6 +44,8 @@ function PublicRoutes() {
           <Route path="/about" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><About /></div>} />
           <Route path="/opiniones" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><Opiniones /></div>} />
           <Route path="/checkout/entrega" element={<CheckoutEntrega />} />
+          <Route path="/favoritos" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><Favoritos /></div>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />

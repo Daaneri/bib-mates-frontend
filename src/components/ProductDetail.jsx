@@ -2,9 +2,12 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check } from 'lucide-react';
+import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check, Heart, Share2 } from 'lucide-react';
 import { siteConfig } from '../config/site';
+import { useWishlist } from '../hooks/useWishlist';
 import FadeIn from './FadeIn';
+
+const STOCK_BAJO_UMBRAL = 5;
 
 function ProductDetailSkeleton() {
   return (
@@ -48,7 +51,9 @@ export default function ProductDetail() {
   const [showToast, setShowToast] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
+  const [copiado, setCopiado] = useState(false);
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -96,6 +101,8 @@ export default function ProductDetail() {
   const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
 
   const esPersonalizable = product.personalizable === true;
+  const sinStock = (product.stock ?? 0) === 0;
+  const stockBajo = !sinStock && (product.stock ?? 0) < STOCK_BAJO_UMBRAL;
 
   function handleAgregarCarrito() {
     addToCart(product);
@@ -104,14 +111,63 @@ export default function ProductDetail() {
     setTimeout(() => setShowToast(false), 2500);
   }
 
+  async function handleCompartir() {
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: product.name,
+      text: `Mirá ${product.name} en ${siteConfig.businessName}`,
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // el usuario canceló el share, no hacemos nada
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      } catch (err) {
+        console.error('No se pudo copiar el link', err);
+      }
+    }
+  }
+
   const extraImages = Array.isArray(product.image_urls) ? product.image_urls : [];
   const gallery = [product.image_url, ...extraImages].filter((url, i, arr) => url && arr.indexOf(url) === i);
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12 relative">
-      <Link to="/" className="group inline-flex items-center gap-2 text-bib-gray hover:text-bib-white transition-colors mb-6 sm:mb-8 text-xs sm:text-sm uppercase tracking-widest">
-        <ArrowLeft size={16} className="transition-transform duration-300 group-hover:-translate-x-1" /> Volver a la selección
-      </Link>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <Link to="/" className="group inline-flex items-center gap-2 text-bib-gray hover:text-bib-white transition-colors text-xs sm:text-sm uppercase tracking-widest">
+          <ArrowLeft size={16} className="transition-transform duration-300 group-hover:-translate-x-1" /> Volver a la selección
+        </Link>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={handleCompartir}
+            className="relative text-bib-gray hover:text-bib-white transition-colors p-1.5"
+            aria-label="Compartir producto"
+          >
+            <Share2 size={18} />
+            {copiado && (
+              <span className="absolute -bottom-8 right-0 bg-bib-white text-bib-black text-[10px] px-2 py-1 rounded whitespace-nowrap">
+                ¡Link copiado!
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => toggleWishlist(product.id)}
+            className="text-bib-gray hover:text-bib-red transition-colors p-1.5"
+            aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart size={18} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
+          </button>
+        </div>
+      </div>
 
       <FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">
@@ -150,6 +206,12 @@ export default function ProductDetail() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
               <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
 
+              {stockBajo && (
+                <p className="text-yellow-400 text-xs sm:text-sm font-medium uppercase tracking-wide mb-3 sm:mb-4">
+                  ¡Últimas {product.stock} unidades!
+                </p>
+              )}
+
               {cajaPresentacion && (
                 <label className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-gray cursor-pointer w-fit">
                   <input
@@ -183,10 +245,15 @@ export default function ProductDetail() {
             <div className="flex flex-col gap-3 sm:gap-4">
               <button
                 onClick={handleAgregarCarrito}
-                className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]"
+                disabled={sinStock}
+                className={`group flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold transition-all active:scale-[0.98] uppercase tracking-widest ${
+                  sinStock
+                    ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed'
+                    : 'bg-bib-red text-bib-black hover:bg-bib-white hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]'
+                }`}
               >
                 <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
-                Agregar al carrito
+                {sinStock ? 'Sin stock' : 'Agregar al carrito'}
               </button>
                <a
                 href={whatsappUrl}
@@ -251,10 +318,13 @@ export default function ProductDetail() {
         </div>
         <button
           onClick={handleAgregarCarrito}
-          className="flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0"
+          disabled={sinStock}
+          className={`flex items-center gap-2 px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0 ${
+            sinStock ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed' : 'bg-bib-red text-bib-black'
+          }`}
         >
           <ShoppingCart size={16} />
-          Agregar
+          {sinStock ? 'Sin stock' : 'Agregar'}
         </button>
       </div>
     </div>

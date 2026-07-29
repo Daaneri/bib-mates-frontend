@@ -1,13 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { siteConfig } from '../config/site';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkExistingSession() {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/admin');
+      } else {
+        setCheckingSession(false);
+      }
+    }
+    checkExistingSession();
+  }, [navigate]);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -19,11 +33,20 @@ export default function Login() {
     });
 
     if (error) {
-      alert(error.message);
+      toast.error('No se pudo iniciar sesión. Revisá el correo y la contraseña.');
     } else {
+      toast.success('Sesión iniciada correctamente');
       navigate('/admin');
     }
     setLoading(false);
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-bib-black flex items-center justify-center">
+        <p className="text-bib-gray text-sm uppercase tracking-widest">Verificando sesión...</p>
+      </div>
+    );
   }
 
   return (
@@ -52,7 +75,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-bib-red text-bib-white font-medium py-3 rounded hover:bg-bib-white hover:text-bib-black transition uppercase tracking-widest text-sm"
+            className="w-full bg-bib-red text-bib-white font-medium py-3 rounded hover:bg-bib-white hover:text-bib-black transition uppercase tracking-widest text-sm disabled:opacity-50"
           >
             {loading ? "Ingresando..." : "Entrar"}
           </button>

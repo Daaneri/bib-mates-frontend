@@ -1,37 +1,44 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, Search, X } from 'lucide-react';
+import { ShoppingCart, Menu, Search, X, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { siteConfig } from '../config/site';
+import { CATEGORIES, SUBCATEGORIES } from '../config/categories';
 import logo from '../assets/bib-mates-logo.png';
-
-const CATEGORIAS = ['Mates', 'Bombillas', 'Bombillones', 'Termos', 'Canastas', 'Yerbas', 'Kits', 'Latas', 'Accesorios'];
 
 export default function Navbar() {
   const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categoriaAbierta, setCategoriaAbierta] = useState(null);
+
+  function cerrarMenu() {
+    setMenuOpen(false);
+    setCategoriaAbierta(null);
+  }
 
   return (
-    <nav className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b-2 border-[#B8813E]">
+    <nav className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
       <div className="p-4 sm:p-6 flex justify-between items-center">
         <div className="flex items-center gap-4 sm:gap-5 flex-1">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="text-bib-white hover:text-bib-red transition duration-300"
+            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
             aria-label="Abrir menú"
           >
-            {menuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+            <span className={`inline-block transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`}>
+              {menuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </span>
           </button>
-          <button className="hidden sm:block text-bib-white hover:text-bib-red transition duration-300" aria-label="Buscar">
+          <button className="hidden sm:block text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110" aria-label="Buscar">
             <Search className="w-5 h-5" />
           </button>
         </div>
 
-        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
           <img
             src={logo}
             alt={`${siteConfig.businessName} Logo`}
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-bib-red/50 object-cover shadow-md shadow-black/50"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-bib-red/50 object-cover shadow-md shadow-black/50 transition-transform duration-300 group-hover:scale-105"
           />
           <span className="font-heading font-bold text-bib-white tracking-tight text-lg sm:text-xl hidden md:block truncate lowercase">
             {siteConfig.businessName}
@@ -50,29 +57,67 @@ export default function Navbar() {
         </div>
       </div>
 
-      {menuOpen && (
-        <div className="flex flex-col gap-4 px-6 pb-6 text-bib-gray uppercase tracking-widest text-sm border-t border-bib-white/10 pt-4 max-h-[70vh] overflow-y-auto">
-          <Link to="/" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Inicio</Link>
-          <Link to="/about" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Nosotros</Link>
-          <Link to="/opiniones" onClick={() => setMenuOpen(false)} className="hover:text-bib-red transition duration-300">Opiniones</Link>
+      <div
+        className={`overflow-hidden transition-all duration-500 ease-in-out border-t ${
+          menuOpen ? 'max-h-[80vh] opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
+        }`}
+      >
+        <div className="flex flex-col text-bib-gray uppercase tracking-widest text-sm max-h-[80vh] overflow-y-auto">
+          <div className="flex flex-col gap-4 px-6 py-4">
+            <Link to="/" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Inicio</Link>
+            <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
+            <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
+          </div>
 
-          <div className="border-t border-bib-white/10 pt-4 mt-1">
-            <p className="text-bib-white/40 text-[10px] mb-3 tracking-widest">Categorías</p>
-            <div className="flex flex-col gap-3">
-              {CATEGORIAS.map((cat) => (
-                <a
-                  key={cat}
-                  href={`/?categoria=${encodeURIComponent(cat)}#seleccion`}
-                  onClick={() => setMenuOpen(false)}
-                  className="hover:text-bib-red transition duration-300"
-                >
-                  {cat}
-                </a>
-              ))}
+          <div className="border-t border-bib-white/10 px-6 py-4">
+            <p className="text-[10px] text-bib-gray/60 mb-3">Categorías</p>
+            <div className="flex flex-col gap-1">
+              {CATEGORIES.map(cat => {
+                const subs = SUBCATEGORIES[cat];
+                const abierta = categoriaAbierta === cat;
+                return (
+                  <div key={cat}>
+                    <div className="flex items-center justify-between py-2">
+                      <Link
+                        to={`/?category=${encodeURIComponent(cat)}#seleccion`}
+                        onClick={cerrarMenu}
+                        className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 flex-1 w-fit"
+                      >
+                        {cat}
+                      </Link>
+                      {subs && (
+                        <button
+                          onClick={() => setCategoriaAbierta(abierta ? null : cat)}
+                          className="p-1 text-bib-gray hover:text-bib-white transition-colors"
+                          aria-label="Ver subcategorías"
+                        >
+                          <ChevronDown size={16} className={`transition-transform duration-300 ${abierta ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${abierta && subs ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      {subs && (
+                        <div className="flex flex-col gap-1 pl-4 pb-2 normal-case tracking-normal text-xs">
+                          {subs.map(sub => (
+                            <Link
+                              key={sub}
+                              to={`/?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(sub)}#seleccion`}
+                              onClick={cerrarMenu}
+                              className="text-bib-gray hover:text-bib-red hover:translate-x-1 transition-all duration-300 py-1 w-fit"
+                            >
+                              {sub}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }

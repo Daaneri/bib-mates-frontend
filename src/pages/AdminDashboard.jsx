@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Star } from 'lucide-react';
 import { siteConfig } from '../config/site';
-
-const CATEGORIAS = ['Mates', 'Bombillas', 'Bombillones', 'Termos', 'Canastas', 'Yerbas', 'Kits', 'Latas', 'Accesorios'];
+import { CATEGORIES as CATEGORIAS, SUBCATEGORIES } from '../config/categories';
 
 export default function AdminDashboard() {
   const [view, setView] = useState('Inventario');
@@ -14,26 +13,17 @@ export default function AdminDashboard() {
   const [resenas, setResenas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
+  const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS[0]);
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
   const [busqueda, setBusqueda] = useState('');
   const [verArchivados, setVerArchivados] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ name: '', price: '', stock: 0, description: '', image_url: '', image_urls: [], personalizable: false });
+  const [editData, setEditData] = useState({ name: '', price: '', stock: 0, description: '', image_url: '', image_urls: [], personalizable: false, category: '', subcategory: '' });
   const [storageFiles, setStorageFiles] = useState([]);
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        navigate('/login');
-      }
-    }
-    checkSession();
-  }, []);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -59,6 +49,7 @@ export default function AdminDashboard() {
     const price = parseFloat(formData.get('price'));
     const stock = parseInt(formData.get('stock'));
     const category = formData.get('category');
+    const subcategory = formData.get('subcategory') || null;
     const description = formData.get('description');
     const personalizable = formData.get('personalizable') === 'on';
 
@@ -68,12 +59,13 @@ export default function AdminDashboard() {
       if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
     }
 
-    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, image_url: imageUrl, description, personalizable }]);
+    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, description, personalizable }]);
     if (error) mostrarMensaje("Error: " + error.message);
     else {
       mostrarMensaje("Producto agregado con éxito");
       setFile(null);
       e.target.reset();
+      setNuevaCategoria(CATEGORIAS[0]);
       fetchData();
     }
     setLoading(false);
@@ -125,7 +117,8 @@ export default function AdminDashboard() {
         price: editData.price.toString(),
         stock: parseInt(editData.stock),
         description: editData.description,
-        category: product.category,
+        category: editData.category,
+        subcategory: editData.subcategory || null,
         image_url: editData.image_url,
         image_urls: editData.image_urls,
         personalizable: editData.personalizable,
@@ -216,6 +209,9 @@ export default function AdminDashboard() {
     return 'bg-green-900/40 text-green-300 border-green-700/40';
   };
 
+  const subcategoriasNueva = SUBCATEGORIES[nuevaCategoria] || [];
+  const subcategoriasEdit = SUBCATEGORIES[editData.category] || [];
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-bib-black text-bib-white">
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
@@ -246,9 +242,18 @@ export default function AdminDashboard() {
               <input name="price" type="number" step="any" placeholder="Precio" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
               <input name="stock" type="number" placeholder="Stock" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
               <textarea name="description" placeholder="Descripción del producto" rows={3} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base resize-none" />
-              <select name="category" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
+              <select name="category" value={nuevaCategoria} onChange={(e) => setNuevaCategoria(e.target.value)} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
                 {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
+              {subcategoriasNueva.length > 0 && (
+                <select name="subcategory" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
+                  <option value="">Sin subcategoría</option>
+                  {subcategoriasNueva.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                </select>
+              )}
+              {nuevaCategoria === 'Yerbas' && (
+                <input name="subcategory" placeholder="Marca de la yerba" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" />
+              )}
               <label className="flex items-center gap-2 text-sm text-bib-gray">
                 <input type="checkbox" name="personalizable" className="w-4 h-4 accent-bib-red" />
                 ¿Es personalizable / grabable?
@@ -286,6 +291,19 @@ export default function AdminDashboard() {
                     <div className="space-y-2">
                       <input className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} placeholder="Nombre" />
                       <textarea className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4 resize-none" rows={2} value={editData.description} onChange={(e) => setEditData({...editData, description: e.target.value})} placeholder="Descripción" />
+
+                      <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value, subcategory: ''})}>
+                        {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
+
+                      {subcategoriasEdit.length > 0 ? (
+                        <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})}>
+                          <option value="">Sin subcategoría</option>
+                          {subcategoriasEdit.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                        </select>
+                      ) : editData.category === 'Yerbas' ? (
+                        <input className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" placeholder="Marca de la yerba" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})} />
+                      ) : null}
 
                       <label className="flex items-center gap-2 text-xs text-bib-gray">
                         <input type="checkbox" checked={editData.personalizable} onChange={(e) => setEditData({...editData, personalizable: e.target.checked})} className="w-4 h-4 accent-bib-red" />
@@ -342,13 +360,16 @@ export default function AdminDashboard() {
                           <span className="font-medium text-lg md:text-xl text-bib-red tracking-wide">
                             ${p.price}
                           </span>
+                          {p.subcategory && (
+                            <span className="px-2 py-1 rounded text-[10px] border border-bib-white/20 text-bib-gray uppercase tracking-wide">{p.subcategory}</span>
+                          )}
                           {p.personalizable && (
                             <span className="px-2 py-1 rounded text-[10px] border border-bib-red/40 text-bib-red uppercase tracking-wide">Personalizable</span>
                           )}
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '' }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>

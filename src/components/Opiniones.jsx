@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Star } from 'lucide-react';
+import { Star, MessageSquareText } from 'lucide-react';
 
 export default function Opiniones() {
   const [resenas, setResenas] = useState([]);
@@ -64,7 +64,13 @@ export default function Opiniones() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         <div className="space-y-4">
           {resenas.length === 0 && (
-            <p className="text-bib-gray text-sm text-center py-8">Todavía no hay reseñas publicadas. ¡Sé el primero en dejar una!</p>
+            <div className="flex flex-col items-center gap-3 text-center py-12 sm:py-16 border border-dashed border-bib-white/10 rounded">
+              <MessageSquareText size={32} className="text-bib-white/20" strokeWidth={1.25} />
+              <p className="text-bib-white font-medium text-sm">Todavía no hay reseñas</p>
+              <p className="text-bib-gray text-xs max-w-[220px]">Sé el primero en contar tu experiencia con {' '}
+                <span className="text-bib-red">BIB Mates</span>
+              </p>
+            </div>
           )}
           {resenas.map((r) => (
             <div key={r.id} className="bg-bib-dark border border-bib-white/10 rounded p-5">

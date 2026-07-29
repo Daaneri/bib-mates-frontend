@@ -2,28 +2,19 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Search, ImageOff } from 'lucide-react'
+import { CATEGORIES, SUBCATEGORIES } from '../config/categories'
+import FadeIn from './FadeIn'
 
-const CATEGORIES = ['Todos', 'Mates', 'Bombillas', 'Bombillones', 'Termos', 'Canastas', 'Yerbas', 'Kits', 'Latas', 'Accesorios'];
-
-function ProductCardSkeleton() {
-  return (
-    <div className="bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 flex flex-col animate-pulse">
-      <div className="aspect-[4/5] bg-bib-card rounded mb-3 sm:mb-4 md:mb-6" />
-      <div className="h-3 sm:h-4 bg-bib-card rounded w-3/4 mb-2" />
-      <div className="h-3 sm:h-4 bg-bib-card rounded w-1/3 mb-4" />
-      <div className="h-8 sm:h-10 bg-bib-card rounded w-full" />
-    </div>
-  );
-}
+const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
 
 function ProductCard({ product }) {
   const sinStock = (product.stock ?? 0) === 0;
 
   return (
-    <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 hover:shadow-lg hover:shadow-bib-red/5 hover:-translate-y-1 flex flex-col relative">
+    <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 hover:-translate-y-1 hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.7)] flex flex-col relative">
       <div className="aspect-[4/5] bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 md:mb-6 relative">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>
+          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
             <ImageOff size={28} strokeWidth={1.25} />
@@ -47,7 +38,7 @@ function ProductCard({ product }) {
             className={`w-full border py-2 md:py-4 rounded font-medium text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 ${
               sinStock
                 ? 'border-bib-white/10 text-bib-white/30 cursor-not-allowed'
-                : 'border-bib-white/20 text-bib-white group-hover:bg-bib-red group-hover:border-bib-red group-hover:text-bib-black'
+                : 'border-bib-white/20 text-bib-white hover:bg-bib-red hover:border-bib-red hover:text-bib-white'
             }`}
           >
             {sinStock ? 'Sin stock' : 'Ver detalle'}
@@ -58,19 +49,25 @@ function ProductCard({ product }) {
   );
 }
 
+function ProductCardSkeleton() {
+  return (
+    <div className="bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 flex flex-col">
+      <div className="aspect-[4/5] rounded mb-3 sm:mb-4 md:mb-6 bg-bib-card animate-pulse" />
+      <div className="h-3 w-3/4 rounded bg-bib-white/10 mb-2 animate-pulse" />
+      <div className="h-3 w-1/3 rounded bg-bib-white/10 mb-3 sm:mb-4 animate-pulse" />
+      <div className="h-8 md:h-11 w-full rounded bg-bib-white/5 animate-pulse" />
+    </div>
+  );
+}
+
 export default function ProductGrid() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('default')
-
-  // Si venimos de un link del Home tipo "?categoria=Termos", arrancamos ya filtrados en esa categoría
-  const [selectedCategory, setSelectedCategory] = useState(() => {
-    const catParam = searchParams.get('categoria');
-    const match = CATEGORIES.find(c => c.toLowerCase() === catParam?.toLowerCase());
-    return match || 'Todos';
-  });
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'Todos')
+  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '')
 
   useEffect(() => {
     async function fetchProducts() {
@@ -83,15 +80,9 @@ export default function ProductGrid() {
     fetchProducts()
   }, [])
 
-  function handleSelectCategory(cat) {
+  function handleCategoryClick(cat) {
     setSelectedCategory(cat);
-    // Mantenemos la URL en sync, así el filtro se puede compartir o recargar sin perderse
-    if (cat === 'Todos') {
-      searchParams.delete('categoria');
-    } else {
-      searchParams.set('categoria', cat);
-    }
-    setSearchParams(searchParams, { replace: true });
+    setSelectedSubcategory('');
   }
 
   const filteredProducts = products
@@ -99,8 +90,9 @@ export default function ProductGrid() {
     .filter(p => {
       const productCat = (p.category || 'Otros').toLowerCase();
       const matchesCategory = selectedCategory === 'Todos' || productCat === selectedCategory.toLowerCase();
+      const matchesSubcategory = !selectedSubcategory || (p.subcategory || '').toLowerCase() === selectedSubcategory.toLowerCase();
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesSubcategory && matchesSearch;
     })
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -108,7 +100,18 @@ export default function ProductGrid() {
       return 0;
     });
 
-  const groupedByCategory = CATEGORIES.filter(c => c !== 'Todos').map(cat => ({
+  // Subcategorías disponibles para la categoría elegida: usa la lista fija si existe,
+  // si no, saca los valores reales cargados en los productos de esa categoría.
+  const subcategoriasDisponibles = (() => {
+    if (selectedCategory === 'Todos') return [];
+    if (SUBCATEGORIES[selectedCategory]) return SUBCATEGORIES[selectedCategory];
+    const enUso = products
+      .filter(p => (p.category || '') === selectedCategory && p.subcategory)
+      .map(p => p.subcategory);
+    return [...new Set(enUso)];
+  })();
+
+  const groupedByCategory = CATEGORIES.map(cat => ({
     name: cat,
     items: filteredProducts.filter(p => (p.category || 'Otros').toLowerCase() === cat.toLowerCase()),
   })).filter(group => group.items.length > 0);
@@ -117,13 +120,13 @@ export default function ProductGrid() {
     <div className="px-4 sm:px-6 space-y-6 sm:space-y-8">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
-          {CATEGORIES.map(cat => (
+          {CATEGORIAS_CON_TODOS.map(cat => (
             <button
               key={cat}
-              onClick={() => handleSelectCategory(cat)}
-              className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+              onClick={() => handleCategoryClick(cat)}
+              className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all duration-300 border shrink-0 whitespace-nowrap ${
                 selectedCategory === cat
-                ? 'bg-bib-red text-bib-black font-bold border-bib-red'
+                ? 'bg-bib-red text-bib-white font-medium border-bib-red'
                 : 'bg-bib-dark text-bib-white border-bib-white/10 hover:border-bib-white/30'
               }`}
             >
@@ -132,11 +135,38 @@ export default function ProductGrid() {
           ))}
         </div>
 
+        {subcategoriasDisponibles.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
+            <button
+              onClick={() => setSelectedSubcategory('')}
+              className={`px-3 py-1.5 rounded text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+                selectedSubcategory === ''
+                ? 'bg-bib-white text-bib-black font-medium border-bib-white'
+                : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
+              }`}
+            >
+              Todas
+            </button>
+            {subcategoriasDisponibles.map(sub => (
+              <button
+                key={sub}
+                onClick={() => setSelectedSubcategory(sub)}
+                className={`px-3 py-1.5 rounded text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+                  selectedSubcategory === sub
+                  ? 'bg-bib-white text-bib-black font-medium border-bib-white'
+                  : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
+                }`}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10">
           <div className="relative flex-1">
             <input
               type="text"
-              value={searchTerm}
               placeholder="Buscar productos..."
               className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-3 pl-10 rounded outline-none focus:border-bib-red transition-colors text-sm sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -173,14 +203,22 @@ export default function ProductGrid() {
                 <section key={group.name}>
                   <h2 className="max-w-7xl mx-auto text-sm font-medium text-bib-white mb-4 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-                    {group.items.map(p => <ProductCard key={p.id} product={p} />)}
+                    {group.items.map((p, i) => (
+                      <FadeIn key={p.id} delay={Math.min(i * 40, 320)}>
+                        <ProductCard product={p} />
+                      </FadeIn>
+                    ))}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-              {filteredProducts.map(p => <ProductCard key={p.id} product={p} />)}
+              {filteredProducts.map((p, i) => (
+                <FadeIn key={p.id} delay={Math.min(i * 40, 320)}>
+                  <ProductCard product={p} />
+                </FadeIn>
+              ))}
             </div>
           )}
         </>

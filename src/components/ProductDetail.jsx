@@ -4,6 +4,40 @@ import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
 import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check } from 'lucide-react';
 import { siteConfig } from '../config/site';
+import FadeIn from './FadeIn';
+
+function ProductDetailSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12">
+      <div className="h-4 w-40 rounded bg-bib-white/10 animate-pulse mb-6 sm:mb-8" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="aspect-square rounded bg-bib-card animate-pulse" />
+          <div className="flex gap-2 sm:gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="w-16 h-16 sm:w-20 sm:h-20 rounded bg-bib-card animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-6 sm:gap-8">
+          <div>
+            <div className="h-8 sm:h-10 w-3/4 rounded bg-bib-white/10 animate-pulse mb-4" />
+            <div className="h-6 w-1/3 rounded bg-bib-white/10 animate-pulse" />
+          </div>
+          <div className="border-y border-bib-white/10 py-6 sm:py-8 space-y-2">
+            <div className="h-3 w-full rounded bg-bib-white/10 animate-pulse" />
+            <div className="h-3 w-full rounded bg-bib-white/10 animate-pulse" />
+            <div className="h-3 w-2/3 rounded bg-bib-white/10 animate-pulse" />
+          </div>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="h-14 sm:h-16 rounded bg-bib-white/10 animate-pulse" />
+            <div className="h-14 sm:h-16 rounded bg-bib-white/5 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -56,11 +90,7 @@ export default function ProductDetail() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!product) return (
-    <div className="flex items-center justify-center min-h-[60vh] text-lg sm:text-xl text-bib-gray animate-pulse px-6 text-center uppercase tracking-widest">
-      Cargando producto...
-    </div>
-  );
+  if (!product) return <ProductDetailSkeleton />;
 
   const whatsappMessage = `Hola! Me interesa saber más sobre el producto: ${product.name}`;
   const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
@@ -79,117 +109,126 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12 relative">
-      <Link to="/" className="inline-flex items-center gap-2 text-bib-gray hover:text-bib-white transition-colors mb-6 sm:mb-8 text-xs sm:text-sm uppercase tracking-widest">
-        <ArrowLeft size={16} /> Volver a la selección
+      <Link to="/" className="group inline-flex items-center gap-2 text-bib-gray hover:text-bib-white transition-colors mb-6 sm:mb-8 text-xs sm:text-sm uppercase tracking-widest">
+        <ArrowLeft size={16} className="transition-transform duration-300 group-hover:-translate-x-1" /> Volver a la selección
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">
+      <FadeIn>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">
 
-        <div className="space-y-3 sm:space-y-4">
-          <div className="bg-bib-card p-2 rounded border border-bib-white/10">
-            <img src={selectedImage || product.image_url} alt={product.name} className="w-full rounded aspect-square object-cover transition-transform duration-700 hover:scale-[1.03]" />
-          </div>
-
-          {gallery.length > 1 && (
-            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
-              {gallery.map((url, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(url)}
-                  className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded overflow-hidden border-2 transition-all ${
-                    selectedImage === url
-                      ? 'border-bib-red'
-                      : 'border-bib-white/15 opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
+          <div className="space-y-3 sm:space-y-4">
+            <div className="bg-bib-card p-2 rounded border border-bib-white/10 overflow-hidden">
+              <img
+                key={selectedImage}
+                src={selectedImage || product.image_url}
+                alt={product.name}
+                className="w-full rounded aspect-square object-cover transition-transform duration-700 hover:scale-[1.03]"
+              />
             </div>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-6 sm:gap-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
-            <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
-
-            {cajaPresentacion && (
-              <label className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-gray cursor-pointer w-fit">
-                <input
-                  type="checkbox"
-                  checked={agregarCaja}
-                  onChange={(e) => setAgregarCaja(e.target.checked)}
-                  className="w-4 h-4 accent-bib-red cursor-pointer"
-                />
-                Agregar {cajaPresentacion.name} + ${Number(cajaPresentacion.price).toLocaleString('es-AR')}
-              </label>
+            {gallery.length > 1 && (
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
+                {gallery.map((url, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(url)}
+                    className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded overflow-hidden border-2 transition-all duration-300 ${
+                      selectedImage === url
+                        ? 'border-bib-red scale-105'
+                        : 'border-bib-white/15 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          <div className="border-y border-bib-white/10 py-6 sm:py-8">
-            <h4 className="text-[10px] uppercase tracking-[0.2em] text-bib-gray mb-3 sm:mb-4 font-medium">Sobre este producto</h4>
-            <p className="text-sm sm:text-base md:text-lg leading-relaxed text-bib-white/80">
-              {product.description || `Cada producto de ${siteConfig.businessName} está pensado para que se note tu onda a la hora de cebar. Si tenés dudas sobre materiales o stock, escribinos.`}
-            </p>
-          </div>
+          <div className="flex flex-col gap-6 sm:gap-8">
+            <div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
 
-          {esPersonalizable && (
-            <div className="flex gap-3 bg-bib-red/10 border border-bib-red/30 rounded p-4 sm:p-5">
-              <Sparkles size={20} className="text-bib-red shrink-0 mt-0.5" />
-              <p className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
-                <span className="text-bib-red font-medium uppercase tracking-wide">¿Lo querés personalizado o grabado?</span><br />
-                Una vez realizada la compra te contactamos por WhatsApp para definir el diseño. Demora de 2 a 5 días hábiles.
+              {cajaPresentacion && (
+                <label className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-gray cursor-pointer w-fit">
+                  <input
+                    type="checkbox"
+                    checked={agregarCaja}
+                    onChange={(e) => setAgregarCaja(e.target.checked)}
+                    className="w-4 h-4 accent-bib-red cursor-pointer"
+                  />
+                  Agregar {cajaPresentacion.name} + ${Number(cajaPresentacion.price).toLocaleString('es-AR')}
+                </label>
+              )}
+            </div>
+
+            <div className="border-y border-bib-white/10 py-6 sm:py-8">
+              <h4 className="text-[10px] uppercase tracking-[0.2em] text-bib-gray mb-3 sm:mb-4 font-medium">Sobre este producto</h4>
+              <p className="text-sm sm:text-base md:text-lg leading-relaxed text-bib-white/80">
+                {product.description || `Cada producto de ${siteConfig.businessName} está pensado para que se note tu onda a la hora de cebar. Si tenés dudas sobre materiales o stock, escribinos.`}
               </p>
             </div>
-          )}
 
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <button
-              onClick={handleAgregarCarrito}
-              className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest"
-            >
-              <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
-              Agregar al carrito
-            </button>
-             <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 sm:gap-3 border border-bib-white/20 text-bib-white text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-medium hover:bg-bib-white/10 transition-all active:scale-[0.98] uppercase tracking-widest"
-            >
-              <MessageCircle size={18} className="shrink-0" />
-              Consultar por WhatsApp
-            </a>
+            {esPersonalizable && (
+              <div className="flex gap-3 bg-bib-red/10 border border-bib-red/30 rounded p-4 sm:p-5">
+                <Sparkles size={20} className="text-bib-red shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
+                  <span className="text-bib-red font-medium uppercase tracking-wide">¿Lo querés personalizado o grabado?</span><br />
+                  Una vez realizada la compra te contactamos por WhatsApp para definir el diseño. Demora de 2 a 5 días hábiles.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <button
+                onClick={handleAgregarCarrito}
+                className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]"
+              >
+                <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
+                Agregar al carrito
+              </button>
+               <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 sm:gap-3 border border-bib-white/20 text-bib-white text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-medium hover:bg-bib-white/10 transition-all active:scale-[0.98] uppercase tracking-widest"
+              >
+                <MessageCircle size={18} className="shrink-0" />
+                Consultar por WhatsApp
+              </a>
+            </div>
           </div>
         </div>
-      </div>
+      </FadeIn>
 
       {relacionados.length > 0 && (
-        <div className="mt-12 sm:mt-16 md:mt-20">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-bib-white mb-6 sm:mb-8 tracking-tight lowercase">también te puede interesar</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {relacionados.map((p) => (
-              <Link
-                key={p.id}
-                to={`/producto/${p.id}`}
-                className="group bg-bib-dark rounded border border-bib-white/10 overflow-hidden hover:border-bib-red/40 transition-colors"
-              >
-                <div className="aspect-square overflow-hidden bg-bib-card">
-                  <img
-                    src={p.image_url}
-                    alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-bib-white truncate">{p.name}</p>
-                  <p className="text-sm sm:text-base font-medium text-bib-red mt-1">${Number(p.price).toLocaleString('es-AR')}</p>
-                </div>
-              </Link>
-            ))}
+        <FadeIn delay={150}>
+          <div className="mt-12 sm:mt-16 md:mt-20">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-bib-white mb-6 sm:mb-8 tracking-tight lowercase">también te puede interesar</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {relacionados.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/producto/${p.id}`}
+                  className="group bg-bib-dark rounded border border-bib-white/10 overflow-hidden hover:border-bib-red/40 hover:-translate-y-1 hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.7)] transition-all duration-300"
+                >
+                  <div className="aspect-square overflow-hidden bg-bib-card">
+                    <img
+                      src={p.image_url}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-bib-white truncate">{p.name}</p>
+                    <p className="text-sm sm:text-base font-medium text-bib-red mt-1">${Number(p.price).toLocaleString('es-AR')}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        </FadeIn>
       )}
 
       <div

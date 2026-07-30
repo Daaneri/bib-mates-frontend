@@ -1,42 +1,26 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { Search, ImageOff, Heart } from 'lucide-react'
+import { Search, ImageOff } from 'lucide-react'
 import { CATEGORIES, SUBCATEGORIES } from '../config/categories'
-import { useWishlist } from '../hooks/useWishlist'
+import FadeIn from './FadeIn'
 
 const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
-const STOCK_BAJO_UMBRAL = 5;
-
-function ProductCardSkeleton() {
-  return (
-    <div className="bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 flex flex-col animate-pulse">
-      <div className="aspect-[4/5] bg-bib-card rounded mb-3 sm:mb-4 md:mb-6" />
-      <div className="h-3 bg-bib-card rounded w-3/4 mb-2" />
-      <div className="h-3 bg-bib-card rounded w-1/3 mb-4" />
-      <div className="h-8 bg-bib-card rounded" />
-    </div>
-  );
-}
 
 function ProductCard({ product }) {
-  const { isWishlisted, toggleWishlist } = useWishlist();
   const sinStock = (product.stock ?? 0) === 0;
-  const stockBajo = !sinStock && (product.stock ?? 0) < STOCK_BAJO_UMBRAL;
 
   return (
-    <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 flex flex-col relative">
-      <button
-        onClick={() => toggleWishlist(product.id)}
-        className="absolute top-2 right-2 z-10 bg-bib-black/70 backdrop-blur-sm p-1.5 rounded-full text-bib-white hover:scale-110 transition-transform"
-        aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-      >
-        <Heart size={16} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
-      </button>
-
+    <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 hover:-translate-y-1 hover:shadow-[0_12px_28px_-12px_rgba(0,0,0,0.7)] flex flex-col relative">
       <div className="aspect-[4/5] bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 md:mb-6 relative">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+          <img
+            src={product.image_url}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
             <ImageOff size={28} strokeWidth={1.25} />
@@ -46,11 +30,6 @@ function ProductCard({ product }) {
         {sinStock && (
           <span className="absolute top-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 sm:px-3 py-1 rounded">
             Sin stock
-          </span>
-        )}
-        {stockBajo && (
-          <span className="absolute top-2 left-2 bg-yellow-500/90 text-black text-[9px] sm:text-[10px] font-medium uppercase tracking-widest px-2 sm:px-3 py-1 rounded">
-            ¡Últimas {product.stock}!
           </span>
         )}
       </div>
@@ -65,13 +44,24 @@ function ProductCard({ product }) {
             className={`w-full border py-2 md:py-4 rounded font-medium text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 ${
               sinStock
                 ? 'border-bib-white/10 text-bib-white/30 cursor-not-allowed'
-                : 'border-bib-white/20 text-bib-white hover:bg-bib-red hover:border-bib-red hover:text-bib-black'
+                : 'border-bib-white/20 text-bib-white hover:bg-bib-red hover:border-bib-red hover:text-bib-white'
             }`}
           >
             {sinStock ? 'Sin stock' : 'Ver detalle'}
           </button>
         </Link>
       </div>
+    </div>
+  );
+}
+
+function ProductCardSkeleton() {
+  return (
+    <div className="bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 flex flex-col">
+      <div className="aspect-[4/5] rounded mb-3 sm:mb-4 md:mb-6 bg-bib-card animate-pulse" />
+      <div className="h-3 w-3/4 rounded bg-bib-white/10 mb-2 animate-pulse" />
+      <div className="h-3 w-1/3 rounded bg-bib-white/10 mb-3 sm:mb-4 animate-pulse" />
+      <div className="h-8 md:h-11 w-full rounded bg-bib-white/5 animate-pulse" />
     </div>
   );
 }
@@ -87,11 +77,11 @@ export default function ProductGrid() {
 
   useEffect(() => {
     async function fetchProducts() {
-      setLoading(true);
+      setLoading(true)
       const { data, error } = await supabase.from('productos').select('*')
       if (error) console.error("Error al traer productos:", error)
       else setProducts(data)
-      setLoading(false);
+      setLoading(false)
     }
     fetchProducts()
   }, [])
@@ -116,6 +106,8 @@ export default function ProductGrid() {
       return 0;
     });
 
+  // Subcategorías disponibles para la categoría elegida: usa la lista fija si existe,
+  // si no, saca los valores reales cargados en los productos de esa categoría.
   const subcategoriasDisponibles = (() => {
     if (selectedCategory === 'Todos') return [];
     if (SUBCATEGORIES[selectedCategory]) return SUBCATEGORIES[selectedCategory];
@@ -138,9 +130,9 @@ export default function ProductGrid() {
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
-              className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+              className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all duration-300 border shrink-0 whitespace-nowrap ${
                 selectedCategory === cat
-                ? 'bg-bib-red text-bib-black font-medium border-bib-red'
+                ? 'bg-bib-red text-bib-white font-medium border-bib-red'
                 : 'bg-bib-dark text-bib-white border-bib-white/10 hover:border-bib-white/30'
               }`}
             >
@@ -217,14 +209,22 @@ export default function ProductGrid() {
                 <section key={group.name}>
                   <h2 className="max-w-7xl mx-auto text-sm font-medium text-bib-white mb-4 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-                    {group.items.map(p => <ProductCard key={p.id} product={p} />)}
+                    {group.items.map((p, i) => (
+                      <FadeIn key={p.id} delay={Math.min(i * 40, 320)}>
+                        <ProductCard product={p} />
+                      </FadeIn>
+                    ))}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-              {filteredProducts.map(p => <ProductCard key={p.id} product={p} />)}
+              {filteredProducts.map((p, i) => (
+                <FadeIn key={p.id} delay={Math.min(i * 40, 320)}>
+                  <ProductCard product={p} />
+                </FadeIn>
+              ))}
             </div>
           )}
         </>

@@ -144,6 +144,8 @@ export default function ProductDetail() {
                 key={selectedImage}
                 src={selectedImage || product.image_url}
                 alt={product.name}
+                fetchpriority="high"
+                decoding="async"
                 className="w-full rounded aspect-square object-cover transition-transform duration-700 hover:scale-[1.03]"
               />
             </div>
@@ -160,7 +162,7 @@ export default function ProductDetail() {
                         : 'border-bib-white/15 opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={url} alt={`${product.name} ${i + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -239,6 +241,8 @@ export default function ProductDetail() {
                     <img
                       src={p.image_url}
                       alt={p.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>

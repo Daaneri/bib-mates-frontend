@@ -1,6 +1,6 @@
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, Tag, X, ShoppingBag } from 'lucide-react';
+import { Trash2, Minus, Plus, Tag, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import FadeIn from './FadeIn';
 
@@ -13,10 +13,11 @@ export default function CartPage() {
   const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount, discountType, discountValue }
   const [couponError, setCouponError] = useState('');
   const [checkingCoupon, setCheckingCoupon] = useState(false);
 
+  // Si ya había un cupón guardado (de una visita anterior), lo revalidamos contra el total actual
   useEffect(() => {
     const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
     if (savedCode && total > 0) {
@@ -25,6 +26,7 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Si cambian las cantidades del carrito, revalidamos el descuento (puede cambiar si es %, o dejar de cumplir el mínimo)
   useEffect(() => {
     if (appliedCoupon && total > 0) {
       validarCupon(appliedCoupon.code, { silencioso: true });
@@ -78,13 +80,9 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <FadeIn>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-bib-white px-6 text-center gap-4">
-          <div className="w-16 h-16 rounded-full border border-dashed border-bib-white/15 flex items-center justify-center">
-            <ShoppingBag size={26} className="text-bib-white/25" strokeWidth={1.25} />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-bold lowercase">tu carrito está vacío</h2>
-          <p className="text-bib-gray text-sm max-w-[240px] -mt-2">Todavía no agregaste ningún producto. Explorá el catálogo y encontrá algo para vos.</p>
-          <Link to="/" className="text-bib-red hover:text-bib-white underline uppercase text-sm tracking-widest transition-colors mt-2">Volver a la tienda</Link>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-bib-white px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-4 lowercase">Tu carrito está vacío</h2>
+          <Link to="/" className="text-bib-gray hover:text-bib-red underline uppercase text-sm tracking-widest transition-colors">Volver a la tienda</Link>
         </div>
       </FadeIn>
     );
@@ -103,7 +101,7 @@ export default function CartPage() {
             <FadeIn key={item.id} delay={i * 60}>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 sm:p-6 md:p-8 bg-bib-dark rounded border border-bib-white/10 transition-all duration-300 hover:border-bib-white/20">
                 <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
-                  <img src={item.image_url} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover rounded shrink-0" />
+                  <img src={item.image_url} alt={item.name} loading="lazy" decoding="async" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover rounded shrink-0" />
                   <h3 className="font-medium text-base sm:text-lg md:text-xl text-bib-white min-w-0 truncate">{item.name}</h3>
                 </div>
                 <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 md:gap-6 shrink-0">
@@ -123,6 +121,7 @@ export default function CartPage() {
           <div className="bg-bib-dark p-6 sm:p-8 md:p-10 rounded border border-bib-white/10 lg:sticky lg:top-28">
             <h2 className="text-sm font-medium text-bib-white mb-6 sm:mb-8 uppercase tracking-widest">Sumario de compra</h2>
 
+            {/* Cupón de descuento */}
             <div className="mb-6 sm:mb-8">
               {appliedCoupon ? (
                 <div className="flex items-center justify-between gap-2 bg-bib-red/10 border border-bib-red/30 rounded px-4 py-3">

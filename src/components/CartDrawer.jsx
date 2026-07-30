@@ -66,7 +66,7 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 space-y-4">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-3 pb-4 border-b border-bib-white/10 last:border-0">
-                  <img src={item.image_url} alt={item.name} className="w-16 h-16 object-cover rounded shrink-0" />
+                  <img src={item.image_url} alt={item.name} loading="lazy" decoding="async" className="w-16 h-16 object-cover rounded shrink-0" />
                   <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
                     <div className="flex justify-between gap-2">
                       <p className="text-sm text-bib-white truncate">{item.name}</p>

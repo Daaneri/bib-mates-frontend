@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check } from 'lucide-react';
+import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
@@ -46,10 +46,9 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [agregarCaja, setAgregarCaja] = useState(false);
   const [cajaPresentacion, setCajaPresentacion] = useState(null);
-  const [showToast, setShowToast] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
-  const { addToCart } = useCart();
+  const { addToCart, openDrawer } = useCart();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -101,8 +100,7 @@ export default function ProductDetail() {
   function handleAgregarCarrito() {
     addToCart(product);
     if (agregarCaja && cajaPresentacion) addToCart(cajaPresentacion);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    openDrawer();
   }
 
   const extraImages = Array.isArray(product.image_urls) ? product.image_urls : [];
@@ -254,15 +252,6 @@ export default function ProductDetail() {
           </div>
         </FadeIn>
       )}
-
-      <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded-full font-bold text-sm shadow-lg transition-all duration-300 ${
-          showToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
-      >
-        <Check size={16} strokeWidth={3} />
-        Agregado al carrito
-      </div>
 
       <div
         className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-bib-black/95 backdrop-blur-md border-t border-bib-white/10 p-3 flex items-center gap-3 transition-transform duration-300 ${

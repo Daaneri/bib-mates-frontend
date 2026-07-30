@@ -42,6 +42,17 @@
       "areaServed": "AR"
     }
     </script>
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-919SQNP2VK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      // send_page_view en false: las vistas de página las mandamos a mano desde React
+      // (AnalyticsTracker.jsx), porque al ser una SPA no hay recarga de página real.
+      gtag('config', 'G-919SQNP2VK', { send_page_view: false });
+    </script>
   </head>
   <body>
     <div id="root"></div>

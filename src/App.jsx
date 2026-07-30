@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import FloatingCart from './components/FloatingCart';
 import ProtectedRoute from './components/ProtectedRoute';
 import CartDrawer from './components/CartDrawer';
+import AnalyticsTracker from './components/AnalyticsTracker';
 
 // Componentes Administrativos
 import AdminDashboard from './pages/AdminDashboard';
@@ -25,6 +26,7 @@ function App() {
   return (
     <CartProvider>
       <Router>
+        <AnalyticsTracker />
         <Routes>
           {/* RUTAS ADMINISTRATIVAS */}
           <Route path="/login" element={<Login />} />

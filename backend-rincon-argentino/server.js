@@ -13,6 +13,7 @@ app.use(express.json());
 
 const BUSINESS_NAME = process.env.BUSINESS_NAME || "BIB Mates";
 const SITE_URL = process.env.SITE_URL || "https://bibmates.com.ar";
+const BACKEND_URL = process.env.BACKEND_URL || "https://bib-mates-backend.onrender.com";
 
 // --- Clientes ---
 const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
@@ -194,6 +195,7 @@ app.post("/api/payment/create-preference", async (req, res) => {
         items: preferenceItems,
         payer: { name: customer.name, email: customer.email },
         external_reference: orderData.identificador.toString(),
+        notification_url: `${BACKEND_URL}/api/payment/webhook`,
         back_urls: {
           success: `${SITE_URL}/checkout/exito`,
           failure: `${SITE_URL}/checkout/error`,
@@ -206,6 +208,70 @@ app.post("/api/payment/create-preference", async (req, res) => {
     res.json({ init_point: result.init_point });
   } catch (err) {
     res.status(500).json({ error: "No se pudo iniciar el pago" });
+  }
+});
+
+// --- WEBHOOK: MercadoPago avisa acá cuando cambia el estado de un pago ---
+// Esto es lo que permite que el pedido pase a "pagado" solo, sin que nadie
+// tenga que entrar al panel admin a cambiarlo a mano.
+app.post("/api/payment/webhook", async (req, res) => {
+  try {
+    // MercadoPago manda el aviso de dos formas posibles según la config: por body (webhooks nuevos)
+    // o por query string (formato IPN viejo). Contemplamos las dos para no perder ninguna notificación.
+    const topic = req.body?.type || req.query.type || req.query.topic;
+    const paymentId = req.body?.data?.id || req.query["data.id"] || req.query.id;
+
+    if (topic !== "payment" || !paymentId) {
+      // No es una notificación de pago (puede ser de otro tipo, ej. "merchant_order") — la ignoramos.
+      return res.sendStatus(200);
+    }
+
+    // Nunca confiamos ciegamente en lo que llega del webhook: le preguntamos a MercadoPago
+    // los datos reales de ese pago antes de tocar la base de datos.
+    const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
+    });
+
+    if (!mpResponse.ok) {
+      console.error("No se pudo consultar el pago en MercadoPago:", await mpResponse.text());
+      return res.sendStatus(200); // Respondemos 200 igual para que MP no reintente en loop infinito
+    }
+
+    const payment = await mpResponse.json();
+    const identificador = payment.external_reference;
+
+    if (!identificador) {
+      console.error("El pago de MercadoPago no trae external_reference, no se puede vincular a un pedido.");
+      return res.sendStatus(200);
+    }
+
+    // Traducción del estado de MercadoPago a los estados que ya usa tu panel admin
+    const estadoMap = {
+      approved: "pagado",
+      pending: "pendiente",
+      in_process: "pendiente",
+      rejected: "fallido",
+      cancelled: "fallido",
+      refunded: "fallido",
+      charged_back: "fallido",
+    };
+    const nuevoEstado = estadoMap[payment.status] || "pendiente";
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ estado: nuevoEstado })
+      .eq("identificador", identificador);
+
+    if (error) {
+      console.error(`Error actualizando el pedido #${identificador} desde el webhook:`, error);
+    } else {
+      console.log(`✔ Pedido #${identificador} actualizado a estado: ${nuevoEstado}`);
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Error procesando webhook de MercadoPago:", err);
+    res.sendStatus(200); // Respondemos 200 igual: si devolvemos error, MP reintenta y puede duplicar el procesamiento
   }
 });
 

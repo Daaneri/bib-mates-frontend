@@ -33,6 +33,10 @@ export function CartProvider({ children }) {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   const updateQuantity = (productId, delta) => {
     setCart((prevCart) =>
       prevCart
@@ -53,6 +57,7 @@ export function CartProvider({ children }) {
         cart,
         addToCart,
         removeFromCart,
+        clearCart,
         updateQuantity,
         isDrawerOpen,
         openDrawer,

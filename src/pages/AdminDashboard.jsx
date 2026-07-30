@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check, X } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS, SUBCATEGORIES } from '../config/categories';
 
@@ -13,7 +13,6 @@ export default function AdminDashboard() {
   const [resenas, setResenas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [extraFiles, setExtraFiles] = useState([]); // [{ file, preview, selected }] — fotos adicionales del producto nuevo
   const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS[0]);
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
   const [busqueda, setBusqueda] = useState('');
@@ -26,33 +25,17 @@ export default function AdminDashboard() {
   const [pickerMode, setPickerMode] = useState(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        navigate('/login');
+      }
+    }
+    checkSession();
+  }, []);
+
   useEffect(() => { fetchData(); }, []);
-
-  function handleExtraFilesChange(e) {
-    const nuevos = Array.from(e.target.files).map((f) => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-      selected: true, // vienen tildadas/seleccionadas por defecto
-    }));
-    setExtraFiles((prev) => [...prev, ...nuevos]);
-    e.target.value = ''; // permite volver a elegir el mismo archivo si lo saca y lo quiere sumar de nuevo
-  }
-
-  function toggleExtraFile(index) {
-    setExtraFiles((prev) => prev.map((item, i) => (i === index ? { ...item, selected: !item.selected } : item)));
-  }
-
-  function quitarExtraFile(index) {
-    setExtraFiles((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
-    });
-  }
-
-  function limpiarExtraFiles() {
-    extraFiles.forEach((item) => URL.revokeObjectURL(item.preview));
-    setExtraFiles([]);
-  }
 
   const mostrarMensaje = (texto) => {
     setMensaje(texto);
@@ -86,20 +69,11 @@ export default function AdminDashboard() {
       if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
     }
 
-    // Solo se suben las fotos adicionales que quedaron tildadas/seleccionadas
-    const imageUrlsExtra = [];
-    const seleccionadas = extraFiles.filter((item) => item.selected);
-    for (const item of seleccionadas) {
-      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${item.file.name}`, item.file);
-      if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
-    }
-
-    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, image_urls: imageUrlsExtra, description, personalizable }]);
+    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, description, personalizable }]);
     if (error) mostrarMensaje("Error: " + error.message);
     else {
       mostrarMensaje("Producto agregado con éxito");
       setFile(null);
-      limpiarExtraFiles();
       e.target.reset();
       setNuevaCategoria(CATEGORIAS[0]);
       fetchData();
@@ -257,7 +231,7 @@ export default function AdminDashboard() {
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center bg-bib-red text-bib-white text-[10px] font-medium w-4 h-4 rounded-full">
+                <span className="ml-2 inline-flex items-center justify-center bg-bib-red text-bib-black text-[10px] font-medium w-4 h-4 rounded-full">
                   {resenasPendientes.length}
                 </span>
               )}
@@ -268,7 +242,7 @@ export default function AdminDashboard() {
       </aside>
 
       <main className="flex-1 p-4 sm:p-6 md:p-16 min-w-0">
-        {mensaje && <div className="bg-bib-red text-bib-white p-3 rounded mb-4 text-center text-sm uppercase tracking-widest">{mensaje}</div>}
+        {mensaje && <div className="bg-bib-red text-bib-black p-3 rounded mb-4 text-center text-sm uppercase tracking-widest">{mensaje}</div>}
 
         {view === 'Inventario' && (
           <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
@@ -297,70 +271,17 @@ export default function AdminDashboard() {
               <div className="flex flex-col items-center gap-2">
                 <input type="file" id="fileInput" className="hidden" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
                 <label htmlFor="fileInput" className="cursor-pointer bg-bib-black px-6 py-2 rounded border border-bib-white/20 hover:border-bib-red transition text-xs md:text-sm text-center break-all">
-                  {file ? file.name : "Seleccionar Imagen principal"}
+                  {file ? file.name : "Seleccionar Imagen"}
                 </label>
               </div>
-
-              <div className="space-y-2 bg-bib-black p-3 rounded border border-bib-white/10">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Fotos adicionales (opcional)</p>
-                  <label htmlFor="extraFilesInput" className="cursor-pointer text-xs bg-bib-dark px-3 py-1.5 rounded border border-bib-white/20 hover:border-bib-red transition">
-                    + Agregar
-                  </label>
-                  <input type="file" id="extraFilesInput" className="hidden" accept="image/*" multiple onChange={handleExtraFilesChange} />
-                </div>
-
-                {extraFiles.length > 0 && (
-                  <>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1">
-                      {extraFiles.map((item, i) => (
-                        <div key={i} className="relative">
-                          <button
-                            type="button"
-                            onClick={() => toggleExtraFile(i)}
-                            className={`aspect-square w-full rounded overflow-hidden border-2 transition-all duration-200 ${
-                              item.selected
-                                ? 'border-green-500'
-                                : 'border-bib-white/10 opacity-40 grayscale hover:opacity-70'
-                            }`}
-                          >
-                            <img src={item.preview} alt={`Extra ${i + 1}`} className="w-full h-full object-cover" />
-                          </button>
-                          {item.selected ? (
-                            <span className="absolute -top-1.5 -right-1.5 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
-                              <X size={10} strokeWidth={3} />
-                            </span>
-                          ) : (
-                            <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
-                              <Check size={10} strokeWidth={3} />
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => quitarExtraFile(i)}
-                            className="absolute -bottom-1.5 -right-1.5 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center shadow"
-                            title="Quitar esta foto de la lista"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-bib-gray pt-1">
-                      Tocá una foto para incluirla o excluirla. Las tildadas en verde se suben con el producto; las apagadas en gris no se suben.
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <button disabled={loading} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors">GUARDAR</button>
+              <button disabled={loading} className="bg-bib-red hover:bg-bib-white text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors">GUARDAR</button>
             </form>
 
             <input type="text" placeholder="Buscar producto..." className="max-w-4xl mx-auto block w-full bg-bib-dark p-3 rounded border border-bib-white/20 px-6 mb-2 text-sm md:text-base" onChange={(e) => setBusqueda(e.target.value)} />
 
             <div className="max-w-4xl mx-auto flex gap-2 mb-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-auto md:px-0 scrollbar-hide">
               {['Todos', ...CATEGORIAS].map(cat => (
-                <button key={cat} onClick={() => setCategoriaFiltro(cat)} className={`px-5 md:px-6 py-1.5 rounded text-xs md:text-sm whitespace-nowrap shrink-0 uppercase tracking-wide ${categoriaFiltro === cat ? 'bg-bib-red text-bib-white' : 'bg-bib-dark text-bib-gray border border-bib-white/10'}`}>{cat}</button>
+                <button key={cat} onClick={() => setCategoriaFiltro(cat)} className={`px-5 md:px-6 py-1.5 rounded text-xs md:text-sm whitespace-nowrap shrink-0 uppercase tracking-wide ${categoriaFiltro === cat ? 'bg-bib-red text-bib-black' : 'bg-bib-dark text-bib-gray border border-bib-white/10'}`}>{cat}</button>
               ))}
             </div>
 
@@ -417,7 +338,7 @@ export default function AdminDashboard() {
                           {editData.image_urls.map(url => (
                             <div key={url} className="relative">
                               <img src={url} alt="Extra" className="w-12 h-12 rounded object-cover border border-bib-white/10" />
-                              <button type="button" onClick={() => quitarImagenExtra(url)} className="absolute -top-1 -right-1 bg-bib-red text-bib-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center">×</button>
+                              <button type="button" onClick={() => quitarImagenExtra(url)} className="absolute -top-1 -right-1 bg-bib-red text-bib-black rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center">×</button>
                             </div>
                           ))}
                           <button type="button" onClick={() => abrirPicker('extra')} className="text-xs bg-bib-dark px-3 py-2 rounded border border-bib-white/20 hover:border-bib-red transition h-fit self-center">
@@ -529,7 +450,7 @@ export default function AdminDashboard() {
                       onClick={() => handleUpdateOrderStatus(o.identificador, estado)}
                       className={`px-3 py-1 rounded text-xs border transition uppercase tracking-wide ${
                         o.estado === estado
-                          ? 'bg-bib-red text-bib-white border-bib-red'
+                          ? 'bg-bib-red text-bib-black border-bib-red'
                           : 'border-bib-white/10 text-bib-gray hover:text-bib-white hover:border-bib-white/30'
                       }`}
                     >
@@ -647,21 +568,19 @@ export default function AdminDashboard() {
                       key={f.name}
                       type="button"
                       onClick={() => elegirImagen(f.url)}
-                      className={`relative aspect-square rounded overflow-hidden border-2 transition-all duration-200 ${
-                        seleccionada
-                          ? 'border-green-500'
-                          : 'border-bib-white/10 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-bib-white/30'
-                      }`}
+                      className={`relative aspect-square rounded overflow-hidden border-2 transition ${seleccionada ? 'border-bib-red' : 'border-bib-white/10 hover:border-bib-white/30'}`}
                     >
-                      <img src={f.url} alt={f.name} className="w-full h-full object-cover" />
-                      {seleccionada ? (
-                        <span className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
-                          <X size={12} strokeWidth={3} />
-                        </span>
-                      ) : pickerMode === 'extra' && (
-                        <span className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
-                          <Check size={12} strokeWidth={3} />
-                        </span>
+                      <img
+                        src={f.url}
+                        alt={f.name}
+                        className={`w-full h-full object-cover transition-opacity ${seleccionada ? 'opacity-40' : 'opacity-100'}`}
+                      />
+                      {seleccionada && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-bib-red text-bib-black rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">
+                            ✓
+                          </div>
+                        </div>
                       )}
                     </button>
                   );
@@ -671,7 +590,7 @@ export default function AdminDashboard() {
 
             {pickerMode === 'extra' && (
               <div className="pt-4 flex justify-end">
-                <button onClick={() => setPickerMode(null)} className="bg-bib-red text-bib-white px-6 py-2 rounded font-medium text-sm uppercase tracking-wide">Listo</button>
+                <button onClick={() => setPickerMode(null)} className="bg-bib-red text-bib-black px-6 py-2 rounded font-medium text-sm uppercase tracking-wide">Listo</button>
               </div>
             )}
           </div>

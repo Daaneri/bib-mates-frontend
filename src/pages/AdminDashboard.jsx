@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check } from 'lucide-react';
+import { Star, Check, X } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS, SUBCATEGORIES } from '../config/categories';
 
@@ -326,7 +326,11 @@ export default function AdminDashboard() {
                           >
                             <img src={item.preview} alt={`Extra ${i + 1}`} className="w-full h-full object-cover" />
                           </button>
-                          {item.selected && (
+                          {item.selected ? (
+                            <span className="absolute -top-1.5 -right-1.5 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
+                              <X size={10} strokeWidth={3} />
+                            </span>
+                          ) : (
                             <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
                               <Check size={10} strokeWidth={3} />
                             </span>
@@ -650,9 +654,13 @@ export default function AdminDashboard() {
                       }`}
                     >
                       <img src={f.url} alt={f.name} className="w-full h-full object-cover" />
-                      {seleccionada && (
-                        <span className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
-                          <Check size={10} strokeWidth={3} />
+                      {seleccionada ? (
+                        <span className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
+                          <X size={12} strokeWidth={3} />
+                        </span>
+                      ) : pickerMode === 'extra' && (
+                        <span className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
+                          <Check size={12} strokeWidth={3} />
                         </span>
                       )}
                     </button>

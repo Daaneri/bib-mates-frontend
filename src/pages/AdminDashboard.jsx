@@ -222,6 +222,15 @@ export default function AdminDashboard() {
   const subcategoriasNueva = SUBCATEGORIES[nuevaCategoria] || [];
   const subcategoriasEdit = SUBCATEGORIES[editData.category] || [];
 
+  // URLs que ya están asignadas a algún producto del catálogo (foto principal o adicionales),
+  // sin contar el producto que se está editando ahora mismo.
+  const urlsUsadasEnOtrosProductos = new Set(
+    productos
+      .filter(p => p.id !== editId)
+      .flatMap(p => [p.image_url, ...(Array.isArray(p.image_urls) ? p.image_urls : [])])
+      .filter(Boolean)
+  );
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-bib-black text-bib-white">
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
@@ -560,27 +569,42 @@ export default function AdminDashboard() {
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
                 {storageFiles.map(f => {
-                  const seleccionada = pickerMode === 'main'
+                  const seleccionadaAhora = pickerMode === 'main'
                     ? editData.image_url === f.url
                     : editData.image_urls.includes(f.url);
+                  const usadaEnOtroProducto = urlsUsadasEnOtrosProductos.has(f.url) && !seleccionadaAhora;
+
                   return (
                     <button
                       key={f.name}
                       type="button"
                       onClick={() => elegirImagen(f.url)}
-                      className={`relative aspect-square rounded overflow-hidden border-2 transition ${seleccionada ? 'border-bib-red' : 'border-bib-white/10 hover:border-bib-white/30'}`}
+                      className={`relative aspect-square rounded overflow-hidden border-2 transition ${
+                        seleccionadaAhora
+                          ? 'border-bib-red'
+                          : usadaEnOtroProducto
+                          ? 'border-yellow-600/50'
+                          : 'border-bib-white/10 hover:border-bib-white/30'
+                      }`}
                     >
                       <img
                         src={f.url}
                         alt={f.name}
-                        className={`w-full h-full object-cover transition-opacity ${seleccionada ? 'opacity-40' : 'opacity-100'}`}
+                        className={`w-full h-full object-cover transition-opacity ${
+                          seleccionadaAhora ? 'opacity-40' : usadaEnOtroProducto ? 'opacity-50' : 'opacity-100'
+                        }`}
                       />
-                      {seleccionada && (
+                      {seleccionadaAhora && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="bg-bib-red text-bib-black rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">
                             ✓
                           </div>
                         </div>
+                      )}
+                      {usadaEnOtroProducto && (
+                        <span className="absolute bottom-1 left-1 right-1 bg-yellow-600/90 text-black text-[9px] font-medium uppercase tracking-wide rounded px-1 py-0.5 text-center">
+                          En uso
+                        </span>
                       )}
                     </button>
                   );

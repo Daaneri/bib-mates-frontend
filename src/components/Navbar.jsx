@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, Search, X, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { siteConfig } from '../config/site';
@@ -10,10 +10,30 @@ export default function Navbar() {
   const { cart, openDrawer } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriaAbierta, setCategoriaAbierta] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const navigate = useNavigate();
 
   function cerrarMenu() {
     setMenuOpen(false);
     setCategoriaAbierta(null);
+  }
+
+  function abrirBusqueda() {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  }
+
+  function cerrarBusqueda() {
+    setSearchOpen(false);
+    setSearchValue('');
+  }
+
+  function handleBuscar(e) {
+    e.preventDefault();
+    if (!searchValue.trim()) return;
+    navigate(`/?search=${encodeURIComponent(searchValue.trim())}#seleccion`);
+    cerrarBusqueda();
   }
 
   return (
@@ -29,7 +49,11 @@ export default function Navbar() {
               {menuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </span>
           </button>
-          <button className="hidden sm:block text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110" aria-label="Buscar">
+          <button
+            onClick={abrirBusqueda}
+            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
+            aria-label="Buscar productos"
+          >
             <Search className="w-5 h-5" />
           </button>
         </div>
@@ -55,6 +79,33 @@ export default function Navbar() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Buscador desplegable */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out border-t ${
+          searchOpen ? 'max-h-24 opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
+        }`}
+      >
+        <form onSubmit={handleBuscar} className="p-4 sm:p-6 flex items-center gap-3">
+          <Search size={18} className="text-bib-gray shrink-0" />
+          <input
+            type="text"
+            autoFocus={searchOpen}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Buscar productos..."
+            className="flex-1 min-w-0 bg-transparent text-bib-white placeholder:text-bib-white/40 outline-none text-sm sm:text-base"
+          />
+          <button
+            type="button"
+            onClick={cerrarBusqueda}
+            className="text-bib-gray hover:text-bib-white transition-colors shrink-0"
+            aria-label="Cerrar buscador"
+          >
+            <X size={18} />
+          </button>
+        </form>
       </div>
 
       <div

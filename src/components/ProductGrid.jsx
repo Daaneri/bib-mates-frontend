@@ -80,7 +80,7 @@ export default function ProductGrid() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [sortBy, setSortBy] = useState('default')
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'Todos')
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '')
@@ -97,6 +97,15 @@ export default function ProductGrid() {
     }
     fetchProducts()
   }, [])
+
+  // Si llega un ?search= nuevo desde la lupa del Navbar (aunque ya estemos parados en esta página),
+  // actualizamos el campo de búsqueda para que se sincronice con la URL.
+  useEffect(() => {
+    const paramSearch = searchParams.get('search');
+    if (paramSearch !== null) {
+      setSearchTerm(paramSearch);
+    }
+  }, [searchParams])
 
   function handleCategoryClick(cat) {
     setSelectedCategory(cat);
@@ -188,6 +197,7 @@ export default function ProductGrid() {
             <input
               type="text"
               placeholder="Buscar productos..."
+              value={searchTerm}
               className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-3 pl-10 rounded outline-none focus:border-bib-red transition-colors text-sm sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
             />

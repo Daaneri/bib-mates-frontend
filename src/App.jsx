@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
 import { Toaster } from 'sonner';
@@ -22,9 +23,10 @@ import PagoError from './components/PagoError';
 import PagoPendiente from './components/PagoPendiente';
 import NotFound from './components/NotFound';
 
-// Componentes Administrativos
-import AdminDashboard from './pages/AdminDashboard';
-import Login from './pages/Login';
+// Componentes Administrativos — se cargan solo cuando alguien entra a /admin o /login,
+// así el código pesado (recharts, formularios de admin) no viaja en el bundle público.
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Login = lazy(() => import('./pages/Login'));
 
 function PublicRoutes() {
   const location = useLocation();
@@ -60,6 +62,14 @@ function PublicRoutes() {
   );
 }
 
+function AdminLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-bib-black flex items-center justify-center">
+      <p className="text-bib-gray text-sm uppercase tracking-widest animate-pulse">Cargando...</p>
+    </div>
+  );
+}
+
 function App() {
   return (
     <CartProvider>
@@ -67,10 +77,16 @@ function App() {
         <AnalyticsTracker />
         <Routes>
           {/* RUTAS ADMINISTRATIVAS */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={
+            <Suspense fallback={<AdminLoadingFallback />}>
+              <Login />
+            </Suspense>
+          } />
           <Route path="/admin" element={
             <ProtectedRoute>
-              <AdminDashboard />
+              <Suspense fallback={<AdminLoadingFallback />}>
+                <AdminDashboard />
+              </Suspense>
             </ProtectedRoute>
           } />
 

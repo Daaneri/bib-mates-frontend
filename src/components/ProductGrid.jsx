@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { Search, ImageOff, Heart } from 'lucide-react'
+import { Search, ImageOff, Heart, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { CATEGORIES, SUBCATEGORIES } from '../config/categories'
 import { useWishlist } from '../hooks/useWishlist'
 
@@ -86,6 +86,19 @@ export default function ProductGrid() {
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
+  const [precioAbierto, setPrecioAbierto] = useState(false)
+  const precioRef = useRef(null)
+
+  // Cierra el dropdown de precio si tocás afuera
+  useEffect(() => {
+    function handleClickAfuera(e) {
+      if (precioRef.current && !precioRef.current.contains(e.target)) {
+        setPrecioAbierto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickAfuera)
+    return () => document.removeEventListener('mousedown', handleClickAfuera)
+  }, [])
 
   useEffect(() => {
     async function fetchProducts() {
@@ -212,35 +225,62 @@ export default function ProductGrid() {
             <option value="price-low">Precio: más barato</option>
             <option value="price-high">Precio: más caro</option>
           </select>
-        </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10">
-          <span className="text-xs text-bib-gray uppercase tracking-widest shrink-0">Precio</span>
-          <div className="flex items-center gap-2 flex-1">
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="Desde"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
-            />
-            <span className="text-bib-gray text-xs shrink-0">a</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="Hasta"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
-            />
-            {hayFiltroPrecio && (
-              <button
-                onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                className="text-bib-gray hover:text-bib-red text-xs uppercase tracking-widest shrink-0 px-2"
-              >
-                Limpiar
-              </button>
+          <div className="relative shrink-0" ref={precioRef}>
+            <button
+              type="button"
+              onClick={() => setPrecioAbierto((prev) => !prev)}
+              className={`w-full md:w-auto flex items-center justify-center gap-2 p-3 rounded border text-sm sm:text-base transition-colors ${
+                hayFiltroPrecio
+                  ? 'bg-bib-red/10 border-bib-red text-bib-red'
+                  : 'bg-bib-black border-bib-white/20 text-bib-white hover:border-bib-white/40'
+              }`}
+            >
+              <SlidersHorizontal size={16} />
+              {hayFiltroPrecio
+                ? `$${minPrice || '0'} - $${maxPrice || '∞'}`
+                : 'Precio'}
+              <ChevronDown size={14} className={`transition-transform duration-200 ${precioAbierto ? 'rotate-180' : ''}`} />
+            </button>
+
+            {precioAbierto && (
+              <div className="absolute right-0 md:right-0 top-full mt-2 z-20 w-full md:w-72 bg-bib-dark border border-bib-white/10 rounded shadow-2xl p-4 space-y-3">
+                <p className="text-xs text-bib-gray uppercase tracking-widest">Rango de precio</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="Desde"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
+                  />
+                  <span className="text-bib-gray text-xs shrink-0">a</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="Hasta"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                    disabled={!hayFiltroPrecio}
+                    className="text-bib-gray hover:text-bib-red disabled:opacity-30 disabled:hover:text-bib-gray text-xs uppercase tracking-widest transition-colors"
+                  >
+                    Limpiar
+                  </button>
+                  <button
+                    onClick={() => setPrecioAbierto(false)}
+                    className="bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                  >
+                    Listo
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

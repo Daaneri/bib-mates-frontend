@@ -25,6 +25,10 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-2 items-center md:items-end">
+          <div className="flex gap-4 text-xs text-bib-gray mb-1">
+            <a href="/privacidad" className="hover:text-bib-white transition-colors">Privacidad</a>
+            <a href="/terminos" className="hover:text-bib-white transition-colors">Términos</a>
+          </div>
           <p className="text-xs sm:text-sm text-bib-gray/60">© 2026 {siteConfig.businessName.toLowerCase().replace(/\s+/g, '.')}.</p>
           <p className="text-[10px] sm:text-xs text-bib-gray/40 mt-1">
             Hecho por <a href="https://www.instagram.com/desarrollando.andoo/" target="_blank" rel="noopener noreferrer" className="hover:text-bib-white underline transition-colors duration-300">Desarrollando.andoo</a>

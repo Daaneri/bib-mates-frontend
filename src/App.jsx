@@ -18,13 +18,14 @@ import FloatingCart from './components/FloatingCart';
 import ProtectedRoute from './components/ProtectedRoute';
 import CartDrawer from './components/CartDrawer';
 import AnalyticsTracker from './components/AnalyticsTracker';
+import CookieBanner from './components/CookieBanner';
+import { PrivacyPolicy, TermsOfService } from './pages/LegalPages';
 import PagoExito from './components/PagoExito';
 import PagoError from './components/PagoError';
 import PagoPendiente from './components/PagoPendiente';
 import NotFound from './components/NotFound';
 
-// Componentes Administrativos — se cargan solo cuando alguien entra a /admin o /login,
-// así el código pesado (recharts, formularios de admin) no viaja en el bundle público.
+// Componentes Administrativos
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Login = lazy(() => import('./pages/Login'));
 
@@ -37,6 +38,7 @@ function PublicRoutes() {
       <Navbar />
       <FloatingCart />
       <CartDrawer />
+      <CookieBanner />
 
       <a href={`https://wa.me/${siteConfig.whatsapp}`} target="_blank" rel="noopener noreferrer"
         className="fixed bottom-24 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300">
@@ -54,6 +56,11 @@ function PublicRoutes() {
           <Route path="/checkout/exito" element={<PagoExito />} />
           <Route path="/checkout/error" element={<PagoError />} />
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
+          
+          {/* RUTAS LEGALES */}
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
+          <Route path="/terminos" element={<TermsOfService />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

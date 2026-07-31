@@ -5,8 +5,6 @@ import { useLocation } from 'react-router-dom';
  * Como BIB Mates es una SPA (no hay recarga real de página al navegar),
  * Google Analytics no detecta los cambios de ruta solo. Este componente
  * avisa manualmente cada vez que cambia la URL.
- *
- * Se coloca una sola vez, adentro del <Router>, en App.jsx.
  */
 export default function AnalyticsTracker() {
   const location = useLocation();

@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
+import { toast } from 'sonner';
 import { siteConfig } from '../config/site';
 
 const CartContext = createContext();
@@ -10,7 +11,6 @@ export function CartProvider({ children }) {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // Estado del carrito lateral (drawer): abierto/cerrado
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -29,21 +29,41 @@ export function CartProvider({ children }) {
     });
   };
 
+  const restoreItem = (item) => {
+    setCart((prevCart) => {
+      const yaEsta = prevCart.some((p) => p.id === item.id);
+      if (yaEsta) return prevCart;
+      return [...prevCart, item];
+    });
+  };
+
   const removeFromCart = (productId) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+    setCart((prevCart) => {
+      const eliminado = prevCart.find((item) => item.id === productId);
+      const next = prevCart.filter((item) => item.id !== productId);
+      if (eliminado) {
+        toast(`${eliminado.name} eliminado del carrito`, {
+          action: {
+            label: 'Deshacer',
+            onClick: () => restoreItem(eliminado),
+          },
+        });
+      }
+      return next;
+    });
   };
 
   const clearCart = () => {
     setCart([]);
   };
 
+  // El "-" nunca borra el producto: se frena en cantidad 1.
+  // Para eliminar del todo hay que usar el ícono de basura (que sí ofrece "Deshacer").
   const updateQuantity = (productId, delta) => {
     setCart((prevCart) =>
-      prevCart
-        .map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity + delta } : item
-        )
-        .filter((item) => item.quantity > 0) // <--- ESTO ELIMINA EL PRODUCTO EN 0
+      prevCart.map((item) =>
+        item.id === productId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
+      )
     );
   };
 

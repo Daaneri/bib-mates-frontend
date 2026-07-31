@@ -6,6 +6,7 @@ import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
+import { ChevronRight } from 'lucide-react';
 
 function ProductDetailSkeleton() {
   return (
@@ -131,9 +132,47 @@ export default function ProductDetail() {
         jsonLd={productJsonLd}
       />
 
-      <Link to="/" className="group inline-flex items-center gap-2 text-bib-gray hover:text-bib-white transition-colors mb-6 sm:mb-8 text-xs sm:text-sm uppercase tracking-widest">
-        <ArrowLeft size={16} className="transition-transform duration-300 group-hover:-translate-x-1" /> Volver a la selección
-      </Link>
+      <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">
+  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-bib-gray overflow-x-auto whitespace-nowrap">
+    <Link to="/" className="hover:text-bib-white transition-colors shrink-0">Inicio</Link>
+    <ChevronRight size={12} className="shrink-0" />
+    <Link to={`/?category=${encodeURIComponent(product.category)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
+      {product.category}
+    </Link>
+    {product.subcategory && (
+      <>
+        <ChevronRight size={12} className="shrink-0" />
+        <Link to={`/?category=${encodeURIComponent(product.category)}&subcategory=${encodeURIComponent(product.subcategory)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
+          {product.subcategory}
+        </Link>
+      </>
+    )}
+    <ChevronRight size={12} className="shrink-0" />
+    <span className="text-bib-white truncate max-w-[140px] sm:max-w-none">{product.name}</span>
+  </nav>
+
+  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+    <button
+      onClick={handleCompartir}
+      className="relative text-bib-gray hover:text-bib-white transition-colors p-1.5"
+      aria-label="Compartir producto"
+    >
+      <Share2 size={18} />
+      {copiado && (
+        <span className="absolute -bottom-8 right-0 bg-bib-white text-bib-black text-[10px] px-2 py-1 rounded whitespace-nowrap">
+          ¡Link copiado!
+        </span>
+      )}
+    </button>
+    <button
+      onClick={() => toggleWishlist(product.id)}
+      className="text-bib-gray hover:text-bib-red transition-colors p-1.5"
+      aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+    >
+      <Heart size={18} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
+    </button>
+  </div>
+</div>
 
       <FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">

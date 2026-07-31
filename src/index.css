@@ -96,3 +96,16 @@
     }
   }
 }
+@keyframes loadingBar {
+  0% { width: 0%; opacity: 1; }
+  70% { width: 80%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+.top-loading-bar {
+  animation: loadingBar 0.6s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-loading-bar {
+    display: none;
+  }
+}

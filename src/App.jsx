@@ -41,7 +41,7 @@ function PublicRoutes() {
         <MessageCircle size={24} />
       </a>
 
-      <main key={location.pathname} className="flex-grow animate-fade-in">
+      <main key={location.pathname} className="flex-grow animate-page-fade-in">
         <Routes location={location}>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><CartPage /></div>} />

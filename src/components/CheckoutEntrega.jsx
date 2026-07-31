@@ -8,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const PESO_ESTIMADO_POR_UNIDAD = 0.5;
 const ENVIO_GRATIS_DESDE = 120000;
 const COUPON_STORAGE_KEY = 'bib_coupon_code';
+const DESCUENTO_TRANSFERENCIA = 0.10;
 
 const PROVINCIAS = [
   { code: "BA", name: "Buenos Aires" }, { code: "CT", name: "Catamarca" },
@@ -57,11 +58,13 @@ export default function CheckoutEntrega() {
   const [quoteError, setQuoteError] = useState(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount }
+  const [paymentMethod, setPaymentMethod] = useState("mercadopago"); // "mercadopago" | "transferencia"
 
   const totalProductos = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const envioGratis = totalProductos >= ENVIO_GRATIS_DESDE;
   const costoEnvio = envioGratis ? 0 : (selectedRate?.totalPrice ?? 0);
-  const totalConEnvio = totalProductos - (appliedCoupon?.discount || 0) + costoEnvio;
+  const descuentoTransferencia = paymentMethod === "transferencia" ? Math.round(totalProductos * DESCUENTO_TRANSFERENCIA) : 0;
+  const totalConEnvio = totalProductos - (appliedCoupon?.discount || 0) - descuentoTransferencia + costoEnvio;
 
   // Revalida el cupón que haya quedado guardado del paso anterior (carrito), contra el subtotal real
   useEffect(() => {
@@ -178,7 +181,11 @@ export default function CheckoutEntrega() {
         ? `${shippingData.street}, ${shippingData.floor}`
         : shippingData.street;
 
-      const res = await fetch(`${API_URL}/api/payment/create-preference`, {
+      const endpoint = paymentMethod === "transferencia"
+        ? "/api/payment/create-transfer-order"
+        : "/api/payment/create-preference";
+
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -201,6 +208,23 @@ export default function CheckoutEntrega() {
 
       const data = await res.json();
 
+      if (paymentMethod === "transferencia") {
+        if (!res.ok) {
+          alert("No se pudo registrar el pedido. Probá de nuevo.");
+          setLoadingPayment(false);
+          return;
+        }
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+        navigate("/checkout/transferencia", {
+          state: {
+            orderId: data.orderId,
+            total: data.total,
+            datosTransferencia: data.datosTransferencia,
+          },
+        });
+        return;
+      }
+
       if (!res.ok || !data.init_point) {
         alert("No se pudo iniciar el pago. Probá de nuevo.");
         setLoadingPayment(false);
@@ -211,7 +235,7 @@ export default function CheckoutEntrega() {
       window.location.href = data.init_point;
     } catch (err) {
       console.error("Error iniciando pago:", err);
-      alert("Error al conectar con MercadoPago.");
+      alert("Error al conectar con el servidor.");
       setLoadingPayment(false);
     }
   }
@@ -329,6 +353,12 @@ export default function CheckoutEntrega() {
               <span>-${appliedCoupon.discount.toLocaleString("es-AR")}</span>
             </div>
           )}
+          {descuentoTransferencia > 0 && (
+            <div className="flex justify-between text-xs sm:text-sm text-green-400">
+              <span>Descuento por transferencia</span>
+              <span>-${descuentoTransferencia.toLocaleString("es-AR")}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs sm:text-sm text-bib-gray">
             <span>Envío</span>
             <span>
@@ -339,12 +369,37 @@ export default function CheckoutEntrega() {
                 : "A calcular"}
             </span>
           </div>
+
+          <div className="pt-2">
+            <label className="block text-xs sm:text-sm text-bib-gray mb-2">Método de pago</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("mercadopago")}
+                className={`rounded border px-4 py-3 text-xs sm:text-sm text-left transition-colors ${
+                  paymentMethod === "mercadopago" ? "border-bib-red bg-bib-red/10 text-bib-white" : "border-bib-white/20 text-bib-gray"
+                }`}
+              >
+                Mercado Pago / Tarjeta
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("transferencia")}
+                className={`rounded border px-4 py-3 text-xs sm:text-sm text-left transition-colors ${
+                  paymentMethod === "transferencia" ? "border-bib-red bg-bib-red/10 text-bib-white" : "border-bib-white/20 text-bib-gray"
+                }`}
+              >
+                Transferencia bancaria <span className="text-green-400">(10% off)</span>
+              </button>
+            </div>
+          </div>
+
           <div className="flex justify-between items-center text-lg sm:text-2xl font-medium text-bib-white border-t border-bib-white/10 pt-4 sm:pt-6">
             <span>Total</span>
             <span className="text-2xl sm:text-4xl text-bib-red tracking-tight">${totalConEnvio.toLocaleString("es-AR")}</span>
           </div>
           <button onClick={irAPagar} disabled={!selectedRate || loadingPayment} className="w-full bg-bib-red hover:bg-bib-white disabled:opacity-40 text-bib-white hover:text-bib-black font-medium rounded px-6 py-3.5 sm:py-4 transition-colors text-sm sm:text-base uppercase tracking-widest mt-2">
-            {loadingPayment ? "Redirigiendo..." : "Continuar para el pago"}
+            {loadingPayment ? "Redirigiendo..." : paymentMethod === "transferencia" ? "Confirmar pedido" : "Continuar para el pago"}
           </button>
         </div>
       </div>

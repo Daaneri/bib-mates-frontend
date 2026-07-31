@@ -23,6 +23,7 @@ import { PrivacyPolicy, TermsOfService } from './pages/LegalPages';
 import PagoExito from './components/PagoExito';
 import PagoError from './components/PagoError';
 import PagoPendiente from './components/PagoPendiente';
+import PagoTransferencia from './components/PagoTransferencia';
 import NotFound from './components/NotFound';
 
 // Componentes Administrativos
@@ -56,6 +57,7 @@ function PublicRoutes() {
           <Route path="/checkout/exito" element={<PagoExito />} />
           <Route path="/checkout/error" element={<PagoError />} />
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
+          <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
           
           {/* RUTAS LEGALES */}
           <Route path="/privacidad" element={<PrivacyPolicy />} />

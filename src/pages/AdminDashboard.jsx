@@ -478,64 +478,84 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {pedidos.map(o => (
-              <div key={o.identificador} className="bg-bib-dark p-5 md:p-6 rounded border border-bib-white/10 space-y-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-base md:text-lg text-bib-white">{o.nombre_del_cliente}</p>
-                    <p className="text-xs md:text-sm text-bib-gray">{o.telefono}</p>
+            {pedidos.map(o => {
+              const esTransferenciaPendiente = o.metodo_pago === 'transferencia' && o.estado === 'pendiente';
+              return (
+                <div key={o.identificador} className={`bg-bib-dark p-5 md:p-6 rounded border space-y-3 ${esTransferenciaPendiente ? 'border-yellow-700/40' : 'border-bib-white/10'}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-base md:text-lg text-bib-white">{o.nombre_del_cliente}</p>
+                      <p className="text-xs md:text-sm text-bib-gray">{o.telefono}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={`px-3 py-1 rounded text-xs border ${estadoColor(o.estado)}`}>
+                        {o.estado}
+                      </span>
+                      {o.metodo_pago === 'transferencia' && (
+                        <span className="px-3 py-1 rounded text-xs border border-bib-white/20 text-bib-gray uppercase tracking-wide">
+                          Transferencia
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded text-xs border shrink-0 ${estadoColor(o.estado)}`}>
-                    {o.estado}
-                  </span>
-                </div>
 
-                <div className="text-xs md:text-sm text-bib-gray space-y-0.5">
-                  <p>{o.direccion}, {o.ciudad} {o.provincia && `(${o.provincia})`} {o.codigo_postal && `- CP ${o.codigo_postal}`}</p>
-                  {o.creado_en && (
-                    <p className="text-bib-gray/60">
-                      {new Date(o.creado_en).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  <div className="text-xs md:text-sm text-bib-gray space-y-0.5">
+                    <p>{o.direccion}, {o.ciudad} {o.provincia && `(${o.provincia})`} {o.codigo_postal && `- CP ${o.codigo_postal}`}</p>
+                    {o.creado_en && (
+                      <p className="text-bib-gray/60">
+                        {new Date(o.creado_en).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
+
+                  {Array.isArray(o.productos) && o.productos.length > 0 && (
+                    <div className="bg-bib-black rounded p-3 space-y-1">
+                      {o.productos.map((item, i) => (
+                        <div key={i} className="flex justify-between text-xs md:text-sm text-bib-white">
+                          <span>{item.quantity}x {item.name}</span>
+                          <span>${(item.price * item.quantity).toLocaleString('es-AR')}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </div>
 
-                {Array.isArray(o.productos) && o.productos.length > 0 && (
-                  <div className="bg-bib-black rounded p-3 space-y-1">
-                    {o.productos.map((item, i) => (
-                      <div key={i} className="flex justify-between text-xs md:text-sm text-bib-white">
-                        <span>{item.quantity}x {item.name}</span>
-                        <span>${(item.price * item.quantity).toLocaleString('es-AR')}</span>
-                      </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-bib-white/10">
+                    <div className="text-xs md:text-sm text-bib-gray">
+                      Envío: {o.costo_de_envio > 0 ? `$${Number(o.costo_de_envio).toLocaleString('es-AR')}` : 'Sin costo'}
+                      {o.descuento > 0 && ` · Descuento: -$${Number(o.descuento).toLocaleString('es-AR')}`}
+                    </div>
+                    <div className="font-medium text-lg md:text-xl text-bib-red">
+                      ${Number(o.total).toLocaleString('es-AR')}
+                    </div>
+                  </div>
+
+                  {esTransferenciaPendiente && (
+                    <button
+                      onClick={() => handleUpdateOrderStatus(o.identificador, 'pagado')}
+                      className="w-full bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide transition-colors"
+                    >
+                      Confirmar transferencia recibida
+                    </button>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {['pendiente', 'pagado', 'enviado', 'fallido'].map((estado) => (
+                      <button
+                        key={estado}
+                        onClick={() => handleUpdateOrderStatus(o.identificador, estado)}
+                        className={`px-3 py-1 rounded text-xs border transition uppercase tracking-wide ${
+                          o.estado === estado
+                            ? 'bg-bib-red text-bib-white border-bib-red'
+                            : 'border-bib-white/10 text-bib-gray hover:text-bib-white hover:border-bib-white/30'
+                        }`}
+                      >
+                        {estado}
+                      </button>
                     ))}
                   </div>
-                )}
-
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-bib-white/10">
-                  <div className="text-xs md:text-sm text-bib-gray">
-                    Envío: {o.costo_de_envio > 0 ? `$${Number(o.costo_de_envio).toLocaleString('es-AR')}` : 'Sin costo'}
-                  </div>
-                  <div className="font-medium text-lg md:text-xl text-bib-red">
-                    ${Number(o.total).toLocaleString('es-AR')}
-                  </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {['pendiente', 'pagado', 'enviado', 'fallido'].map((estado) => (
-                    <button
-                      key={estado}
-                      onClick={() => handleUpdateOrderStatus(o.identificador, estado)}
-                      className={`px-3 py-1 rounded text-xs border transition uppercase tracking-wide ${
-                        o.estado === estado
-                          ? 'bg-bib-red text-bib-white border-bib-red'
-                          : 'border-bib-white/10 text-bib-gray hover:text-bib-white hover:border-bib-white/30'
-                      }`}
-                    >
-                      {estado}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

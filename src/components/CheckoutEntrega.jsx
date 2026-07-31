@@ -294,8 +294,8 @@ export default function CheckoutEntrega() {
               <input className={inputClass} placeholder="Código Postal" value={shippingData.postalCode} onChange={(e) => { const cp = e.target.value; setShippingData({ ...shippingData, postalCode: cp }); buscarPorCP(cp); }} />
               <input className={inputClass} placeholder="Localidad" value={shippingData.city} onChange={(e) => setShippingData({ ...shippingData, city: e.target.value })} />
               <select className={inputClass} value={shippingData.state} onChange={(e) => setShippingData({ ...shippingData, state: e.target.value })}>
-                <option value="" className="text-black">Provincia</option>
-                {PROVINCIAS.map((p) => (<option key={p.code} value={p.code} className="text-black">{p.name}</option>))}
+                <option value="" className="bg-bib-black text-bib-red">Provincia</option>
+                {PROVINCIAS.map((p) => (<option key={p.code} value={p.code} className="bg-bib-black text-bib-red">{p.name}</option>))}
               </select>
             </div>
             <input className={inputClass} placeholder="Calle y número" value={shippingData.street} onChange={(e) => setShippingData({ ...shippingData, street: e.target.value })} />
@@ -309,14 +309,14 @@ export default function CheckoutEntrega() {
               <div className="pt-2">
                 <label className="block text-xs sm:text-sm text-bib-gray mb-2">Elegí una opción de envío</label>
                 <select className={inputClass} value={selectValue} onChange={(e) => handleRateChange(e.target.value)}>
-                  <option value="" className="text-black">Seleccioná una opción</option>
+                  <option value="" className="bg-bib-black text-bib-red">Seleccioná una opción</option>
                   {PICKUP_OPTIONS.map((p) => (
-                    <option key={p.id} value={p.id} className="text-black">
+                    <option key={p.id} value={p.id} className="bg-bib-black text-bib-red">
                       {p.carrierDescription} — {p.serviceDescription} (sin costo)
                     </option>
                   ))}
                   {rates.map((rate, i) => (
-                    <option key={i} value={i} className="text-black">
+                    <option key={i} value={i} className="bg-bib-black text-bib-red">
                       {rate.carrierDescription} - {rate.serviceDescription} - {rate.customLabel ? rate.customLabel : `$${rate.totalPrice.toLocaleString("es-AR")}`}
                     </option>
                   ))}

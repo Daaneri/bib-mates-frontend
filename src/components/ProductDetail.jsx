@@ -2,11 +2,11 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles } from 'lucide-react';
+import { useWishlist } from '../hooks/useWishlist';
+import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Heart, Share2, ChevronRight } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
-import { ChevronRight } from 'lucide-react';
 
 function ProductDetailSkeleton() {
   return (
@@ -49,7 +49,9 @@ export default function ProductDetail() {
   const [cajaPresentacion, setCajaPresentacion] = useState(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
+  const [copiado, setCopiado] = useState(false);
   const { addToCart, openDrawer } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -104,6 +106,27 @@ export default function ProductDetail() {
     openDrawer();
   }
 
+  async function handleCompartir() {
+    const shareUrl = window.location.href;
+    // En celular, si el navegador soporta el share nativo, usamos ese (abre el menú de compartir del sistema)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, url: shareUrl });
+      } catch (err) {
+        // El usuario canceló el share nativo — no hacemos nada
+      }
+      return;
+    }
+    // En desktop (sin share nativo), copiamos el link al portapapeles
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch (err) {
+      console.error('No se pudo copiar el link:', err);
+    }
+  }
+
   const extraImages = Array.isArray(product.image_urls) ? product.image_urls : [];
   const gallery = [product.image_url, ...extraImages].filter((url, i, arr) => url && arr.indexOf(url) === i);
 
@@ -133,46 +156,46 @@ export default function ProductDetail() {
       />
 
       <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">
-  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-bib-gray overflow-x-auto whitespace-nowrap">
-    <Link to="/" className="hover:text-bib-white transition-colors shrink-0">Inicio</Link>
-    <ChevronRight size={12} className="shrink-0" />
-    <Link to={`/?category=${encodeURIComponent(product.category)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
-      {product.category}
-    </Link>
-    {product.subcategory && (
-      <>
-        <ChevronRight size={12} className="shrink-0" />
-        <Link to={`/?category=${encodeURIComponent(product.category)}&subcategory=${encodeURIComponent(product.subcategory)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
-          {product.subcategory}
-        </Link>
-      </>
-    )}
-    <ChevronRight size={12} className="shrink-0" />
-    <span className="text-bib-white truncate max-w-[140px] sm:max-w-none">{product.name}</span>
-  </nav>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-bib-gray overflow-x-auto whitespace-nowrap">
+          <Link to="/" className="hover:text-bib-white transition-colors shrink-0">Inicio</Link>
+          <ChevronRight size={12} className="shrink-0" />
+          <Link to={`/?category=${encodeURIComponent(product.category)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
+            {product.category}
+          </Link>
+          {product.subcategory && (
+            <>
+              <ChevronRight size={12} className="shrink-0" />
+              <Link to={`/?category=${encodeURIComponent(product.category)}&subcategory=${encodeURIComponent(product.subcategory)}#seleccion`} className="hover:text-bib-white transition-colors shrink-0">
+                {product.subcategory}
+              </Link>
+            </>
+          )}
+          <ChevronRight size={12} className="shrink-0" />
+          <span className="text-bib-white truncate max-w-[140px] sm:max-w-none">{product.name}</span>
+        </nav>
 
-  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-    <button
-      onClick={handleCompartir}
-      className="relative text-bib-gray hover:text-bib-white transition-colors p-1.5"
-      aria-label="Compartir producto"
-    >
-      <Share2 size={18} />
-      {copiado && (
-        <span className="absolute -bottom-8 right-0 bg-bib-white text-bib-black text-[10px] px-2 py-1 rounded whitespace-nowrap">
-          ¡Link copiado!
-        </span>
-      )}
-    </button>
-    <button
-      onClick={() => toggleWishlist(product.id)}
-      className="text-bib-gray hover:text-bib-red transition-colors p-1.5"
-      aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-    >
-      <Heart size={18} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
-    </button>
-  </div>
-</div>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <button
+            onClick={handleCompartir}
+            className="relative text-bib-gray hover:text-bib-white transition-colors p-1.5"
+            aria-label="Compartir producto"
+          >
+            <Share2 size={18} />
+            {copiado && (
+              <span className="absolute -bottom-8 right-0 bg-bib-white text-bib-black text-[10px] px-2 py-1 rounded whitespace-nowrap">
+                ¡Link copiado!
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => toggleWishlist(product.id)}
+            className="text-bib-gray hover:text-bib-red transition-colors p-1.5"
+            aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart size={18} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
+          </button>
+        </div>
+      </div>
 
       <FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-start bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">

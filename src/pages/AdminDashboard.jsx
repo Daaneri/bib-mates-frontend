@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check, X } from 'lucide-react';
+import { Star, Check, X, Download } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS, SUBCATEGORIES } from '../config/categories';
 
@@ -195,6 +195,75 @@ export default function AdminDashboard() {
       mostrarMensaje("Pedido actualizado");
       fetchData();
     }
+  }
+
+  function handleExportarPedidos() {
+    if (pedidos.length === 0) {
+      mostrarMensaje("No hay pedidos para exportar");
+      return;
+    }
+
+    const encabezados = [
+      'Numero de pedido', 'Fecha', 'Cliente', 'DNI', 'Telefono', 'Email',
+      'Direccion', 'Ciudad', 'Provincia', 'Codigo Postal',
+      'Productos', 'Metodo de pago', 'Estado', 'Costo de envio', 'Descuento', 'Total',
+    ];
+
+    // Excel (config regional AR) usa ";" como separador de columnas porque la "," la usa para decimales
+    const SEPARADOR = ';';
+
+    // Escapa comillas y envuelve en comillas los campos que tengan el separador, comillas o saltos de línea
+    function escaparCampo(valor) {
+      const texto = valor === null || valor === undefined ? '' : String(valor);
+      if (texto.includes(SEPARADOR) || texto.includes('"') || texto.includes('\n')) {
+        return `"${texto.replace(/"/g, '""')}"`;
+      }
+      return texto;
+    }
+
+    const filas = pedidos.map((o) => {
+      const productosTexto = Array.isArray(o.productos)
+        ? o.productos.map((p) => `${p.quantity}x ${p.name}`).join(' | ')
+        : '';
+      const fecha = o.creado_en
+        ? new Date(o.creado_en).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+
+      return [
+        o.identificador,
+        fecha,
+        o.nombre_del_cliente,
+        o.dni,
+        o.telefono,
+        o.email,
+        o.direccion,
+        o.ciudad,
+        o.provincia,
+        o.codigo_postal,
+        productosTexto,
+        o.metodo_pago === 'transferencia' ? 'Transferencia' : 'Mercado Pago',
+        o.estado,
+        o.costo_de_envio,
+        o.descuento || 0,
+        o.total,
+      ].map(escaparCampo).join(SEPARADOR);
+    });
+
+    const csv = [encabezados.join(SEPARADOR), ...filas].join('\n');
+
+    // El BOM (\uFEFF) es necesario para que Excel muestre bien las tildes y la "ñ"
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const hoy = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `pedidos_${siteConfig.businessName.toLowerCase().replace(/\s+/g, '_')}_${hoy}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    mostrarMensaje(`Exportados ${pedidos.length} pedidos`);
   }
 
   async function handleAprobarResena(id) {
@@ -472,6 +541,16 @@ export default function AdminDashboard() {
 
         {view === 'Pedidos' && (
           <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex justify-end">
+              <button
+                onClick={handleExportarPedidos}
+                className="flex items-center gap-2 bg-bib-dark border border-bib-white/20 hover:border-bib-red text-bib-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide transition-colors"
+              >
+                <Download size={14} />
+                Exportar a Excel
+              </button>
+            </div>
+
             {pedidos.length === 0 && (
               <div className="bg-bib-dark p-8 rounded border border-bib-white/10 text-center text-bib-gray">
                 Todavía no hay pedidos.

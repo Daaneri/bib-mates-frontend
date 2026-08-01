@@ -24,6 +24,7 @@ import PagoExito from './components/PagoExito';
 import PagoError from './components/PagoError';
 import PagoPendiente from './components/PagoPendiente';
 import PagoTransferencia from './components/PagoTransferencia';
+import Favoritos from './components/Favoritos';
 import NotFound from './components/NotFound';
 
 // Componentes Administrativos
@@ -58,6 +59,7 @@ function PublicRoutes() {
           <Route path="/checkout/error" element={<PagoError />} />
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
           <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
+          <Route path="/favoritos" element={<Favoritos />} />
           
           {/* RUTAS LEGALES */}
           <Route path="/privacidad" element={<PrivacyPolicy />} />

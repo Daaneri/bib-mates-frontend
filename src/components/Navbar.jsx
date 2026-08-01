@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, Search, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, Search, X, ChevronDown, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../hooks/useWishlist';
 import { siteConfig } from '../config/site';
 import { CATEGORIES, SUBCATEGORIES } from '../config/categories';
 import logo from '../assets/bib-mates-logo.png';
 
 export default function Navbar() {
   const { cart, openDrawer } = useCart();
+  const { wishlist } = useWishlist();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriaAbierta, setCategoriaAbierta] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -70,6 +72,14 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 sm:gap-5 flex-1 justify-end">
+          <Link to="/favoritos" className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Ver favoritos">
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-red text-bib-black text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
           <button onClick={openDrawer} className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Abrir carrito">
             <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
             {cart.length > 0 && (
@@ -118,6 +128,7 @@ export default function Navbar() {
             <Link to="/" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Inicio</Link>
             <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
             <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
+            <Link to="/favoritos" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Favoritos</Link>
           </div>
 
           <div className="border-t border-bib-white/10 px-6 py-4">

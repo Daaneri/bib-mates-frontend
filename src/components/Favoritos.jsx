@@ -4,6 +4,7 @@ import { Heart, ImageOff } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useWishlist } from '../hooks/useWishlist';
 import FadeIn from './FadeIn';
+import SeoHead from './SeoHead';
 
 export default function Favoritos() {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -31,6 +32,7 @@ export default function Favoritos() {
   if (productos.length === 0) {
     return (
       <FadeIn>
+        <SeoHead title="Favoritos" path="/favoritos" noindex />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6 gap-4">
           <div className="w-16 h-16 rounded-full border border-dashed border-bib-white/15 flex items-center justify-center">
             <Heart size={26} className="text-bib-white/25" strokeWidth={1.25} />
@@ -45,6 +47,7 @@ export default function Favoritos() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 sm:py-16 px-4 sm:px-6">
+      <SeoHead title="Favoritos" path="/favoritos" noindex />
       <h1 className="text-3xl sm:text-4xl font-heading font-bold text-bib-white mb-10 text-center lowercase">tus favoritos</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
         {productos.map((p) => (
@@ -58,7 +61,7 @@ export default function Favoritos() {
             </button>
             <div className="aspect-[4/5] bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 md:mb-6 relative">
               {p.image_url ? (
-                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={p.image_url} alt={p.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
                   <ImageOff size={28} strokeWidth={1.25} />

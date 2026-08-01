@@ -19,6 +19,8 @@ async function generar() {
     process.exit(1);
   }
 
+  const hoy = new Date().toISOString().split('T')[0];
+
   const paginasEstaticas = [
     { path: '', priority: '1.0' },
     { path: 'about', priority: '0.6' },
@@ -28,6 +30,7 @@ async function generar() {
   const urlsEstaticas = paginasEstaticas.map(({ path, priority }) => `
   <url>
     <loc>${SITE_URL}/${path}</loc>
+    <lastmod>${hoy}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
   </url>`).join('');
@@ -37,6 +40,7 @@ async function generar() {
   const urlsProductos = productosActivos.map(p => `
   <url>
     <loc>${SITE_URL}/producto/${p.id}</loc>
+    <lastmod>${hoy}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`).join('');

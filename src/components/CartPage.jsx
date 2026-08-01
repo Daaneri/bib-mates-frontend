@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Minus, Plus, Tag, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import FadeIn from './FadeIn';
+import SeoHead from './SeoHead';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const COUPON_STORAGE_KEY = 'bib_coupon_code';
@@ -80,6 +81,7 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <FadeIn>
+        <SeoHead title="Carrito" path="/cart" noindex />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-bib-white px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-4 lowercase">Tu carrito está vacío</h2>
           <Link to="/" className="text-bib-gray hover:text-bib-red underline uppercase text-sm tracking-widest transition-colors">Volver a la tienda</Link>
@@ -90,6 +92,7 @@ export default function CartPage() {
 
   return (
     <div className="w-full max-w-6xl mx-auto py-10 sm:py-16 px-4 sm:px-6">
+      <SeoHead title="Carrito" path="/cart" noindex />
       <FadeIn>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-10 sm:mb-16 text-center tracking-tight lowercase">tu pedido</h1>
       </FadeIn>

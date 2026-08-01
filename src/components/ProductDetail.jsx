@@ -136,6 +136,10 @@ export default function ProductDetail() {
     name: product.name,
     description: product.description || `${product.name} - ${siteConfig.businessName}`,
     image: gallery,
+    brand: {
+      "@type": "Brand",
+      name: siteConfig.businessName,
+    },
     offers: {
       "@type": "Offer",
       priceCurrency: "ARS",
@@ -145,6 +149,16 @@ export default function ProductDetail() {
     },
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: "https://bib-mates-frontend.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: product.category, item: `https://bib-mates-frontend.vercel.app/?category=${encodeURIComponent(product.category)}#seleccion` },
+      { "@type": "ListItem", position: 3, name: product.name, item: `https://bib-mates-frontend.vercel.app/producto/${product.id}` },
+    ],
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12 relative">
       <SeoHead
@@ -152,7 +166,7 @@ export default function ProductDetail() {
         description={product.description || `${product.name} en ${siteConfig.businessName}. Envíos a todo el país.`}
         image={product.image_url}
         path={`/producto/${product.id}`}
-        jsonLd={productJsonLd}
+        jsonLd={[productJsonLd, breadcrumbJsonLd]}
       />
 
       <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">

@@ -3,7 +3,7 @@ export const siteConfig = {
   tagline: "Tomar mate, siempre es una buena idea",
   whatsapp: "5491132585236",
   whatsappDisplay: "11 3258 5236",
-  email: "", // pendiente, se lo pedís mañana
+  email: "ivanezequieljure1997@hotmail.com", 
    colors: {
   primary: "#000000",
   secondary: "#000000",

@@ -5,8 +5,6 @@ import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 
 export default function PagoError() {
-  // Ojo: acá NO se vacía el carrito — el pago falló, así que el cliente
-  // tiene que poder volver a intentar sin perder lo que tenía elegido.
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-16">
       <Helmet>
@@ -25,7 +23,7 @@ export default function PagoError() {
           <div className="flex flex-col gap-3">
             <Link
               to="/checkout/entrega"
-              className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
+              className="bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
             >
               Volver a intentar
             </Link>

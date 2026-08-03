@@ -11,7 +11,6 @@ export default function PagoExito() {
   const [searchParams] = useSearchParams();
   const externalReference = searchParams.get('external_reference');
 
-  // El pago se aprobó: vaciamos el carrito para que no queden productos viejos dando vueltas
   useEffect(() => {
     clearCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,7 +37,7 @@ export default function PagoExito() {
           <div className="flex flex-col gap-3 mt-6">
             <Link
               to="/"
-              className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
+              className="bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
             >
               Volver al inicio
             </Link>

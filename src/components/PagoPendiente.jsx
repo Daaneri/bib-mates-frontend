@@ -11,8 +11,6 @@ export default function PagoPendiente() {
   const [searchParams] = useSearchParams();
   const externalReference = searchParams.get('external_reference');
 
-  // El pedido ya quedó registrado (suele pasar con Rapipago/Pago Fácil,
-  // que tardan en acreditarse); vaciamos el carrito igual que en un pago aprobado.
   useEffect(() => {
     clearCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,7 +37,7 @@ export default function PagoPendiente() {
           <div className="flex flex-col gap-3 mt-6">
             <Link
               to="/"
-              className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
+              className="bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-6 py-3 uppercase tracking-widest text-xs transition-all duration-300"
             >
               Volver al inicio
             </Link>

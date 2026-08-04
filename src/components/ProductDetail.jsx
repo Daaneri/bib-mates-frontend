@@ -2,11 +2,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../hooks/useWishlist';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Heart, Share2, ChevronRight } from 'lucide-react';
+import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Check, Heart, Share2, ChevronRight, Package } from 'lucide-react';
 import { siteConfig } from '../config/site';
+import { useWishlist } from '../hooks/useWishlist';
 import FadeIn from './FadeIn';
-import SeoHead from './SeoHead';
+
+const STOCK_BAJO_UMBRAL = 5;
+const PRECIO_CAJA_PRESENTACION = 5000;
 
 function ProductDetailSkeleton() {
   return (
@@ -45,12 +47,13 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [agregarCaja, setAgregarCaja] = useState(false);
-  const [cajaPresentacion, setCajaPresentacion] = useState(null);
+  const [quiereGrabado, setQuiereGrabado] = useState(false);
+  const [quiereCaja, setQuiereCaja] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
   const [copiado, setCopiado] = useState(false);
-  const { addToCart, openDrawer } = useCart();
+  const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
@@ -61,15 +64,6 @@ export default function ProductDetail() {
         setSelectedImage(data.image_url);
         fetchRelacionados(data);
       }
-    }
-    async function fetchCaja() {
-      const { data } = await supabase
-        .from('productos')
-        .select('*')
-        .ilike('name', '%Caja de Presentación%')
-        .limit(1)
-        .maybeSingle();
-      if (data) setCajaPresentacion(data);
     }
     async function fetchRelacionados(currentProduct) {
       const { data, error } = await supabase
@@ -82,7 +76,6 @@ export default function ProductDetail() {
       if (!error) setRelacionados(data || []);
     }
     fetchProduct();
-    fetchCaja();
   }, [id]);
 
   useEffect(() => {
@@ -99,76 +92,59 @@ export default function ProductDetail() {
   const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
 
   const esPersonalizable = product.personalizable === true;
+  const sinStock = (product.stock ?? 0) === 0;
+  const stockBajo = !sinStock && (product.stock ?? 0) < STOCK_BAJO_UMBRAL;
 
   function handleAgregarCarrito() {
-    addToCart(product);
-    if (agregarCaja && cajaPresentacion) addToCart(cajaPresentacion);
-    openDrawer();
+    const itemParaCarrito = quiereGrabado
+      ? { ...product, personalizadoSolicitado: true }
+      : product;
+
+    addToCart(itemParaCarrito);
+
+    if (quiereCaja) {
+      addToCart({
+        id: 'caja-presentacion',
+        name: 'Caja de presentación',
+        price: PRECIO_CAJA_PRESENTACION,
+        image_url: product.image_url,
+      });
+    }
+
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
   }
 
   async function handleCompartir() {
     const shareUrl = window.location.href;
-    // En celular, si el navegador soporta el share nativo, usamos ese (abre el menú de compartir del sistema)
+    const shareData = {
+      title: product.name,
+      text: `Mirá ${product.name} en ${siteConfig.businessName}`,
+      url: shareUrl,
+    };
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: product.name, url: shareUrl });
+        await navigator.share(shareData);
       } catch (err) {
-        // El usuario canceló el share nativo — no hacemos nada
+        // el usuario canceló el share, no hacemos nada
       }
-      return;
-    }
-    // En desktop (sin share nativo), copiamos el link al portapapeles
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch (err) {
-      console.error('No se pudo copiar el link:', err);
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      } catch (err) {
+        console.error('No se pudo copiar el link', err);
+      }
     }
   }
 
   const extraImages = Array.isArray(product.image_urls) ? product.image_urls : [];
   const gallery = [product.image_url, ...extraImages].filter((url, i, arr) => url && arr.indexOf(url) === i);
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description || `${product.name} - ${siteConfig.businessName}`,
-    image: gallery,
-    brand: {
-      "@type": "Brand",
-      name: siteConfig.businessName,
-    },
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "ARS",
-      price: product.price,
-      availability: (product.stock ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      url: `https://bib-mates-frontend.vercel.app/producto/${product.id}`,
-    },
-  };
-
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: "https://bib-mates-frontend.vercel.app/" },
-      { "@type": "ListItem", position: 2, name: product.category, item: `https://bib-mates-frontend.vercel.app/?category=${encodeURIComponent(product.category)}#seleccion` },
-      { "@type": "ListItem", position: 3, name: product.name, item: `https://bib-mates-frontend.vercel.app/producto/${product.id}` },
-    ],
-  };
-
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12 relative">
-      <SeoHead
-        title={product.name}
-        description={product.description || `${product.name} en ${siteConfig.businessName}. Envíos a todo el país.`}
-        image={product.image_url}
-        path={`/producto/${product.id}`}
-        jsonLd={[productJsonLd, breadcrumbJsonLd]}
-      />
-
       <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-bib-gray overflow-x-auto whitespace-nowrap">
           <Link to="/" className="hover:text-bib-white transition-colors shrink-0">Inicio</Link>
@@ -220,8 +196,6 @@ export default function ProductDetail() {
                 key={selectedImage}
                 src={selectedImage || product.image_url}
                 alt={product.name}
-                fetchpriority="high"
-                decoding="async"
                 className="w-full rounded aspect-square object-cover transition-transform duration-700 hover:scale-[1.03]"
               />
             </div>
@@ -238,7 +212,7 @@ export default function ProductDetail() {
                         : 'border-bib-white/15 opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={url} alt={`${product.name} ${i + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -250,43 +224,76 @@ export default function ProductDetail() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
               <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
 
-              {cajaPresentacion && (
-                <label className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-gray cursor-pointer w-fit">
-                  <input
-                    type="checkbox"
-                    checked={agregarCaja}
-                    onChange={(e) => setAgregarCaja(e.target.checked)}
-                    className="w-4 h-4 accent-bib-red cursor-pointer"
-                  />
-                  Agregar {cajaPresentacion.name} + ${Number(cajaPresentacion.price).toLocaleString('es-AR')}
-                </label>
+              {stockBajo && (
+                <p className="text-yellow-400 text-xs sm:text-sm font-medium uppercase tracking-wide">
+                  ¡Últimas {product.stock} unidades!
+                </p>
               )}
             </div>
 
-            <div className="border-y border-bib-white/10 py-6 sm:py-8">
-              <h4 className="text-[10px] uppercase tracking-[0.2em] text-bib-gray mb-3 sm:mb-4 font-medium">Sobre este producto</h4>
-              <p className="text-sm sm:text-base md:text-lg leading-relaxed text-bib-white/80">
-                {product.description || `Cada producto de ${siteConfig.businessName} está pensado para que se note tu onda a la hora de cebar. Si tenés dudas sobre materiales o stock, escribinos.`}
-              </p>
-            </div>
-
-            {esPersonalizable && (
-              <div className="flex gap-3 bg-bib-red/10 border border-bib-red/30 rounded p-4 sm:p-5">
-                <Sparkles size={20} className="text-bib-red shrink-0 mt-0.5" />
-                <p className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
-                  <span className="text-bib-red font-medium uppercase tracking-wide">¿Lo querés personalizado o grabado?</span><br />
-                  Una vez realizada la compra te contactamos por WhatsApp para definir el diseño. Demora de 2 a 5 días hábiles.
+            <div className="border-y border-bib-white/10 py-6 sm:py-8 space-y-6">
+              <div>
+                <h4 className="text-[10px] uppercase tracking-[0.2em] text-bib-gray mb-3 sm:mb-4 font-medium">Sobre este producto</h4>
+                <p className="text-sm sm:text-base md:text-lg leading-relaxed text-bib-white/80">
+                  {product.description || `Cada producto de ${siteConfig.businessName} está pensado para que se note tu onda a la hora de cebar. Si tenés dudas sobre materiales o stock, escribinos.`}
                 </p>
               </div>
-            )}
+
+              <div className="space-y-3">
+                {esPersonalizable && (
+                  <label className={`flex items-start gap-3 rounded p-4 border cursor-pointer transition-colors ${
+                    quiereGrabado ? 'bg-bib-red/10 border-bib-red/40' : 'bg-bib-black border-bib-white/10 hover:border-bib-white/20'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={quiereGrabado}
+                      onChange={(e) => setQuiereGrabado(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-bib-red cursor-pointer shrink-0"
+                    />
+                    <span className="flex items-start gap-2">
+                      <Sparkles size={16} className="text-bib-red shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
+                        <span className="text-bib-white font-medium block mb-0.5">¿Deseás grabar tu mate?</span>
+                        Te contactamos por WhatsApp después de la compra para definir el diseño. Demora de 2 a 5 días hábiles.
+                      </span>
+                    </span>
+                  </label>
+                )}
+
+                <label className={`flex items-start gap-3 rounded p-4 border cursor-pointer transition-colors ${
+                  quiereCaja ? 'bg-bib-red/10 border-bib-red/40' : 'bg-bib-black border-bib-white/10 hover:border-bib-white/20'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={quiereCaja}
+                    onChange={(e) => setQuiereCaja(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 accent-bib-red cursor-pointer shrink-0"
+                  />
+                  <span className="flex items-start gap-2">
+                    <Package size={16} className="text-bib-red shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
+                      <span className="text-bib-white font-medium block mb-0.5">
+                        ¿Querés caja de presentación? + ${PRECIO_CAJA_PRESENTACION.toLocaleString('es-AR')}
+                      </span>
+                      Ideal para regalo, viene con el logo de {siteConfig.businessName}.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-3 sm:gap-4">
               <button
                 onClick={handleAgregarCarrito}
-                className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]"
+                disabled={sinStock}
+                className={`group flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold transition-all active:scale-[0.98] uppercase tracking-widest ${
+                  sinStock
+                    ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed'
+                    : 'bg-bib-red text-bib-black hover:bg-bib-white hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]'
+                }`}
               >
                 <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
-                Agregar al carrito
+                {sinStock ? 'Sin stock' : 'Agregar al carrito'}
               </button>
                <a
                 href={whatsappUrl}
@@ -317,8 +324,6 @@ export default function ProductDetail() {
                     <img
                       src={p.image_url}
                       alt={p.name}
-                      loading="lazy"
-                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -334,6 +339,15 @@ export default function ProductDetail() {
       )}
 
       <div
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded-full font-bold text-sm shadow-lg transition-all duration-300 ${
+          showToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
+        <Check size={16} strokeWidth={3} />
+        Agregado al carrito
+      </div>
+
+      <div
         className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-bib-black/95 backdrop-blur-md border-t border-bib-white/10 p-3 flex items-center gap-3 transition-transform duration-300 ${
           showStickyBar ? 'translate-y-0' : 'translate-y-full'
         }`}
@@ -344,10 +358,13 @@ export default function ProductDetail() {
         </div>
         <button
           onClick={handleAgregarCarrito}
-          className="flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0"
+          disabled={sinStock}
+          className={`flex items-center gap-2 px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0 ${
+            sinStock ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed' : 'bg-bib-red text-bib-black'
+          }`}
         >
           <ShoppingCart size={16} />
-          Agregar
+          {sinStock ? 'Sin stock' : 'Agregar'}
         </button>
       </div>
     </div>

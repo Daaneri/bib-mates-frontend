@@ -134,6 +134,13 @@ export default function Navbar() {
           <div className="border-t border-bib-white/10 px-6 py-4">
             <p className="text-[10px] text-bib-gray/60 mb-3">Categorías</p>
             <div className="flex flex-col gap-1">
+              <Link
+                      to="/grabados"
+                      onClick={cerrarMenu}
+                     className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 py-2 w-fit"
+                    >
+                     Grabados
+                </Link>
               {CATEGORIES.map(cat => {
                 const subs = SUBCATEGORIES[cat];
                 const abierta = categoriaAbierta === cat;

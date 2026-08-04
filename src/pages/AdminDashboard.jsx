@@ -11,9 +11,11 @@ export default function AdminDashboard() {
   const [productos, setProductos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [resenas, setResenas] = useState([]);
+  const [grabados, setGrabados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [extraFiles, setExtraFiles] = useState([]); // [{ file, preview, selected }] — fotos adicionales del producto nuevo
+  const [grabadoFile, setGrabadoFile] = useState(null);
   const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS[0]);
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
   const [busqueda, setBusqueda] = useState('');
@@ -63,9 +65,11 @@ export default function AdminDashboard() {
     const { data: p } = await supabase.from('productos').select('*');
     const { data: o } = await supabase.from('orders').select('*').order('creado_en', { ascending: false });
     const { data: r } = await supabase.from('resenas').select('*').order('created_at', { ascending: false });
+    const { data: g } = await supabase.from('grabados').select('*').order('created_at', { ascending: false });
     setProductos(p || []);
     setPedidos(o || []);
     setResenas(r || []);
+    setGrabados(g || []);
   }
 
   async function handleAddProduct(e) {
@@ -105,6 +109,43 @@ export default function AdminDashboard() {
       fetchData();
     }
     setLoading(false);
+  }
+
+  async function handleAddGrabado(e) {
+    e.preventDefault();
+    if (!grabadoFile) return;
+    setLoading(true);
+    const { data, error: uploadError } = await supabase.storage
+      .from('grabados')
+      .upload(`${Date.now()}_${grabadoFile.name}`, grabadoFile);
+
+    if (uploadError) {
+      mostrarMensaje("Error al subir: " + uploadError.message);
+      setLoading(false);
+      return;
+    }
+
+    const imageUrl = supabase.storage.from('grabados').getPublicUrl(data.path).data.publicUrl;
+    const { error } = await supabase.from('grabados').insert([{ image_url: imageUrl }]);
+
+    if (error) mostrarMensaje("Error: " + error.message);
+    else {
+      mostrarMensaje("Foto agregada a la galería");
+      setGrabadoFile(null);
+      e.target.reset();
+      fetchData();
+    }
+    setLoading(false);
+  }
+
+  async function handleDeleteGrabado(id) {
+    if (!window.confirm("¿Eliminar esta foto de la galería?")) return;
+    const { error } = await supabase.from('grabados').delete().eq('id', id);
+    if (error) mostrarMensaje("Error: " + error.message);
+    else {
+      mostrarMensaje("Foto eliminada");
+      fetchData();
+    }
   }
 
   async function fetchStorageFiles() {
@@ -322,7 +363,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Pedidos', 'Reseñas', 'Métricas'].map(item => (
+          {['Inventario', 'Pedidos', 'Reseñas', 'Grabados', 'Métricas'].map(item => (
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
@@ -699,6 +740,42 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {view === 'Grabados' && (
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+            <form onSubmit={handleAddGrabado} className="max-w-2xl mx-auto bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+              <h3 className="text-sm md:text-base mb-2 md:mb-4 uppercase tracking-widest font-medium">Nueva foto de grabado</h3>
+              <div className="flex flex-col items-center gap-2">
+                <input type="file" id="grabadoFileInput" className="hidden" accept="image/*" onChange={(e) => setGrabadoFile(e.target.files[0])} />
+                <label htmlFor="grabadoFileInput" className="cursor-pointer bg-bib-black px-6 py-2 rounded border border-bib-white/20 hover:border-bib-red transition text-xs md:text-sm text-center break-all">
+                  {grabadoFile ? grabadoFile.name : "Seleccionar foto"}
+                </label>
+              </div>
+              <button disabled={loading || !grabadoFile} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors disabled:opacity-40">
+                SUBIR A LA GALERÍA
+              </button>
+            </form>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+              {grabados.map((g) => (
+                <div key={g.id} className="relative group rounded overflow-hidden border border-bib-white/10 aspect-square">
+                  <img src={g.image_url} alt="Grabado" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => handleDeleteGrabado(g.id)}
+                    className="absolute top-2 right-2 bg-bib-red text-bib-white rounded-full w-7 h-7 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Eliminar"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {grabados.length === 0 && (
+              <p className="text-center text-bib-gray py-8">Todavía no subiste ninguna foto.</p>
+            )}
           </div>
         )}
 

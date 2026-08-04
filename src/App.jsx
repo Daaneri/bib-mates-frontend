@@ -26,6 +26,7 @@ import PagoPendiente from './components/PagoPendiente';
 import PagoTransferencia from './components/PagoTransferencia';
 import Favoritos from './components/Favoritos';
 import NotFound from './components/NotFound';
+import Grabados from './components/Grabados';
 
 // Componentes Administrativos
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -60,6 +61,7 @@ function PublicRoutes() {
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
           <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
           <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/grabados" element={<Grabados />} />
           
           {/* RUTAS LEGALES */}
           <Route path="/privacidad" element={<PrivacyPolicy />} />

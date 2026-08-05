@@ -5,6 +5,8 @@ import { useCart } from '../context/CartContext';
 
 export default function CartDrawer() {
   const { cart, removeFromCart, updateQuantity, isDrawerOpen, closeDrawer } = useCart();
+  
+  // Muestra precio de lista por defecto
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   // Bloquea el scroll del fondo mientras el drawer está abierto
@@ -84,9 +86,16 @@ export default function CartDrawer() {
                           <Plus size={14} />
                         </button>
                       </div>
-                      <span className="text-sm font-medium text-bib-red">
-                        ${(item.price * item.quantity).toLocaleString('es-AR')}
-                      </span>
+                      <div className="text-right">
+                        <span className="text-sm font-medium text-bib-red block">
+                          ${(item.price * item.quantity).toLocaleString('es-AR')}
+                        </span>
+                        {item.price_cash > 0 && item.price_cash < item.price && (
+                          <span className="text-[10px] text-green-400 block">
+                            ${(item.price_cash * item.quantity).toLocaleString('es-AR')} transf.
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -95,7 +104,7 @@ export default function CartDrawer() {
 
             <div className="p-5 sm:p-6 border-t border-bib-white/10 space-y-3 shrink-0">
               <div className="flex justify-between items-center text-base font-medium text-bib-white">
-                <span>Subtotal</span>
+                <span>Subtotal (Tarjeta)</span>
                 <span className="text-xl text-bib-red">${total.toLocaleString('es-AR')}</span>
               </div>
               <Link

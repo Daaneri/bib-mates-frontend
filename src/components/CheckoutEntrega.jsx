@@ -8,7 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 const PESO_ESTIMADO_POR_UNIDAD = 0.5;
 const ENVIO_GRATIS_DESDE = 120000;
 const COUPON_STORAGE_KEY = 'bib_coupon_code';
-const DESCUENTO_TRANSFERENCIA = 0.10;
 
 const PROVINCIAS = [
   { code: "BA", name: "Buenos Aires" }, { code: "CT", name: "Catamarca" },
@@ -57,16 +56,25 @@ export default function CheckoutEntrega() {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount }
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("mercadopago"); // "mercadopago" | "transferencia"
 
-  const totalProductos = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Devuelve el precio exacto del ítem según el método de pago elegido
+  const getItemPrice = (item, method) => {
+    if (method === "transferencia" && item.price_cash && item.price_cash > 0) {
+      return item.price_cash;
+    }
+    return item.price;
+  };
+
+  const totalProductos = cart.reduce((sum, item) => sum + (getItemPrice(item, paymentMethod) * item.quantity), 0);
+  const subtotalLista = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const ahorroTransferencia = paymentMethod === "transferencia" ? (subtotalLista - totalProductos) : 0;
+
   const envioGratis = totalProductos >= ENVIO_GRATIS_DESDE;
   const costoEnvio = envioGratis ? 0 : (selectedRate?.totalPrice ?? 0);
-  const descuentoTransferencia = paymentMethod === "transferencia" ? Math.round(totalProductos * DESCUENTO_TRANSFERENCIA) : 0;
-  const totalConEnvio = totalProductos - (appliedCoupon?.discount || 0) - descuentoTransferencia + costoEnvio;
+  const totalConEnvio = totalProductos - (appliedCoupon?.discount || 0) + costoEnvio;
 
-  // Revalida el cupón que haya quedado guardado del paso anterior (carrito), contra el subtotal real
   useEffect(() => {
     const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
     if (savedCode && totalProductos > 0) {
@@ -185,11 +193,16 @@ export default function CheckoutEntrega() {
         ? "/api/payment/create-transfer-order"
         : "/api/payment/create-preference";
 
+      const itemsConPrecioAjustado = cart.map((item) => ({
+        ...item,
+        price: getItemPrice(item, paymentMethod)
+      }));
+
       const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart,
+          items: itemsConPrecioAjustado,
           shippingCost: costoEnvio,
           shippingDescription: selectedRate.customLabel || `${selectedRate.carrierDescription} - ${selectedRate.serviceDescription}`,
           couponCode: appliedCoupon?.code || null,
@@ -344,21 +357,24 @@ export default function CheckoutEntrega() {
           )}
 
           <div className="flex justify-between text-xs sm:text-sm text-bib-gray">
-            <span>Subtotal</span>
+            <span>Subtotal productos</span>
             <span>${totalProductos.toLocaleString("es-AR")}</span>
           </div>
+
+          {ahorroTransferencia > 0 && (
+            <div className="flex justify-between text-xs sm:text-sm text-green-400">
+              <span>Ahorro por contado / transferencia</span>
+              <span>-${ahorroTransferencia.toLocaleString("es-AR")}</span>
+            </div>
+          )}
+
           {appliedCoupon && (
             <div className="flex justify-between text-xs sm:text-sm text-green-400">
-              <span>Descuento</span>
+              <span>Descuento cupón</span>
               <span>-${appliedCoupon.discount.toLocaleString("es-AR")}</span>
             </div>
           )}
-          {descuentoTransferencia > 0 && (
-            <div className="flex justify-between text-xs sm:text-sm text-green-400">
-              <span>Descuento por transferencia</span>
-              <span>-${descuentoTransferencia.toLocaleString("es-AR")}</span>
-            </div>
-          )}
+
           <div className="flex justify-between text-xs sm:text-sm text-bib-gray">
             <span>Envío</span>
             <span>
@@ -389,7 +405,7 @@ export default function CheckoutEntrega() {
                   paymentMethod === "transferencia" ? "border-bib-red bg-bib-red/10 text-bib-white" : "border-bib-white/20 text-bib-gray"
                 }`}
               >
-                Transferencia bancaria <span className="text-green-400">(10% off)</span>
+                Transferencia bancaria <span className="text-green-400">(Precio Especial)</span>
               </button>
             </div>
           </div>

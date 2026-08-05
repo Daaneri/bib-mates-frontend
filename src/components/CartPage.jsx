@@ -11,14 +11,21 @@ const COUPON_STORAGE_KEY = 'bib_coupon_code';
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
+  
+  // Subtotal base (Precio de lista)
   const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  
+  // Subtotal en caso de elegir Transferencia
+  const totalTransferencia = cart.reduce((acc, item) => {
+    const priceCash = item.price_cash && item.price_cash > 0 ? item.price_cash : item.price;
+    return acc + (priceCash * item.quantity);
+  }, 0);
 
   const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount, discountType, discountValue }
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [checkingCoupon, setCheckingCoupon] = useState(false);
 
-  // Si ya había un cupón guardado (de una visita anterior), lo revalidamos contra el total actual
   useEffect(() => {
     const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
     if (savedCode && total > 0) {
@@ -27,7 +34,6 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Si cambian las cantidades del carrito, revalidamos el descuento (puede cambiar si es %, o dejar de cumplir el mínimo)
   useEffect(() => {
     if (appliedCoupon && total > 0) {
       validarCupon(appliedCoupon.code, { silencioso: true });
@@ -100,24 +106,39 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
 
         <div className="lg:col-span-7 space-y-4 sm:space-y-6 md:space-y-8">
-          {cart.map((item, i) => (
-            <FadeIn key={item.id} delay={i * 60}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 sm:p-6 md:p-8 bg-bib-dark rounded border border-bib-white/10 transition-all duration-300 hover:border-bib-white/20">
-                <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
-                  <img src={item.image_url} alt={item.name} loading="lazy" decoding="async" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover rounded shrink-0" />
-                  <h3 className="font-medium text-base sm:text-lg md:text-xl text-bib-white min-w-0 truncate">{item.name}</h3>
-                </div>
-                <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 md:gap-6 shrink-0">
-                  <div className="flex items-center gap-2 sm:gap-4 bg-bib-black/40 rounded-full px-1">
-                    <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-bib-white/10 rounded-full shrink-0 text-bib-white transition-colors"><Minus size={18} /></button>
-                    <span className="font-medium text-base sm:text-lg w-8 sm:w-10 text-center text-bib-white">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} className="p-2 hover:bg-bib-white/10 rounded-full shrink-0 text-bib-white transition-colors"><Plus size={18} /></button>
+          {cart.map((item, i) => {
+            const hasCashDiscount = item.price_cash && item.price_cash > 0 && item.price_cash < item.price;
+            return (
+              <FadeIn key={item.id} delay={i * 60}>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 sm:p-6 md:p-8 bg-bib-dark rounded border border-bib-white/10 transition-all duration-300 hover:border-bib-white/20">
+                  <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
+                    <img src={item.image_url} alt={item.name} loading="lazy" decoding="async" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover rounded shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-base sm:text-lg md:text-xl text-bib-white min-w-0 truncate">{item.name}</h3>
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-bib-gray">
+                          Lista / MP: <span className="text-bib-white font-medium">${(item.price).toLocaleString('es-AR')}</span>
+                        </p>
+                        {hasCashDiscount && (
+                          <p className="text-xs text-green-400">
+                            Transferencia: <span className="font-medium">${(item.price_cash).toLocaleString('es-AR')}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-bib-red hover:text-bib-white shrink-0 transition-colors hover:scale-110 duration-200"><Trash2 size={20} /></button>
+                  <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 md:gap-6 shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-4 bg-bib-black/40 rounded-full px-1">
+                      <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-bib-white/10 rounded-full shrink-0 text-bib-white transition-colors"><Minus size={18} /></button>
+                      <span className="font-medium text-base sm:text-lg w-8 sm:w-10 text-center text-bib-white">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)} className="p-2 hover:bg-bib-white/10 rounded-full shrink-0 text-bib-white transition-colors"><Plus size={18} /></button>
+                    </div>
+                    <button onClick={() => removeFromCart(item.id)} className="text-bib-red hover:text-bib-white shrink-0 transition-colors hover:scale-110 duration-200"><Trash2 size={20} /></button>
+                  </div>
                 </div>
-              </div>
-            </FadeIn>
-          ))}
+              </FadeIn>
+            );
+          })}
         </div>
 
         <FadeIn delay={100} className="lg:col-span-5">
@@ -164,17 +185,21 @@ export default function CartPage() {
 
             <div className="space-y-2 border-b border-bib-white/10 pb-6 sm:pb-8 mb-6 sm:mb-8">
               <div className="flex justify-between items-center text-sm text-bib-gray">
-                <span>Subtotal</span>
+                <span>Subtotal (Tarjeta / MP)</span>
                 <span>${total.toLocaleString('es-AR')}</span>
               </div>
+              <div className="flex justify-between items-center text-xs text-green-400">
+                <span>Subtotal (Transferencia)</span>
+                <span>${totalTransferencia.toLocaleString('es-AR')}</span>
+              </div>
               {appliedCoupon && (
-                <div className="flex justify-between items-center text-sm text-green-400">
-                  <span>Descuento</span>
+                <div className="flex justify-between items-center text-sm text-green-400 pt-2">
+                  <span>Descuento Cupón</span>
                   <span>-${appliedCoupon.discount.toLocaleString('es-AR')}</span>
                 </div>
               )}
               <div className="flex justify-between items-center text-lg sm:text-xl md:text-2xl font-medium text-bib-white pt-2">
-                <span>Total</span>
+                <span>Total estimado</span>
                 <span className="text-2xl sm:text-3xl md:text-4xl text-bib-red tracking-tight">${totalConDescuento.toLocaleString('es-AR')}</span>
               </div>
             </div>

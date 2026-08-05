@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [resenas, setResenas] = useState([]);
   const [grabados, setGrabados] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [file, setFile] = useState(null);
   const [extraFiles, setExtraFiles] = useState([]);
   const [grabadoFile, setGrabadoFile] = useState(null);
@@ -345,27 +346,41 @@ export default function AdminDashboard() {
   }
 
   async function handleUpdate(product) {
-    const { error } = await supabase.from('productos')
-      .update({
-        name: editData.name.trim(),
-        price: Math.max(0, parseFloat(editData.price)) || 0,
-        price_cash: Math.max(0, parseFloat(editData.price_cash)) || 0,
-        stock: Math.max(0, parseInt(editData.stock)) || 0,
-        description: editData.description,
-        category: editData.category,
-        subcategory: editData.subcategory || null,
-        image_url: editData.image_url,
-        image_urls: editData.image_urls,
-        personalizable: editData.personalizable,
-        descuento_porcentaje: Math.min(100, Math.max(0, parseFloat(editData.descuento_porcentaje) || 0)),
-      })
-      .eq('id', product.id);
+    try {
+      setSavingEdit(true);
+      const parsedPrice = parseFloat(editData.price);
+      const parsedPriceCash = parseFloat(editData.price_cash);
+      const parsedDiscount = parseFloat(editData.descuento_porcentaje);
+      const parsedStock = parseInt(editData.stock);
 
-    if (error) mostrarMensaje("Error al actualizar: " + error.message);
-    else {
-      mostrarMensaje("Producto actualizado");
-      setEditId(null);
-      fetchData();
+      const { error } = await supabase.from('productos')
+        .update({
+          name: editData.name ? editData.name.trim() : '',
+          price: isNaN(parsedPrice) ? 0 : Math.max(0, parsedPrice),
+          price_cash: isNaN(parsedPriceCash) ? 0 : Math.max(0, parsedPriceCash),
+          stock: isNaN(parsedStock) ? 0 : Math.max(0, parsedStock),
+          description: editData.description || '',
+          category: editData.category,
+          subcategory: editData.subcategory || null,
+          image_url: editData.image_url || '',
+          image_urls: Array.isArray(editData.image_urls) ? editData.image_urls : [],
+          personalizable: Boolean(editData.personalizable),
+          descuento_porcentaje: isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount)),
+        })
+        .eq('id', product.id);
+
+      if (error) {
+        mostrarMensaje("Error al actualizar: " + error.message);
+      } else {
+        mostrarMensaje("Producto actualizado con éxito");
+        setEditId(null);
+        await fetchData();
+      }
+    } catch (err) {
+      mostrarMensaje("Ocurrió un error inesperado al guardar");
+      console.error(err);
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -718,8 +733,10 @@ export default function AdminDashboard() {
                           <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="% dto" value={editData.descuento_porcentaje} type="number" min="0" max="100" onChange={(e) => setEditData({...editData, descuento_porcentaje: e.target.value})} />
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <button type="button" onClick={() => handleUpdate(p)} className="bg-green-600 text-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide flex-1">Guardar</button>
-                          <button type="button" onClick={() => setEditId(null)} className="text-bib-gray border border-bib-white/10 px-3 py-2 rounded text-xs uppercase tracking-wide">Cancelar</button>
+                          <button type="button" disabled={savingEdit} onClick={() => handleUpdate(p)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide flex-1 disabled:opacity-50">
+                            {savingEdit ? 'Guardando...' : 'Guardar'}
+                          </button>
+                          <button type="button" disabled={savingEdit} onClick={() => setEditId(null)} className="text-bib-gray border border-bib-white/10 px-3 py-2 rounded text-xs uppercase tracking-wide">Cancelar</button>
                         </div>
                       </div>
                     </div>
@@ -826,22 +843,22 @@ export default function AdminDashboard() {
         )}
 
         {view === 'Cupones' && (
-  <div className="max-w-4xl mx-auto">
-    <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
-      [&_div]:!bg-transparent
-      [&_form]:!bg-transparent [&_form]:!p-0 [&_form]:!border-none [&_form]:!shadow-none [&_form]:!outline-none
-      [&_form_div]:!border-none
-      [&_h2]:!text-bib-white [&_h2]:!text-base [&_h2]:!uppercase [&_h2]:!tracking-widest [&_h2]:!font-medium
-      [&_h3]:!text-bib-white [&_h3]:!text-sm [&_h3]:!uppercase [&_h3]:!tracking-widest [&_h3]:!font-medium [&_h3]:!mb-4
-      [&_label]:!text-bib-gray [&_label]:!text-xs [&_label]:!uppercase [&_label]:!tracking-wide
-      [&_input]:!bg-bib-black [&_input]:!text-bib-white [&_input]:!border [&_input]:!border-bib-white/20 [&_input]:!rounded [&_input]:!p-3 [&_input]:!text-sm
-      [&_select]:!bg-bib-black [&_select]:!text-bib-white [&_select]:!border [&_select]:!border-bib-white/20 [&_select]:!rounded [&_select]:!p-3 [&_select]:!text-sm
-      [&_button[type='submit']]:!bg-bib-red [&_button[type='submit']]:hover:!bg-bib-white [&_button[type='submit']]:!text-bib-white [&_button[type='submit']]:hover:!text-bib-black [&_button[type='submit']]:!transition-colors [&_button[type='submit']]:!uppercase [&_button[type='submit']]:!tracking-widest [&_button[type='submit']]:!font-medium [&_button[type='submit']]:!py-3 [&_button[type='submit']]:!px-8 [&_button[type='submit']]:!rounded [&_button[type='submit']]:!border-none
-      [&_button]:!bg-bib-red [&_button]:hover:!bg-bib-white [&_button]:!text-bib-white [&_button]:hover:!text-bib-black">
-      <AdminCoupons token={session?.access_token} />
-    </div>
-  </div>
-)}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
+              [&_div]:!bg-transparent
+              [&_form]:!bg-transparent [&_form]:!p-0 [&_form]:!border-none [&_form]:!shadow-none [&_form]:!outline-none
+              [&_form_div]:!border-none
+              [&_h2]:!text-bib-white [&_h2]:!text-base [&_h2]:!uppercase [&_h2]:!tracking-widest [&_h2]:!font-medium
+              [&_h3]:!text-bib-white [&_h3]:!text-sm [&_h3]:!uppercase [&_h3]:!tracking-widest [&_h3]:!font-medium [&_h3]:!mb-4
+              [&_label]:!text-bib-gray [&_label]:!text-xs [&_label]:!uppercase [&_label]:!tracking-wide
+              [&_input]:!bg-bib-black [&_input]:!text-bib-white [&_input]:!border [&_input]:!border-bib-white/20 [&_input]:!rounded [&_input]:!p-3 [&_input]:!text-sm
+              [&_select]:!bg-bib-black [&_select]:!text-bib-white [&_select]:!border [&_select]:!border-bib-white/20 [&_select]:!rounded [&_select]:!p-3 [&_select]:!text-sm
+              [&_button[type='submit']]:!bg-bib-red [&_button[type='submit']]:hover:!bg-bib-white [&_button[type='submit']]:!text-bib-white [&_button[type='submit']]:hover:!text-bib-black [&_button[type='submit']]:!transition-colors [&_button[type='submit']]:!uppercase [&_button[type='submit']]:!tracking-widest [&_button[type='submit']]:!font-medium [&_button[type='submit']]:!py-3 [&_button[type='submit']]:!px-8 [&_button[type='submit']]:!rounded [&_button[type='submit']]:!border-none
+              [&_button]:!bg-bib-red [&_button]:hover:!bg-bib-white [&_button]:!text-bib-white [&_button]:hover:!text-bib-black">
+              <AdminCoupons token={session?.access_token} />
+            </div>
+          </div>
+        )}
 
         {view === 'Pedidos' && (
           <div className="max-w-4xl mx-auto space-y-4">

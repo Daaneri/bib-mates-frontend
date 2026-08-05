@@ -9,29 +9,45 @@ export default function ProtectedRoute({ children }) {
   useEffect(() => {
     let activo = true;
 
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (!activo) return;
-      setAutorizado(!!data.session);
-      setChecking(false);
-    }
-    checkSession();
-
-    // Si la sesión cambia (ej: se cierra en otra pestaña), reacciona en el momento
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAutorizado(!!session);
+    // Escuchar cambios de estado de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (activo) {
+        setAutorizado(!!session);
+        setChecking(false);
+      }
     });
+
+    // Verificación de sesión inicial
+    async function checkSession() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!activo) return;
+        if (error || !session) {
+          setAutorizado(false);
+        } else {
+          setAutorizado(true);
+        }
+      } catch (err) {
+        if (activo) setAutorizado(false);
+      } finally {
+        if (activo) setChecking(false);
+      }
+    }
+
+    checkSession();
 
     return () => {
       activo = false;
-      listener.subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
   if (checking) {
     return (
       <div className="min-h-screen bg-bib-black flex items-center justify-center">
-        <p className="text-bib-gray text-sm uppercase tracking-widest">Verificando sesión...</p>
+        <p className="text-bib-gray text-sm uppercase tracking-widest animate-pulse">
+          Verificando sesión segura...
+        </p>
       </div>
     );
   }

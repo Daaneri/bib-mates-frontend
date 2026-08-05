@@ -826,10 +826,19 @@ export default function AdminDashboard() {
         )}
 
         {view === 'Cupones' && (
-          <div className="max-w-4xl mx-auto">
-            <AdminCoupons token={session?.access_token} />
-          </div>
-        )}
+  <div className="max-w-4xl mx-auto">
+    <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
+      [&_h2]:text-bib-white [&_h2]:text-base [&_h2]:uppercase [&_h2]:tracking-widest [&_h2]:font-medium
+      [&_h3]:text-bib-white [&_h3]:text-sm [&_h3]:uppercase [&_h3]:tracking-widest [&_h3]:font-medium
+      [&_label]:text-bib-gray [&_label]:text-xs [&_label]:uppercase [&_label]:tracking-wide
+      [&_input]:bg-bib-black [&_input]:text-bib-white [&_input]:border [&_input]:border-bib-white/20 [&_input]:rounded [&_input]:p-3 [&_input]:text-sm
+      [&_select]:bg-bib-black [&_select]:text-bib-white [&_select]:border [&_select]:border-bib-white/20 [&_select]:rounded [&_select]:p-3 [&_select]:text-sm
+      [&_button]:bg-bib-red [&_button]:hover:bg-bib-white [&_button]:text-bib-white [&_button]:hover:text-bib-black [&_button]:transition-colors [&_button]:uppercase [&_button]:tracking-widest [&_button]:font-medium [&_button]:py-3 [&_button]:px-6 [&_button]:rounded
+      [&_.bg-white]:!bg-transparent [&_.text-gray-700]:!text-bib-gray [&_.text-gray-800]:!text-bib-white [&_.text-gray-500]:!text-bib-gray">
+      <AdminCoupons token={session?.access_token} />
+    </div>
+  </div>
+)}
 
         {view === 'Pedidos' && (
           <div className="max-w-4xl mx-auto space-y-4">

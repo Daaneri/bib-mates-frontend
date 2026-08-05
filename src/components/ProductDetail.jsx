@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../hooks/useWishlist';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Heart, Share2, ChevronRight } from 'lucide-react';
+import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Heart, Share2, ChevronRight, CreditCard, Banknote } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
@@ -99,9 +99,11 @@ export default function ProductDetail() {
   const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
 
   const esPersonalizable = product.personalizable === true;
+  const precioLista = precioFinal(product);
+  const cuotaSinInteres = Math.round(precioLista / 3);
 
   function handleAgregarCarrito() {
-    addToCart({ ...product, price: precioFinal(product) });
+    addToCart({ ...product, price: precioLista });
     if (quiereGrabado) {
       addToCart({ id: `${product.id}-grabado`, name: `Grabado - ${product.name}`, price: PRECIO_GRABADO });
     }
@@ -113,16 +115,12 @@ export default function ProductDetail() {
 
   async function handleCompartir() {
     const shareUrl = window.location.href;
-    // En celular, si el navegador soporta el share nativo, usamos ese (abre el menú de compartir del sistema)
     if (navigator.share) {
       try {
         await navigator.share({ title: product.name, url: shareUrl });
-      } catch (err) {
-        // El usuario canceló el share nativo — no hacemos nada
-      }
+      } catch (err) {}
       return;
     }
-    // En desktop (sin share nativo), copiamos el link al portapapeles
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopiado(true);
@@ -148,7 +146,7 @@ export default function ProductDetail() {
     offers: {
       "@type": "Offer",
       priceCurrency: "ARS",
-      price: precioFinal(product),
+      price: precioLista,
       availability: (product.stock ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: `https://bib-mates-frontend.vercel.app/producto/${product.id}`,
     },
@@ -253,15 +251,33 @@ export default function ProductDetail() {
           <div className="flex flex-col gap-6 sm:gap-8">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
-              {product.descuento_porcentaje > 0 ? (
-                <div className="flex items-center gap-3 mb-4 sm:mb-5 flex-wrap">
-                  <p className="text-lg sm:text-xl text-bib-gray line-through">${product.price.toLocaleString('es-AR')}</p>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight">${precioFinal(product).toLocaleString('es-AR')}</p>
-                  <span className="px-2 py-1 rounded text-[10px] border border-green-700/40 bg-green-900/40 text-green-300 uppercase tracking-wide">{product.descuento_porcentaje}% OFF</span>
+              
+              {/* BLOQUE DE PRECIOS Y FINANCIACIÓN */}
+              <div className="space-y-2 mb-5">
+                {product.descuento_porcentaje > 0 ? (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-lg sm:text-xl text-bib-gray line-through">${product.price.toLocaleString('es-AR')}</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-bib-white tracking-tight">${precioLista.toLocaleString('es-AR')}</p>
+                    <span className="px-2 py-1 rounded text-[10px] border border-green-700/40 bg-green-900/40 text-green-300 uppercase tracking-wide">{product.descuento_porcentaje}% OFF</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-bib-white tracking-tight">${precioLista.toLocaleString('es-AR')}</p>
+                )}
+
+                {/* Cartel 3 Cuotas sin interés */}
+                <div className="flex items-center gap-2 text-blue-400 text-sm font-medium pt-1">
+                  <CreditCard size={18} />
+                  <span>Hasta <strong>3 cuotas sin interés</strong> de <strong>${cuotaSinInteres.toLocaleString('es-AR')}</strong></span>
                 </div>
-              ) : (
-                <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-4 sm:mb-5">${product.price.toLocaleString('es-AR')}</p>
-              )}
+
+                {/* Cartel Descuento por Transferencia (si price_cash existe) */}
+                {product.price_cash && (
+                  <div className="flex items-center gap-2 text-green-400 text-sm font-medium pt-0.5">
+                    <Banknote size={18} />
+                    <span><strong>${product.price_cash.toLocaleString('es-AR')}</strong> pagando con Transferencia</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="border-y border-bib-white/10 py-6 sm:py-8">
@@ -345,7 +361,7 @@ export default function ProductDetail() {
                 <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
                 Agregar al carrito
               </button>
-               <a
+              <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -404,7 +420,7 @@ export default function ProductDetail() {
       >
         <div className="flex-1 min-w-0">
           <p className="text-bib-white text-sm font-medium truncate">{product.name}</p>
-          <p className="text-bib-red font-bold">${precioFinal(product).toLocaleString('es-AR')}</p>
+          <p className="text-bib-red font-bold">${precioLista.toLocaleString('es-AR')}</p>
         </div>
         <button
           onClick={handleAgregarCarrito}

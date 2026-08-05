@@ -14,7 +14,7 @@ export default function CheckoutEntrega() {
   const [shippingCost, setShippingCost] = useState(0);
 
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount_percentage, discount }
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
@@ -32,11 +32,13 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
-  // Formatear precios según medio de pago
+  // Formatear precios según el medio de pago seleccionado
   const itemsFormat = cart.map((item) => {
+    // Si es transferencia y tiene price_cash usa ese, de lo contrario toma price (Precio de Lista)
     const price = paymentMethod === "transferencia" && item.price_cash 
       ? item.price_cash 
       : item.price;
+
     return {
       id: item.id,
       name: item.name,
@@ -47,7 +49,6 @@ export default function CheckoutEntrega() {
 
   const totalProductos = itemsFormat.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // Cargar cupón guardado en localStorage al iniciar
   useEffect(() => {
     const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
     if (savedCode) {
@@ -55,7 +56,6 @@ export default function CheckoutEntrega() {
     }
   }, []);
 
-  // Recalcular descuento si cambia el precio o medio de pago
   useEffect(() => {
     if (appliedCoupon?.discount_percentage) {
       const nuevoDescuento = Math.round((totalProductos * appliedCoupon.discount_percentage) / 100);
@@ -314,28 +314,40 @@ export default function CheckoutEntrega() {
             </div>
           )}
 
+          {/* SELECCIÓN DE MEDIO DE PAGO REESTRUCTURADO */}
           <div className="pt-2">
-            <label className="block text-sm font-medium mb-1">Medio de Pago</label>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 border p-3 rounded cursor-pointer">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="mercadopago"
-                  checked={paymentMethod === "mercadopago"}
-                  onChange={() => setPaymentMethod("mercadopago")}
-                />
-                <span>Mercado Pago / Tarjetas</span>
+            <label className="block text-sm font-medium mb-2">Medio de Pago</label>
+            <div className="space-y-3">
+              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-colors ${paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-50/50" : "hover:bg-gray-50"}`}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="mercadopago"
+                    checked={paymentMethod === "mercadopago"}
+                    onChange={() => setPaymentMethod("mercadopago")}
+                  />
+                  <span className="font-semibold text-gray-900">Tarjeta de Crédito / Mercado Pago</span>
+                </div>
+                <p className="text-xs text-gray-600 ml-6 mt-1">
+                  💳 Precio de Lista — <strong>3 cuotas sin interés</strong> (Visa, Mastercard, Amex).
+                </p>
               </label>
-              <label className="flex items-center gap-2 border p-3 rounded cursor-pointer">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="transferencia"
-                  checked={paymentMethod === "transferencia"}
-                  onChange={() => setPaymentMethod("transferencia")}
-                />
-                <span>Transferencia Bancaria</span>
+
+              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-colors ${paymentMethod === "transferencia" ? "border-green-500 bg-green-50/50" : "hover:bg-gray-50"}`}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="transferencia"
+                    checked={paymentMethod === "transferencia"}
+                    onChange={() => setPaymentMethod("transferencia")}
+                  />
+                  <span className="font-semibold text-gray-900">Transferencia Bancaria</span>
+                </div>
+                <p className="text-xs text-green-700 ml-6 mt-1">
+                  🔥 <strong>Precio Especial con Descuento</strong> directo en tu compra.
+                </p>
               </label>
             </div>
           </div>
@@ -345,7 +357,7 @@ export default function CheckoutEntrega() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded mt-4 disabled:opacity-50"
+            className="w-full bg-blue-600 text-white font-semibold py-3 rounded mt-4 disabled:opacity-50 hover:bg-blue-700 transition-colors"
           >
             {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" : "Confirmar Pedido"}
           </button>
@@ -396,7 +408,7 @@ export default function CheckoutEntrega() {
                 type="button"
                 onClick={handleApplyCoupon}
                 disabled={isApplyingCoupon || !couponCode.trim()}
-                className="bg-gray-800 text-white px-4 py-2 rounded text-sm disabled:opacity-50"
+                className="bg-gray-800 text-white px-4 py-2 rounded text-sm disabled:opacity-50 hover:bg-gray-900"
               >
                 Aplicar
               </button>
@@ -409,12 +421,12 @@ export default function CheckoutEntrega() {
 
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Subtotal</span>
+            <span>Subtotal ({paymentMethod === "transferencia" ? "Transferencia" : "Lista"})</span>
             <span>${totalProductos.toLocaleString("es-AR")}</span>
           </div>
           {appliedCoupon && (
             <div className="flex justify-between text-green-600 font-medium">
-              <span>Descuento</span>
+              <span>Descuento Cupón</span>
               <span>-${totalDescuento.toLocaleString("es-AR")}</span>
             </div>
           )}

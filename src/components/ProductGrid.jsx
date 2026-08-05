@@ -6,7 +6,6 @@ import { CATEGORIES, SUBCATEGORIES } from '../config/categories'
 import { useWishlist } from '../hooks/useWishlist'
 
 const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
-const STOCK_BAJO_UMBRAL = 5;
 
 function ProductCardSkeleton() {
   return (
@@ -19,10 +18,10 @@ function ProductCardSkeleton() {
   );
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const sinStock = (product.stock ?? 0) === 0;
-  const stockBajo = !sinStock && (product.stock ?? 0) < STOCK_BAJO_UMBRAL;
+  const stockBajo = mostrarStockBajo && !sinStock && (product.stock ?? 0) < umbralStockBajo;
 
   return (
     <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 flex flex-col relative">
@@ -89,6 +88,10 @@ export default function ProductGrid() {
   const [precioAbierto, setPrecioAbierto] = useState(false)
   const precioRef = useRef(null)
 
+  // Config del cartel de "últimas unidades" — editable desde el panel admin
+  const [mostrarStockBajo, setMostrarStockBajo] = useState(true)
+  const [umbralStockBajo, setUmbralStockBajo] = useState(5)
+
   // Cierra el dropdown de precio si tocás afuera
   useEffect(() => {
     function handleClickAfuera(e) {
@@ -108,7 +111,19 @@ export default function ProductGrid() {
       else setProducts(data)
       setLoading(false);
     }
+    async function fetchSettings() {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('mostrar_stock_bajo, umbral_stock_bajo')
+        .eq('id', 1)
+        .single();
+      if (!error && data) {
+        if (data.mostrar_stock_bajo !== null) setMostrarStockBajo(data.mostrar_stock_bajo);
+        if (data.umbral_stock_bajo !== null) setUmbralStockBajo(data.umbral_stock_bajo);
+      }
+    }
     fetchProducts()
+    fetchSettings()
   }, [])
 
   // Si llega un ?search= nuevo desde la lupa del Navbar (aunque ya estemos parados en esta página),
@@ -304,14 +319,14 @@ export default function ProductGrid() {
                 <section key={group.name}>
                   <h2 className="max-w-7xl mx-auto text-sm font-medium text-bib-white mb-4 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-                    {group.items.map(p => <ProductCard key={p.id} product={p} />)}
+                    {group.items.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
-              {filteredProducts.map(p => <ProductCard key={p.id} product={p} />)}
+              {filteredProducts.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
             </div>
           )}
         </>

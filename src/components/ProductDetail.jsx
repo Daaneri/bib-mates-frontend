@@ -46,8 +46,9 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [agregarCaja, setAgregarCaja] = useState(false);
-  const [quiereGrabado, setQuiereGrabado] = useState(false);
   const [cajaPresentacion, setCajaPresentacion] = useState(null);
+  const [agregarGrabado, setAgregarGrabado] = useState(false);
+  const [servicioGrabado, setServicioGrabado] = useState(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
   const [copiado, setCopiado] = useState(false);
@@ -72,6 +73,15 @@ export default function ProductDetail() {
         .maybeSingle();
       if (data) setCajaPresentacion(data);
     }
+    async function fetchGrabado() {
+      const { data } = await supabase
+        .from('productos')
+        .select('*')
+        .ilike('name', '%Grabado%')
+        .limit(1)
+        .maybeSingle();
+      if (data) setServicioGrabado(data);
+    }
     async function fetchRelacionados(currentProduct) {
       const { data, error } = await supabase
         .from('productos')
@@ -84,6 +94,7 @@ export default function ProductDetail() {
     }
     fetchProduct();
     fetchCaja();
+    fetchGrabado();
   }, [id]);
 
   useEffect(() => {
@@ -102,13 +113,11 @@ export default function ProductDetail() {
   const esPersonalizable = product.personalizable === true;
 
   function handleAgregarCarrito() {
-  const productoFinal = quiereGrabado
-    ? { ...product, grabado: true, notas: 'Grabado solicitado' }
-    : product;
-  addToCart(productoFinal);
-  if (agregarCaja && cajaPresentacion) addToCart(cajaPresentacion);
-  openDrawer();
-}
+    addToCart(product);
+    if (agregarCaja && cajaPresentacion) addToCart(cajaPresentacion);
+    if (agregarGrabado && servicioGrabado) addToCart(servicioGrabado);
+    openDrawer();
+  }
 
   async function handleCompartir() {
     const shareUrl = window.location.href;
@@ -252,67 +261,34 @@ export default function ProductDetail() {
           <div className="flex flex-col gap-6 sm:gap-8">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-4 sm:mb-5">${product.price.toLocaleString('es-AR')}</p>
 
-              <div className="flex flex-col gap-4 mt-2">
-  <div>
-    <p className="text-xs sm:text-sm text-bib-white/80 mb-2">¿Desea grabar su mate?</p>
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={() => setQuiereGrabado(true)}
-        className={`px-4 py-2 rounded text-xs sm:text-sm uppercase tracking-wide border transition-all ${
-          quiereGrabado
-            ? 'bg-bib-red text-bib-black border-bib-red font-bold'
-            : 'border-bib-white/20 text-bib-white/70 hover:border-bib-white/40'
-        }`}
-      >
-        Sí
-      </button>
-      <button
-        type="button"
-        onClick={() => setQuiereGrabado(false)}
-        className={`px-4 py-2 rounded text-xs sm:text-sm uppercase tracking-wide border transition-all ${
-          !quiereGrabado
-            ? 'bg-bib-red text-bib-black border-bib-red font-bold'
-            : 'border-bib-white/20 text-bib-white/70 hover:border-bib-white/40'
-        }`}
-      >
-        No
-      </button>
-    </div>
-  </div>
-
-  <div>
-    <p className="text-xs sm:text-sm text-bib-white/80 mb-2">
-      ¿Desea caja de presentación? +${cajaPresentacion ? Number(cajaPresentacion.price).toLocaleString('es-AR') : '5.000'}
-    </p>
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={() => setAgregarCaja(true)}
-        className={`px-4 py-2 rounded text-xs sm:text-sm uppercase tracking-wide border transition-all ${
-          agregarCaja
-            ? 'bg-bib-red text-bib-black border-bib-red font-bold'
-            : 'border-bib-white/20 text-bib-white/70 hover:border-bib-white/40'
-        }`}
-      >
-        Sí
-      </button>
-      <button
-        type="button"
-        onClick={() => setAgregarCaja(false)}
-        className={`px-4 py-2 rounded text-xs sm:text-sm uppercase tracking-wide border transition-all ${
-          !agregarCaja
-            ? 'bg-bib-red text-bib-black border-bib-red font-bold'
-            : 'border-bib-white/20 text-bib-white/70 hover:border-bib-white/40'
-        }`}
-      >
-        No
-      </button>
-    </div>
-  </div>
-</div>
+              {(esPersonalizable || cajaPresentacion) && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {esPersonalizable && servicioGrabado && (
+                    <label className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-white bg-bib-black border border-bib-white/10 rounded p-3 cursor-pointer hover:border-bib-red/40 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={agregarGrabado}
+                        onChange={(e) => setAgregarGrabado(e.target.checked)}
+                        className="w-4 h-4 accent-bib-red cursor-pointer shrink-0"
+                      />
+                      <span>¿Desea grabar su mate? + ${Number(servicioGrabado.price).toLocaleString('es-AR')}</span>
+                    </label>
+                  )}
+                  {cajaPresentacion && (
+                    <label className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-white bg-bib-black border border-bib-white/10 rounded p-3 cursor-pointer hover:border-bib-red/40 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={agregarCaja}
+                        onChange={(e) => setAgregarCaja(e.target.checked)}
+                        className="w-4 h-4 accent-bib-red cursor-pointer shrink-0"
+                      />
+                      <span>¿Quiere caja de presentación? + ${Number(cajaPresentacion.price).toLocaleString('es-AR')}</span>
+                    </label>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="border-y border-bib-white/10 py-6 sm:py-8">

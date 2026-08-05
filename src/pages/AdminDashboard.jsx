@@ -26,6 +26,18 @@ export default function AdminDashboard() {
   const [storageFiles, setStorageFiles] = useState([]);
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
+
+  // Configuración general del sitio (Quiénes somos, transferencia, cartel de stock bajo)
+  const [settings, setSettings] = useState({
+    quienes_somos: '',
+    transferencia_alias: '',
+    transferencia_cbu: '',
+    transferencia_titular: '',
+    mostrar_stock_bajo: true,
+    umbral_stock_bajo: 5,
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => { fetchData(); }, []);
@@ -66,10 +78,42 @@ export default function AdminDashboard() {
     const { data: o } = await supabase.from('orders').select('*').order('creado_en', { ascending: false });
     const { data: r } = await supabase.from('resenas').select('*').order('created_at', { ascending: false });
     const { data: g } = await supabase.from('grabados').select('*').order('created_at', { ascending: false });
+    const { data: s } = await supabase.from('site_settings').select('*').eq('id', 1).single();
     setProductos(p || []);
     setPedidos(o || []);
     setResenas(r || []);
     setGrabados(g || []);
+    if (s) {
+      setSettings({
+        quienes_somos: s.quienes_somos || '',
+        transferencia_alias: s.transferencia_alias || '',
+        transferencia_cbu: s.transferencia_cbu || '',
+        transferencia_titular: s.transferencia_titular || '',
+        mostrar_stock_bajo: s.mostrar_stock_bajo ?? true,
+        umbral_stock_bajo: s.umbral_stock_bajo ?? 5,
+      });
+    }
+  }
+
+  async function handleSaveSettings(e) {
+    e.preventDefault();
+    setSavingSettings(true);
+    const { error } = await supabase
+      .from('site_settings')
+      .update({
+        quienes_somos: settings.quienes_somos,
+        transferencia_alias: settings.transferencia_alias,
+        transferencia_cbu: settings.transferencia_cbu,
+        transferencia_titular: settings.transferencia_titular,
+        mostrar_stock_bajo: settings.mostrar_stock_bajo,
+        umbral_stock_bajo: parseInt(settings.umbral_stock_bajo) || 5,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', 1);
+
+    if (error) mostrarMensaje("Error al guardar: " + error.message);
+    else mostrarMensaje("Configuración guardada");
+    setSavingSettings(false);
   }
 
   async function handleAddProduct(e) {
@@ -363,7 +407,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Pedidos', 'Reseñas', 'Grabados', 'Métricas'].map(item => (
+          {['Inventario', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
@@ -776,6 +820,77 @@ export default function AdminDashboard() {
             {grabados.length === 0 && (
               <p className="text-center text-bib-gray py-8">Todavía no subiste ninguna foto.</p>
             )}
+          </div>
+        )}
+
+        {view === 'Configuración' && (
+          <div className="max-w-2xl mx-auto">
+            <form onSubmit={handleSaveSettings} className="space-y-6 md:space-y-8">
+
+              <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+                <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Quiénes somos</h3>
+                <p className="text-xs text-bib-gray">Este texto aparece en la página "Nosotros" de la tienda.</p>
+                <textarea
+                  rows={6}
+                  placeholder="Contá la historia del negocio..."
+                  className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base resize-none"
+                  value={settings.quienes_somos}
+                  onChange={(e) => setSettings({ ...settings, quienes_somos: e.target.value })}
+                />
+              </div>
+
+              <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+                <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de transferencia</h3>
+                <p className="text-xs text-bib-gray">Guardados acá para tenerlos a mano — todavía no se muestran en ninguna pantalla de la tienda.</p>
+                <input
+                  placeholder="Alias"
+                  className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                  value={settings.transferencia_alias}
+                  onChange={(e) => setSettings({ ...settings, transferencia_alias: e.target.value })}
+                />
+                <input
+                  placeholder="CBU / CVU"
+                  className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                  value={settings.transferencia_cbu}
+                  onChange={(e) => setSettings({ ...settings, transferencia_cbu: e.target.value })}
+                />
+                <input
+                  placeholder="Titular de la cuenta"
+                  className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                  value={settings.transferencia_titular}
+                  onChange={(e) => setSettings({ ...settings, transferencia_titular: e.target.value })}
+                />
+              </div>
+
+              <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+                <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Cartel de "últimas unidades"</h3>
+                <label className="flex items-center gap-3 text-sm text-bib-white cursor-pointer w-fit">
+                  <input
+                    type="checkbox"
+                    checked={settings.mostrar_stock_bajo}
+                    onChange={(e) => setSettings({ ...settings, mostrar_stock_bajo: e.target.checked })}
+                    className="w-4 h-4 accent-bib-red cursor-pointer"
+                  />
+                  Mostrar el cartel cuando queda poco stock
+                </label>
+                {settings.mostrar_stock_bajo && (
+                  <div>
+                    <label className="text-xs text-bib-gray uppercase tracking-wide">Mostrarlo cuando quedan menos de:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base mt-1"
+                      value={settings.umbral_stock_bajo}
+                      onChange={(e) => setSettings({ ...settings, umbral_stock_bajo: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <button disabled={savingSettings} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors disabled:opacity-40">
+                {savingSettings ? 'Guardando...' : 'GUARDAR CONFIGURACIÓN'}
+              </button>
+            </form>
           </div>
         )}
 

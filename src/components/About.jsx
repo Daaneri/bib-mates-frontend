@@ -1,9 +1,29 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
 import { siteConfig } from '../config/site';
 import { Award, Sparkles } from 'lucide-react';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
+const TEXTO_POR_DEFECTO = `En ${siteConfig.businessName}, creemos que tomar mate es siempre una buena idea. Nuestra misión es acercarte piezas de calidad, con estilo propio, para que cada ronda de mate sea una experiencia distinta.`;
+
 export default function About() {
+  const [quienesSomos, setQuienesSomos] = useState(TEXTO_POR_DEFECTO);
+
+  useEffect(() => {
+    async function fetchTexto() {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('quienes_somos')
+        .eq('id', 1)
+        .single();
+      if (!error && data?.quienes_somos) {
+        setQuienesSomos(data.quienes_somos);
+      }
+    }
+    fetchTexto();
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto p-5 sm:p-6 md:p-20 text-center">
       <SeoHead
@@ -20,10 +40,8 @@ export default function About() {
 
       <FadeIn delay={100}>
         <div className="bg-bib-dark p-5 sm:p-8 md:p-12 rounded border border-bib-white/10">
-          <p className="text-base sm:text-lg md:text-xl leading-relaxed text-bib-white/80 mb-6 sm:mb-8">
-            En <strong className="text-bib-red">{siteConfig.businessName}</strong>, creemos que tomar mate es siempre una buena idea.
-            Nuestra misión es acercarte piezas de calidad, con estilo propio, para que cada ronda
-            de mate sea una experiencia distinta.
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed text-bib-white/80 mb-6 sm:mb-8 whitespace-pre-line">
+            {quienesSomos}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 text-left mt-8 sm:mt-12 border-t border-bib-white/10 pt-8 sm:pt-12">

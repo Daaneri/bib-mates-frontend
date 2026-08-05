@@ -5,9 +5,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Star, Check, X, Download, Plus, Trash2 } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/categories';
+import AdminCoupons from '../components/AdminCoupons';
 
 export default function AdminDashboard() {
   const [view, setView] = useState('Inventario');
+  const [session, setSession] = useState(null);
   const [productos, setProductos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [resenas, setResenas] = useState([]);
@@ -60,7 +62,12 @@ export default function AdminDashboard() {
 
   const navigate = useNavigate();
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+    fetchData(); 
+  }, []);
 
   function handleExtraFilesChange(e) {
     const nuevos = Array.from(e.target.files).map((f) => ({
@@ -149,7 +156,6 @@ export default function AdminDashboard() {
     const { error } = await supabase.from('categorias').insert([{ nombre: catLimpia }]);
 
     if (error) {
-      // Fallback local si la tabla aún no fue creada en Supabase
       setCategorias(prev => [...prev, catLimpia]);
       mostrarMensaje(`Categoría "${catLimpia}" agregada localmente`);
     } else {
@@ -161,7 +167,6 @@ export default function AdminDashboard() {
   }
 
   async function handleDeleteCategory(catNombre) {
-    // Verificación de Hueco de Seguridad: Impedir borrar si hay productos vinculados
     const productosConEstaCat = productos.filter(p => p.category === catNombre && !p.archivado);
     if (productosConEstaCat.length > 0) {
       mostrarMensaje(`No se puede eliminar: Hay ${productosConEstaCat.length} producto(s) asignado(s) a esta categoría.`);
@@ -214,7 +219,6 @@ export default function AdminDashboard() {
     const formData = new FormData(e.target);
     const name = formData.get('name')?.toString().trim();
     
-    // Sanitización estricta de valores numéricos de precio
     const price = Math.max(0, parseFloat(formData.get('price'))) || 0;
     const price_cash = Math.max(0, parseFloat(formData.get('price_cash'))) || 0;
     
@@ -514,7 +518,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Categorías', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
+          {['Inventario', 'Categorías', 'Cupones', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
@@ -818,6 +822,12 @@ export default function AdminDashboard() {
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {view === 'Cupones' && (
+          <div className="max-w-4xl mx-auto">
+            <AdminCoupons token={session?.access_token} />
           </div>
         )}
 

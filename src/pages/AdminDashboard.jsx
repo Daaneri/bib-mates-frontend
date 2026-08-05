@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check, X, Download } from 'lucide-react';
+import { Star, Check, X, Download, Plus, Trash2 } from 'lucide-react';
 import { siteConfig } from '../config/site';
-import { CATEGORIES as CATEGORIAS, SUBCATEGORIES } from '../config/categories';
+import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/categories';
 
 export default function AdminDashboard() {
   const [view, setView] = useState('Inventario');
@@ -14,20 +14,40 @@ export default function AdminDashboard() {
   const [grabados, setGrabados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [extraFiles, setExtraFiles] = useState([]); // [{ file, preview, selected }] — fotos adicionales del producto nuevo
+  const [extraFiles, setExtraFiles] = useState([]);
   const [grabadoFile, setGrabadoFile] = useState(null);
-  const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS[0]);
+  
+  // Categorías Dinámicas
+  const [categorias, setCategorias] = useState(CATEGORIAS_INICIALES);
+  const [nuevaCategoriaForm, setNuevaCategoriaForm] = useState('');
+  const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS_INICIALES[0] || '');
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
+  
   const [busqueda, setBusqueda] = useState('');
   const [verArchivados, setVerArchivados] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ name: '', price: '', stock: 0, description: '', image_url: '', image_urls: [], personalizable: false, category: '', subcategory: '', descuento_porcentaje: 0 });
+  
+  // Estado de edición extendido con Doble Precio (price_cash)
+  const [editData, setEditData] = useState({
+    name: '',
+    price: '',
+    price_cash: '',
+    stock: 0,
+    description: '',
+    image_url: '',
+    image_urls: [],
+    personalizable: false,
+    category: '',
+    subcategory: '',
+    descuento_porcentaje: 0
+  });
+
   const [storageFiles, setStorageFiles] = useState([]);
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
 
-  // Configuración general del sitio (Quiénes somos, transferencia, cartel de stock bajo)
+  // Configuración general del sitio
   const [settings, setSettings] = useState({
     quienes_somos: '',
     transferencia_alias: '',
@@ -46,10 +66,10 @@ export default function AdminDashboard() {
     const nuevos = Array.from(e.target.files).map((f) => ({
       file: f,
       preview: URL.createObjectURL(f),
-      selected: true, // vienen tildadas/seleccionadas por defecto
+      selected: true,
     }));
     setExtraFiles((prev) => [...prev, ...nuevos]);
-    e.target.value = ''; // permite volver a elegir el mismo archivo si lo saca y lo quiere sumar de nuevo
+    e.target.value = '';
   }
 
   function toggleExtraFile(index) {
@@ -70,7 +90,7 @@ export default function AdminDashboard() {
 
   const mostrarMensaje = (texto) => {
     setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3000);
+    setTimeout(() => setMensaje(''), 3500);
   };
 
   async function fetchData() {
@@ -79,10 +99,25 @@ export default function AdminDashboard() {
     const { data: r } = await supabase.from('resenas').select('*').order('created_at', { ascending: false });
     const { data: g } = await supabase.from('grabados').select('*').order('created_at', { ascending: false });
     const { data: s } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+    
+    // Carga de categorías personalizadas desde la base de datos si existen
+    const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
+    
+    if (catData && catData.length > 0) {
+      const listaDB = catData.map(c => c.nombre);
+      setCategorias(listaDB);
+      if (!listaDB.includes(nuevaCategoria)) {
+        setNuevaCategoria(listaDB[0]);
+      }
+    } else {
+      setCategorias(CATEGORIAS_INICIALES);
+    }
+
     setProductos(p || []);
     setPedidos(o || []);
     setResenas(r || []);
     setGrabados(g || []);
+    
     if (s) {
       setSettings({
         quienes_somos: s.quienes_somos || '',
@@ -93,6 +128,63 @@ export default function AdminDashboard() {
         umbral_stock_bajo: s.umbral_stock_bajo ?? 5,
       });
     }
+  }
+
+  // Manejo Seguro de Categorías
+  async function handleAddCategory(e) {
+    e.preventDefault();
+    const catLimpia = nuevaCategoriaForm.trim();
+
+    if (!catLimpia) {
+      mostrarMensaje("El nombre de la categoría no puede estar vacío");
+      return;
+    }
+
+    if (categorias.some(c => c.toLowerCase() === catLimpia.toLowerCase())) {
+      mostrarMensaje("Esta categoría ya existe");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.from('categorias').insert([{ nombre: catLimpia }]);
+
+    if (error) {
+      // Fallback local si la tabla aún no fue creada en Supabase
+      setCategorias(prev => [...prev, catLimpia]);
+      mostrarMensaje(`Categoría "${catLimpia}" agregada localmente`);
+    } else {
+      mostrarMensaje("Categoría agregada con éxito");
+      fetchData();
+    }
+    setNuevaCategoriaForm('');
+    setLoading(false);
+  }
+
+  async function handleDeleteCategory(catNombre) {
+    // Verificación de Hueco de Seguridad: Impedir borrar si hay productos vinculados
+    const productosConEstaCat = productos.filter(p => p.category === catNombre && !p.archivado);
+    if (productosConEstaCat.length > 0) {
+      mostrarMensaje(`No se puede eliminar: Hay ${productosConEstaCat.length} producto(s) asignado(s) a esta categoría.`);
+      return;
+    }
+
+    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${catNombre}"?`)) return;
+
+    setLoading(true);
+    const { error } = await supabase.from('categorias').delete().eq('nombre', catNombre);
+
+    if (error) {
+      setCategorias(prev => prev.filter(c => c !== catNombre));
+      mostrarMensaje(`Categoría "${catNombre}" removida`);
+    } else {
+      mostrarMensaje("Categoría eliminada con éxito");
+      fetchData();
+    }
+
+    if (nuevaCategoria === catNombre) {
+      setNuevaCategoria(categorias.find(c => c !== catNombre) || '');
+    }
+    setLoading(false);
   }
 
   async function handleSaveSettings(e) {
@@ -106,7 +198,7 @@ export default function AdminDashboard() {
         transferencia_cbu: settings.transferencia_cbu,
         transferencia_titular: settings.transferencia_titular,
         mostrar_stock_bajo: settings.mostrar_stock_bajo,
-        umbral_stock_bajo: parseInt(settings.umbral_stock_bajo) || 5,
+        umbral_stock_bajo: Math.max(1, parseInt(settings.umbral_stock_bajo) || 5),
         updated_at: new Date().toISOString(),
       })
       .eq('id', 1);
@@ -120,14 +212,18 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.target);
-    const name = formData.get('name');
-    const price = parseFloat(formData.get('price'));
-    const stock = parseInt(formData.get('stock'));
+    const name = formData.get('name')?.toString().trim();
+    
+    // Sanitización estricta de valores numéricos de precio
+    const price = Math.max(0, parseFloat(formData.get('price'))) || 0;
+    const price_cash = Math.max(0, parseFloat(formData.get('price_cash'))) || 0;
+    
+    const stock = Math.max(0, parseInt(formData.get('stock'))) || 0;
     const category = formData.get('category');
     const subcategory = formData.get('subcategory') || null;
     const description = formData.get('description');
     const personalizable = formData.get('personalizable') === 'on';
-    const descuentoPorcentaje = parseFloat(formData.get('descuento_porcentaje')) || 0;
+    const descuentoPorcentaje = Math.min(100, Math.max(0, parseFloat(formData.get('descuento_porcentaje')) || 0));
 
     let imageUrl = '';
     if (file) {
@@ -135,7 +231,6 @@ export default function AdminDashboard() {
       if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
     }
 
-    // Solo se suben las fotos adicionales que quedaron tildadas/seleccionadas
     const imageUrlsExtra = [];
     const seleccionadas = extraFiles.filter((item) => item.selected);
     for (const item of seleccionadas) {
@@ -143,14 +238,27 @@ export default function AdminDashboard() {
       if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
     }
 
-    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, image_urls: imageUrlsExtra, description, personalizable, descuento_porcentaje: descuentoPorcentaje }]);
+    const { error } = await supabase.from('productos').insert([{ 
+      name, 
+      price, 
+      price_cash,
+      stock, 
+      category, 
+      subcategory, 
+      image_url: imageUrl, 
+      image_urls: imageUrlsExtra, 
+      description, 
+      personalizable, 
+      descuento_porcentaje: descuentoPorcentaje 
+    }]);
+
     if (error) mostrarMensaje("Error: " + error.message);
     else {
       mostrarMensaje("Producto agregado con éxito");
       setFile(null);
       limpiarExtraFiles();
       e.target.reset();
-      setNuevaCategoria(CATEGORIAS[0]);
+      setNuevaCategoria(categorias[0] || '');
       fetchData();
     }
     setLoading(false);
@@ -235,16 +343,17 @@ export default function AdminDashboard() {
   async function handleUpdate(product) {
     const { error } = await supabase.from('productos')
       .update({
-        name: editData.name,
-        price: editData.price.toString(),
-        stock: parseInt(editData.stock),
+        name: editData.name.trim(),
+        price: Math.max(0, parseFloat(editData.price)) || 0,
+        price_cash: Math.max(0, parseFloat(editData.price_cash)) || 0,
+        stock: Math.max(0, parseInt(editData.stock)) || 0,
         description: editData.description,
         category: editData.category,
         subcategory: editData.subcategory || null,
         image_url: editData.image_url,
         image_urls: editData.image_urls,
         personalizable: editData.personalizable,
-        descuento_porcentaje: parseFloat(editData.descuento_porcentaje) || 0,
+        descuento_porcentaje: Math.min(100, Math.max(0, parseFloat(editData.descuento_porcentaje) || 0)),
       })
       .eq('id', product.id);
 
@@ -266,7 +375,7 @@ export default function AdminDashboard() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("¿Eliminar este producto?")) return;
+    if (!window.confirm("¿Eliminar este producto definitivo?")) return;
     const { error } = await supabase.from('productos').delete().eq('id', id);
     if (error) mostrarMensaje("Error: " + error.message);
     else {
@@ -296,10 +405,8 @@ export default function AdminDashboard() {
       'Productos', 'Metodo de pago', 'Estado', 'Costo de envio', 'Descuento', 'Total',
     ];
 
-    // Excel (config regional AR) usa ";" como separador de columnas porque la "," la usa para decimales
     const SEPARADOR = ';';
 
-    // Escapa comillas y envuelve en comillas los campos que tengan el separador, comillas o saltos de línea
     function escaparCampo(valor) {
       const texto = valor === null || valor === undefined ? '' : String(valor);
       if (texto.includes(SEPARADOR) || texto.includes('"') || texto.includes('\n')) {
@@ -337,8 +444,6 @@ export default function AdminDashboard() {
     });
 
     const csv = [encabezados.join(SEPARADOR), ...filas].join('\n');
-
-    // El BOM (\uFEFF) es necesario para que Excel muestre bien las tildes y la "ñ"
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -409,7 +514,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
+          {['Inventario', 'Categorías', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
@@ -424,23 +529,37 @@ export default function AdminDashboard() {
       </aside>
 
       <main className="flex-1 p-4 sm:p-6 md:p-16 min-w-0">
-        {mensaje && <div className="bg-bib-red text-bib-white p-3 rounded mb-4 text-center text-sm uppercase tracking-widest">{mensaje}</div>}
+        {mensaje && <div className="bg-bib-red text-bib-white p-3 rounded mb-4 text-center text-sm uppercase tracking-widest transition-all">{mensaje}</div>}
 
         {view === 'Inventario' && (
           <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
             <form onSubmit={handleAddProduct} className="max-w-4xl mx-auto bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
               <h3 className="text-sm md:text-base mb-2 md:mb-4 uppercase tracking-widest font-medium">Nuevo Producto</h3>
               <input name="name" placeholder="Nombre" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
-              <input name="price" type="number" step="any" placeholder="Precio" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-bib-gray mb-1 px-1">Precio de Lista / Tarjeta ($)</label>
+                  <input name="price" type="number" step="any" min="0" placeholder="Ej: 15000" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
+                </div>
+                <div>
+                  <label className="block text-xs text-bib-gray mb-1 px-1">Precio Contado / Efectivo ($)</label>
+                  <input name="price_cash" type="number" step="any" min="0" placeholder="Ej: 12500" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs text-bib-gray mb-1 px-1">% de descuento (opcional, 0 = sin descuento)</label>
                 <input name="descuento_porcentaje" type="number" step="any" min="0" max="100" placeholder="Ej: 15" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" />
               </div>
-              <input name="stock" type="number" placeholder="Stock" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
+              
+              <input name="stock" type="number" min="0" placeholder="Stock" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
               <textarea name="description" placeholder="Descripción del producto" rows={3} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base resize-none" />
+              
               <select name="category" value={nuevaCategoria} onChange={(e) => setNuevaCategoria(e.target.value)} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
-                {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
+              
               {subcategoriasNueva.length > 0 && (
                 <select name="subcategory" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
                   <option value="">Sin subcategoría</option>
@@ -450,10 +569,12 @@ export default function AdminDashboard() {
               {nuevaCategoria === 'Yerbas' && (
                 <input name="subcategory" placeholder="Marca de la yerba" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" />
               )}
+              
               <label className="flex items-center gap-2 text-sm text-bib-gray">
                 <input type="checkbox" name="personalizable" className="w-4 h-4 accent-bib-red" />
                 ¿Es personalizable / grabable?
               </label>
+              
               <div className="flex flex-col items-center gap-2">
                 <input type="file" id="fileInput" className="hidden" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
                 <label htmlFor="fileInput" className="cursor-pointer bg-bib-black px-6 py-2 rounded border border-bib-white/20 hover:border-bib-red transition text-xs md:text-sm text-center break-all">
@@ -499,16 +620,13 @@ export default function AdminDashboard() {
                             type="button"
                             onClick={() => quitarExtraFile(i)}
                             className="absolute -bottom-1.5 -right-1.5 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center shadow"
-                            title="Quitar esta foto de la lista"
+                            title="Quitar esta foto"
                           >
                             ×
                           </button>
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-bib-gray pt-1">
-                      Tocá una foto para incluirla o excluirla. Las tildadas en verde se suben con el producto; las apagadas en gris no se suben.
-                    </p>
                   </>
                 )}
               </div>
@@ -519,7 +637,7 @@ export default function AdminDashboard() {
             <input type="text" placeholder="Buscar producto..." className="max-w-4xl mx-auto block w-full bg-bib-dark p-3 rounded border border-bib-white/20 px-6 mb-2 text-sm md:text-base" onChange={(e) => setBusqueda(e.target.value)} />
 
             <div className="max-w-4xl mx-auto flex gap-2 mb-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-auto md:px-0 scrollbar-hide">
-              {['Todos', ...CATEGORIAS].map(cat => (
+              {['Todos', ...categorias].map(cat => (
                 <button key={cat} onClick={() => setCategoriaFiltro(cat)} className={`px-5 md:px-6 py-1.5 rounded text-xs md:text-sm whitespace-nowrap shrink-0 uppercase tracking-wide ${categoriaFiltro === cat ? 'bg-bib-red text-bib-white' : 'bg-bib-dark text-bib-gray border border-bib-white/10'}`}>{cat}</button>
               ))}
             </div>
@@ -542,7 +660,7 @@ export default function AdminDashboard() {
                       <textarea className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4 resize-none" rows={2} value={editData.description} onChange={(e) => setEditData({...editData, description: e.target.value})} placeholder="Descripción" />
 
                       <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value, subcategory: ''})}>
-                        {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
 
                       {subcategoriasEdit.length > 0 ? (
@@ -586,12 +704,19 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-24 text-sm px-4" placeholder="Stock" value={editData.stock} type="number" onChange={(e) => setEditData({...editData, stock: e.target.value})} />
-                        <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-28 text-sm px-4" placeholder="Precio" value={editData.price} type="number" onChange={(e) => setEditData({...editData, price: e.target.value})} />
-                        <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-28 text-sm px-4" placeholder="% descuento" value={editData.descuento_porcentaje} type="number" min="0" max="100" onChange={(e) => setEditData({...editData, descuento_porcentaje: e.target.value})} />
-                        <button type="button" onClick={() => handleUpdate(p)} className="bg-green-600 text-white px-5 py-2 rounded text-xs font-medium uppercase tracking-wide">Guardar cambios</button>
-                        <button type="button" onClick={() => setEditId(null)} className="text-bib-gray px-3 py-2 text-xs uppercase tracking-wide">Cancelar</button>
+                      <div className="space-y-2 pt-1">
+                        <div className="flex gap-2">
+                          <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Precio Lista" value={editData.price} type="number" min="0" step="any" onChange={(e) => setEditData({...editData, price: e.target.value})} />
+                          <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Precio Efectivo" value={editData.price_cash} type="number" min="0" step="any" onChange={(e) => setEditData({...editData, price_cash: e.target.value})} />
+                        </div>
+                        <div className="flex gap-2">
+                          <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Stock" value={editData.stock} type="number" min="0" onChange={(e) => setEditData({...editData, stock: e.target.value})} />
+                          <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="% dto" value={editData.descuento_porcentaje} type="number" min="0" max="100" onChange={(e) => setEditData({...editData, descuento_porcentaje: e.target.value})} />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <button type="button" onClick={() => handleUpdate(p)} className="bg-green-600 text-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide flex-1">Guardar</button>
+                          <button type="button" onClick={() => setEditId(null)} className="text-bib-gray border border-bib-white/10 px-3 py-2 rounded text-xs uppercase tracking-wide">Cancelar</button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -603,19 +728,25 @@ export default function AdminDashboard() {
                             <p className="text-xs md:text-sm text-bib-gray mt-1 line-clamp-2">{p.description}</p>
                           )}
                         </div>
+                        
+                        <div className="space-y-1 bg-bib-black/50 p-2.5 rounded border border-bib-white/5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-bib-gray uppercase tracking-wider">Lista / Tarjeta:</span>
+                            <span className="font-medium text-sm text-bib-white">
+                              ${p.price?.toLocaleString('es-AR')}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-green-400 font-medium uppercase tracking-wider">Contado / Efec:</span>
+                            <span className="font-semibold text-sm text-green-400">
+                              ${(p.price_cash || p.price)?.toLocaleString('es-AR')}
+                            </span>
+                          </div>
+                        </div>
+
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`px-3 py-1 rounded text-xs border font-medium ${stockColor(p.stock ?? 0)}`}>
                             Stock: {p.stock ?? 0}
-                          </span>
-                          <span className="font-medium text-lg md:text-xl text-bib-red tracking-wide">
-                            {p.descuento_porcentaje > 0 ? (
-                              <>
-                                <span className="line-through text-bib-gray text-sm mr-2">${p.price}</span>
-                                ${Math.round(p.price * (1 - p.descuento_porcentaje / 100))}
-                              </>
-                            ) : (
-                              <>${p.price}</>
-                            )}
                           </span>
                           {p.descuento_porcentaje > 0 && (
                             <span className="px-2 py-1 rounded text-[10px] border border-green-700/40 bg-green-900/40 text-green-300 uppercase tracking-wide">{p.descuento_porcentaje}% OFF</span>
@@ -629,7 +760,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>
@@ -637,6 +768,55 @@ export default function AdminDashboard() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {view === 'Categorías' && (
+          <div className="max-w-2xl mx-auto space-y-6">
+            <form onSubmit={handleAddCategory} className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
+              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Crear Nueva Categoría</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nombre de la categoría (ej: Bombillas, Cueros)"
+                  className="flex-1 bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                  value={nuevaCategoriaForm}
+                  onChange={(e) => setNuevaCategoriaForm(e.target.value)}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black px-6 py-3 rounded font-medium text-xs md:text-sm uppercase tracking-widest transition-colors flex items-center gap-2 shrink-0"
+                >
+                  <Plus size={16} /> Crear
+                </button>
+              </div>
+            </form>
+
+            <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
+              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Categorías Existentes</h3>
+              <div className="divide-y divide-bib-white/10">
+                {categorias.map(cat => {
+                  const cantidadProductos = productos.filter(p => p.category === cat && !p.archivado).length;
+                  return (
+                    <div key={cat} className="py-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm text-bib-white">{cat}</p>
+                        <p className="text-xs text-bib-gray">{cantidadProductos} producto(s) asignados</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="text-bib-gray hover:text-bib-red p-2 rounded border border-bib-white/10 hover:border-bib-red transition"
+                        title="Eliminar categoría"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -843,7 +1023,6 @@ export default function AdminDashboard() {
         {view === 'Configuración' && (
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSaveSettings} className="space-y-6 md:space-y-8">
-
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Quiénes somos</h3>
                 <p className="text-xs text-bib-gray">Este texto aparece en la página "Nosotros" de la tienda.</p>
@@ -858,7 +1037,7 @@ export default function AdminDashboard() {
 
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de transferencia</h3>
-                <p className="text-xs text-bib-gray">Estos datos se muestran al cliente cuando elige pagar por transferencia (en la pantalla de confirmación y en el mail que le llega).</p>
+                <p className="text-xs text-bib-gray">Estos datos se muestran al cliente cuando elige pagar por transferencia.</p>
                 <input
                   placeholder="Alias"
                   className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
@@ -932,7 +1111,7 @@ export default function AdminDashboard() {
           <div className="bg-bib-dark border border-bib-white/10 rounded p-4 md:p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium uppercase tracking-widest">
-                {pickerMode === 'main' ? 'Elegir foto principal' : 'Elegir fotos adicionales (podés tocar varias)'}
+                {pickerMode === 'main' ? 'Elegir foto principal' : 'Elegir fotos adicionales'}
               </h3>
               <button onClick={() => setPickerMode(null)} className="text-bib-gray hover:text-bib-white text-sm">Cerrar ✕</button>
             </div>

@@ -841,7 +841,7 @@ export default function AdminDashboard() {
 
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de transferencia</h3>
-                <p className="text-xs text-bib-gray">Guardados acá para tenerlos a mano — todavía no se muestran en ninguna pantalla de la tienda.</p>
+                <p className="text-xs text-bib-gray">Estos datos se muestran al cliente cuando elige pagar por transferencia (en la pantalla de confirmación y en el mail que le llega).</p>
                 <input
                   placeholder="Alias"
                   className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"

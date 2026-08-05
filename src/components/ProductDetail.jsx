@@ -45,10 +45,6 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [agregarCaja, setAgregarCaja] = useState(false);
-  const [cajaPresentacion, setCajaPresentacion] = useState(null);
-  const [agregarGrabado, setAgregarGrabado] = useState(false);
-  const [servicioGrabado, setServicioGrabado] = useState(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
   const [copiado, setCopiado] = useState(false);
@@ -64,24 +60,6 @@ export default function ProductDetail() {
         fetchRelacionados(data);
       }
     }
-    async function fetchCaja() {
-      const { data } = await supabase
-        .from('productos')
-        .select('*')
-        .ilike('name', '%Caja de Presentación%')
-        .limit(1)
-        .maybeSingle();
-      if (data) setCajaPresentacion(data);
-    }
-    async function fetchGrabado() {
-      const { data } = await supabase
-        .from('productos')
-        .select('*')
-        .ilike('name', '%Grabado%')
-        .limit(1)
-        .maybeSingle();
-      if (data) setServicioGrabado(data);
-    }
     async function fetchRelacionados(currentProduct) {
       const { data, error } = await supabase
         .from('productos')
@@ -93,8 +71,6 @@ export default function ProductDetail() {
       if (!error) setRelacionados(data || []);
     }
     fetchProduct();
-    fetchCaja();
-    fetchGrabado();
   }, [id]);
 
   useEffect(() => {
@@ -114,8 +90,6 @@ export default function ProductDetail() {
 
   function handleAgregarCarrito() {
     addToCart(product);
-    if (agregarCaja && cajaPresentacion) addToCart(cajaPresentacion);
-    if (agregarGrabado && servicioGrabado) addToCart(servicioGrabado);
     openDrawer();
   }
 
@@ -262,33 +236,6 @@ export default function ProductDetail() {
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
               <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-4 sm:mb-5">${product.price.toLocaleString('es-AR')}</p>
-
-              {(esPersonalizable || cajaPresentacion) && (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {esPersonalizable && servicioGrabado && (
-                    <label className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-white bg-bib-black border border-bib-white/10 rounded p-3 cursor-pointer hover:border-bib-red/40 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={agregarGrabado}
-                        onChange={(e) => setAgregarGrabado(e.target.checked)}
-                        className="w-4 h-4 accent-bib-red cursor-pointer shrink-0"
-                      />
-                      <span>¿Desea grabar su mate? + ${Number(servicioGrabado.price).toLocaleString('es-AR')}</span>
-                    </label>
-                  )}
-                  {cajaPresentacion && (
-                    <label className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-bib-white bg-bib-black border border-bib-white/10 rounded p-3 cursor-pointer hover:border-bib-red/40 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={agregarCaja}
-                        onChange={(e) => setAgregarCaja(e.target.checked)}
-                        className="w-4 h-4 accent-bib-red cursor-pointer shrink-0"
-                      />
-                      <span>¿Quiere caja de presentación? + ${Number(cajaPresentacion.price).toLocaleString('es-AR')}</span>
-                    </label>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="border-y border-bib-white/10 py-6 sm:py-8">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
+import { CreditCard, Banknote } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const COUPON_STORAGE_KEY = "applied_coupon_code";
@@ -32,9 +33,7 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
-  // Formatear precios según el medio de pago seleccionado
   const itemsFormat = cart.map((item) => {
-    // Si es transferencia y tiene price_cash usa ese, de lo contrario toma price (Precio de Lista)
     const price = paymentMethod === "transferencia" && item.price_cash 
       ? item.price_cash 
       : item.price;
@@ -194,77 +193,79 @@ export default function CheckoutEntrega() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-bib-white">
       <div>
-        <h2 className="text-2xl font-bold mb-4">Datos del Cliente y Entrega</h2>
+        <h2 className="text-2xl font-bold mb-4 font-heading tracking-wide">Datos del Cliente y Entrega</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Nombre Completo</label>
+            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">Nombre Completo</label>
             <input
               type="text"
               name="name"
               required
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full border p-2 rounded"
+              className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium">DNI</label>
+              <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">DNI</label>
               <input
                 type="text"
                 name="dni"
                 required
                 value={formData.dni}
                 onChange={handleInputChange}
-                className="w-full border p-2 rounded"
+                className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Teléfono</label>
+              <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">Teléfono</label>
               <input
                 type="text"
                 name="phone"
                 required
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full border p-2 rounded"
+                className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium">Email</label>
+            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">Email</label>
             <input
               type="email"
               name="email"
               required
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full border p-2 rounded"
+              className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none"
             />
           </div>
 
           <div className="pt-2">
-            <label className="block text-sm font-medium mb-1">Método de entrega</label>
+            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Método de entrega</label>
             <div className="flex gap-4">
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="radio"
                   name="shippingType"
                   value="envio"
                   checked={shippingType === "envio"}
                   onChange={() => setShippingType("envio")}
+                  className="accent-bib-red"
                 />
                 Envío a Domicilio
               </label>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="radio"
                   name="shippingType"
                   value="retiro"
                   checked={shippingType === "retiro"}
                   onChange={() => setShippingType("retiro")}
+                  className="accent-bib-red"
                 />
                 Retiro Gratis
               </label>
@@ -280,7 +281,7 @@ export default function CheckoutEntrega() {
                 required
                 value={formData.address}
                 onChange={handleInputChange}
-                className="w-full border p-2 rounded"
+                className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
               />
               <div className="grid grid-cols-3 gap-2">
                 <input
@@ -290,7 +291,7 @@ export default function CheckoutEntrega() {
                   required
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
                 />
                 <input
                   type="text"
@@ -299,7 +300,7 @@ export default function CheckoutEntrega() {
                   required
                   value={formData.state}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
                 />
                 <input
                   type="text"
@@ -308,17 +309,17 @@ export default function CheckoutEntrega() {
                   required
                   value={formData.postalCode}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
                 />
               </div>
             </div>
           )}
 
-          {/* SELECCIÓN DE MEDIO DE PAGO REESTRUCTURADO */}
+          {/* OPCIONES DE PAGO ADAPTADAS AL MODO OSCURO */}
           <div className="pt-2">
-            <label className="block text-sm font-medium mb-2">Medio de Pago</label>
+            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Medio de Pago</label>
             <div className="space-y-3">
-              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-colors ${paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-50/50" : "hover:bg-gray-50"}`}>
+              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
                 <div className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -326,15 +327,17 @@ export default function CheckoutEntrega() {
                     value="mercadopago"
                     checked={paymentMethod === "mercadopago"}
                     onChange={() => setPaymentMethod("mercadopago")}
+                    className="accent-blue-500"
                   />
-                  <span className="font-semibold text-gray-900">Tarjeta de Crédito / Mercado Pago</span>
+                  <CreditCard size={18} className="text-blue-400" />
+                  <span className="font-medium text-bib-white text-sm">Tarjeta de Crédito / Mercado Pago</span>
                 </div>
-                <p className="text-xs text-gray-600 ml-6 mt-1">
-                  💳 Precio de Lista — <strong>3 cuotas sin interés</strong> (Visa, Mastercard, Amex).
+                <p className="text-xs text-bib-gray ml-6 mt-1">
+                  💳 Precio de Lista — <strong className="text-blue-400">3 cuotas sin interés</strong>
                 </p>
               </label>
 
-              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-colors ${paymentMethod === "transferencia" ? "border-green-500 bg-green-50/50" : "hover:bg-gray-50"}`}>
+              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "transferencia" ? "border-green-500 bg-green-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
                 <div className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -342,55 +345,56 @@ export default function CheckoutEntrega() {
                     value="transferencia"
                     checked={paymentMethod === "transferencia"}
                     onChange={() => setPaymentMethod("transferencia")}
+                    className="accent-green-500"
                   />
-                  <span className="font-semibold text-gray-900">Transferencia Bancaria</span>
+                  <Banknote size={18} className="text-green-400" />
+                  <span className="font-medium text-bib-white text-sm">Transferencia Bancaria</span>
                 </div>
-                <p className="text-xs text-green-700 ml-6 mt-1">
-                  🔥 <strong>Precio Especial con Descuento</strong> directo en tu compra.
+                <p className="text-xs text-green-400 ml-6 mt-1">
+                  🔥 <strong>Precio Especial con Descuento</strong>
                 </p>
               </label>
             </div>
           </div>
 
-          {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
+          {errorMessage && <p className="text-red-400 text-sm mt-2">{errorMessage}</p>}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded mt-4 disabled:opacity-50 hover:bg-blue-700 transition-colors"
+            className="w-full bg-bib-red text-bib-black font-bold py-3.5 rounded mt-4 uppercase tracking-widest disabled:opacity-50 hover:bg-bib-white transition-all active:scale-[0.98]"
           >
             {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" : "Confirmar Pedido"}
           </button>
         </form>
       </div>
 
-      <div className="bg-gray-50 p-6 rounded border h-fit">
-        <h3 className="text-xl font-bold mb-4">Resumen del Pedido</h3>
+      {/* RESUMEN DEL PEDIDO - MODO OSCURO FIX */}
+      <div className="bg-bib-dark p-6 rounded border border-bib-white/10 h-fit">
+        <h3 className="text-xl font-bold mb-4 font-heading tracking-wide border-b border-bib-white/10 pb-3">Resumen del Pedido</h3>
         <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
           {itemsFormat.map((item) => (
             <div key={item.id} className="flex justify-between text-sm">
-              <span>{item.name} x{item.quantity}</span>
-              <span>${(item.price * item.quantity).toLocaleString("es-AR")}</span>
+              <span className="text-bib-white/80">{item.name} x{item.quantity}</span>
+              <span className="font-medium text-bib-white">${(item.price * item.quantity).toLocaleString("es-AR")}</span>
             </div>
           ))}
         </div>
 
-        <hr className="my-4" />
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Cupón de Descuento</label>
+        <div className="my-4 border-t border-bib-white/10 pt-4">
+          <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1.5">Cupón de Descuento</label>
           {appliedCoupon ? (
-            <div className="flex justify-between items-center bg-green-100 border border-green-300 p-2 rounded">
+            <div className="flex justify-between items-center bg-green-950/40 border border-green-500/30 p-2.5 rounded">
               <div>
-                <p className="text-sm font-semibold text-green-800">
+                <p className="text-sm font-semibold text-green-400">
                   {appliedCoupon.code} ({appliedCoupon.discount_percentage}% OFF)
                 </p>
-                <p className="text-xs text-green-700">-${appliedCoupon.discount.toLocaleString("es-AR")}</p>
+                <p className="text-xs text-green-300">-${appliedCoupon.discount.toLocaleString("es-AR")}</p>
               </div>
               <button
                 type="button"
                 onClick={handleRemoveCoupon}
-                className="text-red-500 text-xs font-semibold hover:underline"
+                className="text-red-400 text-xs font-semibold hover:underline"
               >
                 Quitar
               </button>
@@ -399,44 +403,42 @@ export default function CheckoutEntrega() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ingresar código"
+                placeholder="CÓDIGO"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
-                className="border p-2 rounded text-sm w-full uppercase"
+                className="bg-bib-card border border-bib-white/10 p-2 rounded text-sm w-full uppercase text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
               />
               <button
                 type="button"
                 onClick={handleApplyCoupon}
                 disabled={isApplyingCoupon || !couponCode.trim()}
-                className="bg-gray-800 text-white px-4 py-2 rounded text-sm disabled:opacity-50 hover:bg-gray-900"
+                className="bg-bib-white/10 text-bib-white px-4 py-2 rounded text-xs font-semibold uppercase tracking-wider disabled:opacity-50 hover:bg-bib-white/20"
               >
                 Aplicar
               </button>
             </div>
           )}
-          {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
+          {couponError && <p className="text-red-400 text-xs mt-1">{couponError}</p>}
         </div>
 
-        <hr className="my-4" />
-
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
+        <div className="space-y-2 text-sm border-t border-bib-white/10 pt-4">
+          <div className="flex justify-between text-bib-gray">
             <span>Subtotal ({paymentMethod === "transferencia" ? "Transferencia" : "Lista"})</span>
-            <span>${totalProductos.toLocaleString("es-AR")}</span>
+            <span className="text-bib-white">${totalProductos.toLocaleString("es-AR")}</span>
           </div>
           {appliedCoupon && (
-            <div className="flex justify-between text-green-600 font-medium">
+            <div className="flex justify-between text-green-400 font-medium">
               <span>Descuento Cupón</span>
               <span>-${totalDescuento.toLocaleString("es-AR")}</span>
             </div>
           )}
-          <div className="flex justify-between">
+          <div className="flex justify-between text-bib-gray">
             <span>Envío</span>
-            <span>{shippingType === "envio" ? `$${shippingCost.toLocaleString("es-AR")}` : "Gratis"}</span>
+            <span className="text-bib-white">{shippingType === "envio" ? `$${shippingCost.toLocaleString("es-AR")}` : "Gratis"}</span>
           </div>
-          <div className="flex justify-between text-base font-bold pt-2 border-t">
+          <div className="flex justify-between text-lg font-bold pt-3 border-t border-bib-white/10 text-bib-white">
             <span>Total</span>
-            <span>${totalFinal.toLocaleString("es-AR")}</span>
+            <span className="text-bib-red">${totalFinal.toLocaleString("es-AR")}</span>
           </div>
         </div>
       </div>

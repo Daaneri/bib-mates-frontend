@@ -8,6 +8,16 @@ import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
+const PRECIO_GRABADO = 9000;
+const PRECIO_CAJA = 8500;
+
+function precioFinal(product) {
+  if (product.descuento_porcentaje > 0) {
+    return Math.round(product.price * (1 - product.descuento_porcentaje / 100));
+  }
+  return product.price;
+}
+
 function ProductDetailSkeleton() {
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12">
@@ -46,6 +56,8 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [quiereGrabado, setQuiereGrabado] = useState(false);
+  const [quiereCaja, setQuiereCaja] = useState(false);
   const [relacionados, setRelacionados] = useState([]);
   const [copiado, setCopiado] = useState(false);
   const { addToCart, openDrawer } = useCart();
@@ -89,7 +101,13 @@ export default function ProductDetail() {
   const esPersonalizable = product.personalizable === true;
 
   function handleAgregarCarrito() {
-    addToCart(product);
+    addToCart({ ...product, price: precioFinal(product) });
+    if (quiereGrabado) {
+      addToCart({ id: `${product.id}-grabado`, name: `Grabado - ${product.name}`, price: PRECIO_GRABADO });
+    }
+    if (quiereCaja) {
+      addToCart({ id: `${product.id}-caja`, name: 'Caja de presentación', price: PRECIO_CAJA });
+    }
     openDrawer();
   }
 
@@ -130,7 +148,7 @@ export default function ProductDetail() {
     offers: {
       "@type": "Offer",
       priceCurrency: "ARS",
-      price: product.price,
+      price: precioFinal(product),
       availability: (product.stock ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: `https://bib-mates-frontend.vercel.app/producto/${product.id}`,
     },
@@ -235,7 +253,15 @@ export default function ProductDetail() {
           <div className="flex flex-col gap-6 sm:gap-8">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-bib-white mb-3 sm:mb-4 break-words tracking-tight">{product.name}</h1>
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-4 sm:mb-5">${product.price.toLocaleString('es-AR')}</p>
+              {product.descuento_porcentaje > 0 ? (
+                <div className="flex items-center gap-3 mb-4 sm:mb-5 flex-wrap">
+                  <p className="text-lg sm:text-xl text-bib-gray line-through">${product.price.toLocaleString('es-AR')}</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight">${precioFinal(product).toLocaleString('es-AR')}</p>
+                  <span className="px-2 py-1 rounded text-[10px] border border-green-700/40 bg-green-900/40 text-green-300 uppercase tracking-wide">{product.descuento_porcentaje}% OFF</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl md:text-3xl font-medium text-bib-red tracking-tight mb-4 sm:mb-5">${product.price.toLocaleString('es-AR')}</p>
+              )}
             </div>
 
             <div className="border-y border-bib-white/10 py-6 sm:py-8">
@@ -254,6 +280,62 @@ export default function ProductDetail() {
                 </p>
               </div>
             )}
+
+            <div className="space-y-4">
+              {esPersonalizable && (
+                <div>
+                  <p className="text-xs sm:text-sm text-bib-white mb-2">
+                    ¿Querés que tu mate venga grabado? <span className="text-bib-red">(+${PRECIO_GRABADO.toLocaleString('es-AR')})</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setQuiereGrabado(true)}
+                      className={`rounded border px-4 py-2.5 text-xs sm:text-sm font-medium uppercase tracking-wide transition-colors ${
+                        quiereGrabado ? 'border-bib-red bg-bib-red/10 text-bib-white' : 'border-bib-white/20 text-bib-gray'
+                      }`}
+                    >
+                      Sí
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setQuiereGrabado(false)}
+                      className={`rounded border px-4 py-2.5 text-xs sm:text-sm font-medium uppercase tracking-wide transition-colors ${
+                        !quiereGrabado ? 'border-bib-red bg-bib-red/10 text-bib-white' : 'border-bib-white/20 text-bib-gray'
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs sm:text-sm text-bib-white mb-2">
+                  ¿Querés agregar caja de presentación? <span className="text-bib-red">(+${PRECIO_CAJA.toLocaleString('es-AR')})</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuiereCaja(true)}
+                    className={`rounded border px-4 py-2.5 text-xs sm:text-sm font-medium uppercase tracking-wide transition-colors ${
+                      quiereCaja ? 'border-bib-red bg-bib-red/10 text-bib-white' : 'border-bib-white/20 text-bib-gray'
+                    }`}
+                  >
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuiereCaja(false)}
+                    className={`rounded border px-4 py-2.5 text-xs sm:text-sm font-medium uppercase tracking-wide transition-colors ${
+                      !quiereCaja ? 'border-bib-red bg-bib-red/10 text-bib-white' : 'border-bib-white/20 text-bib-gray'
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-3 sm:gap-4">
               <button
@@ -299,7 +381,14 @@ export default function ProductDetail() {
                   </div>
                   <div className="p-3 sm:p-4">
                     <p className="text-xs sm:text-sm text-bib-white truncate">{p.name}</p>
-                    <p className="text-sm sm:text-base font-medium text-bib-red mt-1">${Number(p.price).toLocaleString('es-AR')}</p>
+                    {p.descuento_porcentaje > 0 ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] sm:text-xs text-bib-gray line-through">${Number(p.price).toLocaleString('es-AR')}</p>
+                        <p className="text-sm sm:text-base font-medium text-bib-red">${precioFinal(p).toLocaleString('es-AR')}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm sm:text-base font-medium text-bib-red mt-1">${Number(p.price).toLocaleString('es-AR')}</p>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -315,7 +404,7 @@ export default function ProductDetail() {
       >
         <div className="flex-1 min-w-0">
           <p className="text-bib-white text-sm font-medium truncate">{product.name}</p>
-          <p className="text-bib-red font-bold">${product.price.toLocaleString('es-AR')}</p>
+          <p className="text-bib-red font-bold">${precioFinal(product).toLocaleString('es-AR')}</p>
         </div>
         <button
           onClick={handleAgregarCarrito}

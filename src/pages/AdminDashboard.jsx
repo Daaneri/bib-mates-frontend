@@ -22,7 +22,7 @@ export default function AdminDashboard() {
   const [verArchivados, setVerArchivados] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ name: '', price: '', stock: 0, description: '', image_url: '', image_urls: [], personalizable: false, category: '', subcategory: '' });
+  const [editData, setEditData] = useState({ name: '', price: '', stock: 0, description: '', image_url: '', image_urls: [], personalizable: false, category: '', subcategory: '', descuento_porcentaje: 0 });
   const [storageFiles, setStorageFiles] = useState([]);
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
@@ -127,6 +127,7 @@ export default function AdminDashboard() {
     const subcategory = formData.get('subcategory') || null;
     const description = formData.get('description');
     const personalizable = formData.get('personalizable') === 'on';
+    const descuentoPorcentaje = parseFloat(formData.get('descuento_porcentaje')) || 0;
 
     let imageUrl = '';
     if (file) {
@@ -142,7 +143,7 @@ export default function AdminDashboard() {
       if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
     }
 
-    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, image_urls: imageUrlsExtra, description, personalizable }]);
+    const { error } = await supabase.from('productos').insert([{ name, price, stock, category, subcategory, image_url: imageUrl, image_urls: imageUrlsExtra, description, personalizable, descuento_porcentaje: descuentoPorcentaje }]);
     if (error) mostrarMensaje("Error: " + error.message);
     else {
       mostrarMensaje("Producto agregado con éxito");
@@ -243,6 +244,7 @@ export default function AdminDashboard() {
         image_url: editData.image_url,
         image_urls: editData.image_urls,
         personalizable: editData.personalizable,
+        descuento_porcentaje: parseFloat(editData.descuento_porcentaje) || 0,
       })
       .eq('id', product.id);
 
@@ -430,6 +432,10 @@ export default function AdminDashboard() {
               <h3 className="text-sm md:text-base mb-2 md:mb-4 uppercase tracking-widest font-medium">Nuevo Producto</h3>
               <input name="name" placeholder="Nombre" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
               <input name="price" type="number" step="any" placeholder="Precio" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
+              <div>
+                <label className="block text-xs text-bib-gray mb-1 px-1">% de descuento (opcional, 0 = sin descuento)</label>
+                <input name="descuento_porcentaje" type="number" step="any" min="0" max="100" placeholder="Ej: 15" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" />
+              </div>
               <input name="stock" type="number" placeholder="Stock" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" required />
               <textarea name="description" placeholder="Descripción del producto" rows={3} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base resize-none" />
               <select name="category" value={nuevaCategoria} onChange={(e) => setNuevaCategoria(e.target.value)} className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
@@ -583,6 +589,7 @@ export default function AdminDashboard() {
                       <div className="flex flex-wrap gap-2">
                         <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-24 text-sm px-4" placeholder="Stock" value={editData.stock} type="number" onChange={(e) => setEditData({...editData, stock: e.target.value})} />
                         <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-28 text-sm px-4" placeholder="Precio" value={editData.price} type="number" onChange={(e) => setEditData({...editData, price: e.target.value})} />
+                        <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-28 text-sm px-4" placeholder="% descuento" value={editData.descuento_porcentaje} type="number" min="0" max="100" onChange={(e) => setEditData({...editData, descuento_porcentaje: e.target.value})} />
                         <button type="button" onClick={() => handleUpdate(p)} className="bg-green-600 text-white px-5 py-2 rounded text-xs font-medium uppercase tracking-wide">Guardar cambios</button>
                         <button type="button" onClick={() => setEditId(null)} className="text-bib-gray px-3 py-2 text-xs uppercase tracking-wide">Cancelar</button>
                       </div>
@@ -601,8 +608,18 @@ export default function AdminDashboard() {
                             Stock: {p.stock ?? 0}
                           </span>
                           <span className="font-medium text-lg md:text-xl text-bib-red tracking-wide">
-                            ${p.price}
+                            {p.descuento_porcentaje > 0 ? (
+                              <>
+                                <span className="line-through text-bib-gray text-sm mr-2">${p.price}</span>
+                                ${Math.round(p.price * (1 - p.descuento_porcentaje / 100))}
+                              </>
+                            ) : (
+                              <>${p.price}</>
+                            )}
                           </span>
+                          {p.descuento_porcentaje > 0 && (
+                            <span className="px-2 py-1 rounded text-[10px] border border-green-700/40 bg-green-900/40 text-green-300 uppercase tracking-wide">{p.descuento_porcentaje}% OFF</span>
+                          )}
                           {p.subcategory && (
                             <span className="px-2 py-1 rounded text-[10px] border border-bib-white/20 text-bib-gray uppercase tracking-wide">{p.subcategory}</span>
                           )}
@@ -612,7 +629,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '' }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>

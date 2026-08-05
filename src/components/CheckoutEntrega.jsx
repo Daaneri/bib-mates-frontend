@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
@@ -32,7 +32,7 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
-  // Calcular precio del producto según el medio de pago
+  // Formatear precios según medio de pago
   const itemsFormat = cart.map((item) => {
     const price = paymentMethod === "transferencia" && item.price_cash 
       ? item.price_cash 
@@ -55,7 +55,7 @@ export default function CheckoutEntrega() {
     }
   }, []);
 
-  // Actualizar el monto en pesos del descuento si cambian los productos o el medio de pago
+  // Recalcular descuento si cambia el precio o medio de pago
   useEffect(() => {
     if (appliedCoupon?.discount_percentage) {
       const nuevoDescuento = Math.round((totalProductos * appliedCoupon.discount_percentage) / 100);
@@ -170,7 +170,6 @@ export default function CheckoutEntrega() {
           setIsSubmitting(false);
         }
       } else {
-        // Transferencia Bancaria
         const res = await fetch(`${API_URL}/api/payment/create-transfer-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -196,7 +195,6 @@ export default function CheckoutEntrega() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-      {/* Formulario de envío y datos */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Datos del Cliente y Entrega</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -354,7 +352,6 @@ export default function CheckoutEntrega() {
         </form>
       </div>
 
-      {/* Resumen de Compra */}
       <div className="bg-gray-50 p-6 rounded border h-fit">
         <h3 className="text-xl font-bold mb-4">Resumen del Pedido</h3>
         <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
@@ -368,7 +365,6 @@ export default function CheckoutEntrega() {
 
         <hr className="my-4" />
 
-        {/* Formulario de Cupón */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cupón de Descuento</label>
           {appliedCoupon ? (
@@ -377,7 +373,7 @@ export default function CheckoutEntrega() {
                 <p className="text-sm font-semibold text-green-800">
                   {appliedCoupon.code} ({appliedCoupon.discount_percentage}% OFF)
                 </p>
-                <p className="text-xs text-green-700">-$${appliedCoupon.discount.toLocaleString("es-AR")}</p>
+                <p className="text-xs text-green-700">-${appliedCoupon.discount.toLocaleString("es-AR")}</p>
               </div>
               <button
                 type="button"
@@ -411,7 +407,6 @@ export default function CheckoutEntrega() {
 
         <hr className="my-4" />
 
-        {/* Desglose de Precios */}
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>

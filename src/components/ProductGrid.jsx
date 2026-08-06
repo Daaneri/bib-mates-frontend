@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
-import { Search, ImageOff, Heart, SlidersHorizontal, ChevronDown } from 'lucide-react'
-import { CATEGORIES, SUBCATEGORIES } from '../config/categories'
-import { useWishlist } from '../hooks/useWishlist'
+import { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import { Search, ImageOff, Heart, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { CATEGORIES, SUBCATEGORIES } from '../config/categories';
+import { useWishlist } from '../hooks/useWishlist';
 
 const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
 
 function ProductCardSkeleton() {
   return (
-    <div className="bg-bib-dark p-2 sm:p-4 rounded border border-bib-white/10 flex flex-col animate-pulse">
+    <div className="bg-bib-dark p-2.5 sm:p-4 rounded border border-bib-white/10 flex flex-col animate-pulse">
       <div className="aspect-square bg-bib-card rounded mb-2 sm:mb-3" />
       <div className="h-3 bg-bib-card rounded w-3/4 mb-1.5" />
       <div className="h-4 bg-bib-card rounded w-1/2 mb-1.5" />
       <div className="h-3 bg-bib-card rounded w-2/3 mb-3" />
-      <div className="h-8 bg-bib-card rounded" />
+      <div className="h-8 bg-bib-card rounded mt-auto" />
     </div>
   );
 }
@@ -32,7 +32,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   const cuotaMonto = (precioLista / 3).toFixed(2);
 
   return (
-    <div className="group bg-bib-dark p-2.5 sm:p-4 rounded border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative">
+    <div className="group bg-bib-dark p-2 sm:p-4 rounded border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative h-full">
       
       {/* Botón Favoritos */}
       <button
@@ -40,7 +40,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
         className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 bg-bib-black/70 backdrop-blur-sm p-1.5 rounded-full text-bib-white hover:scale-110 transition-transform"
         aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       >
-        <Heart size={14} className={isWishlisted(product.id) ? 'fill-[#C4A278] text-[#C4A278]' : ''} />
+        <Heart size={13} className={isWishlisted(product.id) ? 'fill-[#C4A278] text-[#C4A278]' : ''} />
       </button>
 
       <div>
@@ -54,7 +54,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-1 h-full text-bib-white/20">
-              <ImageOff size={22} strokeWidth={1.25} />
+              <ImageOff size={20} strokeWidth={1.25} />
               <span className="uppercase tracking-widest text-[8px] sm:text-[10px]">Sin imagen</span>
             </div>
           )}
@@ -71,7 +71,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
           )}
         </Link>
 
-        {/* Info y Precios Compactos para Móvil */}
+        {/* Información de precios adaptada a móvil */}
         <div className="space-y-1 mb-3">
           <Link to={`/producto/${product.id}`} className="block">
             <h3 className="text-[11px] sm:text-sm font-medium text-bib-white line-clamp-1 hover:text-[#C4A278] transition-colors">
@@ -80,27 +80,27 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
           </Link>
 
           <div>
-            <p className="text-sm sm:text-lg font-bold text-bib-white tracking-tight">
+            <p className="text-xs sm:text-lg font-bold text-bib-white tracking-tight">
               ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
-          <p className="text-[10px] sm:text-xs text-[#C4A278] font-medium leading-tight">
+          <p className="text-[9px] sm:text-xs text-[#C4A278] font-medium leading-tight">
             ${precioMercadoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}{' '}
-            <span className="text-[9px] sm:text-[10px] text-bib-gray font-normal block sm:inline">Mercado Pago</span>
+            <span className="text-[8px] sm:text-[10px] text-bib-gray font-normal block sm:inline">pagando con MP</span>
           </p>
 
-          <p className="text-[9px] sm:text-xs text-bib-gray/80 line-clamp-1">
+          <p className="text-[8px] sm:text-xs text-bib-gray/80 line-clamp-1">
             3 cuotas de <span className="font-medium text-bib-white">${Number(cuotaMonto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
           </p>
         </div>
       </div>
 
       {/* Botón Comprar */}
-      <Link to={`/producto/${product.id}`} className="block w-full">
+      <Link to={`/producto/${product.id}`} className="block w-full mt-auto">
         <button
           disabled={sinStock}
-          className={`w-full py-1.5 sm:py-2.5 rounded font-semibold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest transition-all duration-200 ${
+          className={`w-full py-2 sm:py-2.5 rounded font-semibold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest transition-all duration-200 ${
             sinStock
               ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed border border-bib-white/10'
               : 'bg-[#C4A278] hover:bg-bib-white text-bib-black'
@@ -115,36 +115,36 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
 
 export default function ProductGrid() {
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
-  const [sortBy, setSortBy] = useState('default')
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'Todos')
-  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [precioAbierto, setPrecioAbierto] = useState(false)
-  const precioRef = useRef(null)
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [sortBy, setSortBy] = useState('default');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'Todos');
+  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [precioAbierto, setPrecioAbierto] = useState(false);
+  const precioRef = useRef(null);
 
-  const [mostrarStockBajo, setMostrarStockBajo] = useState(true)
-  const [umbralStockBajo, setUmbralStockBajo] = useState(5)
+  const [mostrarStockBajo, setMostrarStockBajo] = useState(true);
+  const [umbralStockBajo, setUmbralStockBajo] = useState(5);
 
   useEffect(() => {
     function handleClickAfuera(e) {
       if (precioRef.current && !precioRef.current.contains(e.target)) {
-        setPrecioAbierto(false)
+        setPrecioAbierto(false);
       }
     }
-    document.addEventListener('mousedown', handleClickAfuera)
-    return () => document.removeEventListener('mousedown', handleClickAfuera)
-  }, [])
+    document.addEventListener('mousedown', handleClickAfuera);
+    return () => document.removeEventListener('mousedown', handleClickAfuera);
+  }, []);
 
   useEffect(() => {
     async function fetchProducts() {
       setLoading(true);
-      const { data, error } = await supabase.from('productos').select('*')
-      if (error) console.error("Error al traer productos:", error)
-      else setProducts(data)
+      const { data, error } = await supabase.from('productos').select('*');
+      if (error) console.error("Error al traer productos:", error);
+      else setProducts(data || []);
       setLoading(false);
     }
     async function fetchSettings() {
@@ -158,16 +158,16 @@ export default function ProductGrid() {
         if (data.umbral_stock_bajo !== null) setUmbralStockBajo(data.umbral_stock_bajo);
       }
     }
-    fetchProducts()
-    fetchSettings()
-  }, [])
+    fetchProducts();
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const paramSearch = searchParams.get('search');
     if (paramSearch !== null) {
       setSearchTerm(paramSearch);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   function handleCategoryClick(cat) {
     setSelectedCategory(cat);
@@ -208,9 +208,10 @@ export default function ProductGrid() {
   const hayFiltroPrecio = minPrice || maxPrice;
 
   return (
-    <div className="px-2 sm:px-6 space-y-4 sm:space-y-8">
+    <div className="px-1.5 sm:px-6 space-y-4 sm:space-y-8 pb-28 sm:pb-12">
       <div className="max-w-5xl mx-auto space-y-3 sm:space-y-4">
-        {/* Categorías */}
+        
+        {/* Categorías (Scroll horizontal en celular) */}
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
           {CATEGORIAS_CON_TODOS.map(cat => (
             <button
@@ -256,22 +257,22 @@ export default function ProductGrid() {
           </div>
         )}
 
-        {/* Buscador y Filtros */}
+        {/* Buscador y Ordenar */}
         <div className="flex flex-col md:flex-row gap-2 sm:gap-4 bg-bib-dark p-2.5 sm:p-4 rounded border border-bib-white/10">
           <div className="relative flex-1">
             <input
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
-              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 sm:p-3 pl-9 sm:pl-10 rounded outline-none focus:border-[#C4A278] transition-colors text-xs sm:text-base"
+              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2 sm:p-3 pl-8 sm:pl-10 rounded outline-none focus:border-[#C4A278] transition-colors text-xs sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-2.5 sm:left-3 top-3 text-bib-white/50" size={16} />
+            <Search className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3.5 text-bib-white/50" size={14} />
           </div>
 
           <div className="flex gap-2">
             <select
-              className="w-1/2 md:w-auto bg-bib-black border border-bib-white/20 text-bib-white p-2.5 sm:p-3 rounded outline-none cursor-pointer hover:border-bib-white/40 transition-colors text-xs sm:text-base"
+              className="w-1/2 md:w-auto bg-bib-black border border-bib-white/20 text-bib-white p-2 sm:p-3 rounded outline-none cursor-pointer hover:border-bib-white/40 transition-colors text-xs sm:text-base"
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="default">Destacados</option>
@@ -283,13 +284,13 @@ export default function ProductGrid() {
               <button
                 type="button"
                 onClick={() => setPrecioAbierto((prev) => !prev)}
-                className={`w-full flex items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded border text-xs sm:text-base transition-colors ${
+                className={`w-full flex items-center justify-center gap-1.5 p-2 sm:p-3 rounded border text-xs sm:text-base transition-colors ${
                   hayFiltroPrecio
                     ? 'bg-[#C4A278]/10 border-[#C4A278] text-[#C4A278]'
                     : 'bg-bib-black border-bib-white/20 text-bib-white hover:border-bib-white/40'
                 }`}
               >
-                <SlidersHorizontal size={14} />
+                <SlidersHorizontal size={13} />
                 {hayFiltroPrecio ? `$${minPrice || '0'}-$${maxPrice || '∞'}` : 'Precio'}
                 <ChevronDown size={12} className={`transition-transform duration-200 ${precioAbierto ? 'rotate-180' : ''}`} />
               </button>
@@ -336,9 +337,9 @@ export default function ProductGrid() {
         </div>
       </div>
 
-      {/* Grid en Celular: 2 Columnas (`grid-cols-2`) */}
+      {/* Grid Móvil: 2 Columnas (`grid-cols-2 gap-2`) */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-7xl mx-auto">
           {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       ) : filteredProducts.length > 0 ? (
@@ -347,15 +348,15 @@ export default function ProductGrid() {
             <div className="space-y-6 sm:space-y-12">
               {groupedByCategory.map(group => (
                 <section key={group.name}>
-                  <h2 className="max-w-7xl mx-auto text-xs sm:text-sm font-medium text-bib-white mb-3 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6 max-w-7xl mx-auto">
+                  <h2 className="max-w-7xl mx-auto text-xs sm:text-sm font-medium text-bib-white mb-2 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-7xl mx-auto">
                     {group.items.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-7xl mx-auto">
               {filteredProducts.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
             </div>
           )}
@@ -366,5 +367,5 @@ export default function ProductGrid() {
         </div>
       )}
     </div>
-  )
+  );
 }

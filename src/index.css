@@ -114,10 +114,10 @@
 }
 
 /* =========================================================
-   Alineación Vertical de Botones Flotantes (Móvil y PC)
+   Alineación Vertical y Limpieza de Widget WhatsApp
    ========================================================= */
 
-/* Forzar posicionamiento del widget inyectado de WhatsApp justo sobre el carrito */
+/* 1. Posicionamiento del widget de WhatsApp justo sobre el carrito */
 #whatsapp-widget,
 .whatsapp-button,
 [class*="whatsapp"],
@@ -126,9 +126,27 @@ iframe[src*="whatsapp"],
 a[href*="wa.me"],
 a[href*="whatsapp.com"] {
   position: fixed !important;
-  bottom: 80px !important; /* Ubica a WhatsApp por encima del carrito en celular */
+  bottom: 80px !important;
   right: 16px !important;
   z-index: 40 !important;
+  width: auto !important;
+  max-width: 60px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 2. Ocultar el texto/número de teléfono para dejar solo la burbuja verde */
+#whatsapp-widget span,
+#whatsapp-widget p,
+.whatsapp-button span,
+.whatsapp-button p,
+[class*="whatsapp"] span:not([class*="icon"]),
+[class*="whatsapp"] p,
+[class*="whatsapp"] text,
+[id*="whatsapp"] span,
+[id*="whatsapp"] p {
+  display: none !important;
 }
 
 @media (min-width: 640px) {
@@ -139,7 +157,7 @@ a[href*="whatsapp.com"] {
   iframe[src*="whatsapp"],
   a[href*="wa.me"],
   a[href*="whatsapp.com"] {
-    bottom: 96px !important; /* Espaciado adaptado a escritorio */
+    bottom: 96px !important;
     right: 24px !important;
   }
 }

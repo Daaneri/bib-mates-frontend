@@ -113,7 +113,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   );
 }
 
-export default function ProductGrid() {
+export default function ProductGrid({ hideCategoryBar = false }) {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,6 +161,13 @@ export default function ProductGrid() {
     fetchProducts();
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    const paramCategory = searchParams.get('category');
+    if (paramCategory) {
+      setSelectedCategory(paramCategory);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const paramSearch = searchParams.get('search');
@@ -211,50 +218,55 @@ export default function ProductGrid() {
     <div className="px-1.5 sm:px-6 space-y-4 sm:space-y-8 pb-28 sm:pb-12">
       <div className="max-w-5xl mx-auto space-y-3 sm:space-y-4">
         
-        {/* Categorías (Scroll horizontal en celular) */}
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
-          {CATEGORIAS_CON_TODOS.map(cat => (
-            <button
-              key={cat}
-              onClick={() => handleCategoryClick(cat)}
-              className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded text-[11px] sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
-                selectedCategory === cat
-                ? 'bg-[#C4A278] text-bib-black font-semibold border-[#C4A278]'
-                : 'bg-bib-dark text-bib-white border-bib-white/10 hover:border-bib-white/30'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {/* Renderizado condicional de los botones de Categorías y Subcategorías */}
+        {!hideCategoryBar && (
+          <>
+            {/* Categorías */}
+            <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
+              {CATEGORIAS_CON_TODOS.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryClick(cat)}
+                  className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded text-[11px] sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+                    selectedCategory === cat
+                    ? 'bg-[#C4A278] text-bib-black font-semibold border-[#C4A278]'
+                    : 'bg-bib-dark text-bib-white border-bib-white/10 hover:border-bib-white/30'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-        {/* Subcategorías */}
-        {subcategoriasDisponibles.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1.5 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
-            <button
-              onClick={() => setSelectedSubcategory('')}
-              className={`px-2.5 py-1 rounded text-[10px] sm:text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
-                selectedSubcategory === ''
-                ? 'bg-bib-white text-bib-black font-medium border-bib-white'
-                : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
-              }`}
-            >
-              Todas
-            </button>
-            {subcategoriasDisponibles.map(sub => (
-              <button
-                key={sub}
-                onClick={() => setSelectedSubcategory(sub)}
-                className={`px-2.5 py-1 rounded text-[10px] sm:text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
-                  selectedSubcategory === sub
-                  ? 'bg-bib-white text-bib-black font-medium border-bib-white'
-                  : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
+            {/* Subcategorías */}
+            {subcategoriasDisponibles.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-1.5 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
+                <button
+                  onClick={() => setSelectedSubcategory('')}
+                  className={`px-2.5 py-1 rounded text-[10px] sm:text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+                    selectedSubcategory === ''
+                    ? 'bg-bib-white text-bib-black font-medium border-bib-white'
+                    : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
+                  }`}
+                >
+                  Todas
+                </button>
+                {subcategoriasDisponibles.map(sub => (
+                  <button
+                    key={sub}
+                    onClick={() => setSelectedSubcategory(sub)}
+                    className={`px-2.5 py-1 rounded text-[10px] sm:text-[11px] tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
+                      selectedSubcategory === sub
+                      ? 'bg-bib-white text-bib-black font-medium border-bib-white'
+                      : 'bg-transparent text-bib-gray border-bib-white/10 hover:border-bib-white/30'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Buscador y Ordenar */}

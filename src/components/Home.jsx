@@ -134,10 +134,10 @@ export default function Home() {
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías Dinámicas desde Supabase */}
-      <section className="max-w-6xl mx-auto py-16 px-6">
+      {/* Tarjetas de Categorías Dinámicas en una sola línea tipo carrusel deslizable */}
+      <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
-          <div className="text-center mb-10 space-y-1">
+          <div className="text-center mb-8 space-y-1">
             <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Colección completa</p>
             <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
               Explorá por categoría
@@ -145,15 +145,16 @@ export default function Home() {
           </div>
         </FadeIn>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {/* Contenedor Flex en una sola línea horizontal con scroll oculto */}
+        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
           {CATEGORIES.map((catName, i) => {
             const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
 
             return (
-              <FadeIn key={catName} delay={i * 50}>
+              <FadeIn key={catName} delay={i * 40} className="shrink-0 w-36 sm:w-44 lg:w-48 snap-start">
                 <a
                   href={`/?category=${encodeURIComponent(catName)}#seleccion`}
-                  className="group relative h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
+                  className="group relative h-36 sm:h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
                 >
                   <img
                     src={imageUrl}
@@ -162,7 +163,7 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
                   <div className="relative z-10 w-full">
-                    <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors">
+                    <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors truncate">
                       {catName}
                     </span>
                   </div>
@@ -173,9 +174,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Grid de Productos */}
-      <section id="seleccion" className="max-w-7xl mx-auto py-8 pb-20 px-4 sm:px-6">
-        <ProductGrid />
+      {/* Grid de Productos - Se deshabilita la barra de botones repetidos */}
+      <section id="seleccion" className="max-w-7xl mx-auto py-4 pb-20 px-4 sm:px-6">
+        <ProductGrid hideCategoryBar={true} />
       </section>
     </>
   );

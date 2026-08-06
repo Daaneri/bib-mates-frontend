@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, Banknote } from "lucide-react";
+import { CreditCard, Banknote, Truck } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const COUPON_STORAGE_KEY = "applied_coupon_code";
@@ -13,6 +13,8 @@ export default function CheckoutEntrega() {
   const [paymentMethod, setPaymentMethod] = useState("mercadopago"); // 'mercadopago' | 'transferencia'
   const [shippingType, setShippingType] = useState("envio"); // 'envio' | 'retiro'
   const [shippingCost, setShippingCost] = useState(0);
+  const [isShippingCalculated, setIsShippingCalculated] = useState(false);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -61,6 +63,32 @@ export default function CheckoutEntrega() {
       setAppliedCoupon((prev) => ({ ...prev, discount: nuevoDescuento }));
     }
   }, [paymentMethod, totalProductos]);
+
+  const handleShippingTypeChange = (type) => {
+    setShippingType(type);
+    if (type === "retiro") {
+      setShippingCost(0);
+      setIsShippingCalculated(true);
+    } else {
+      setShippingCost(0);
+      setIsShippingCalculated(false);
+    }
+  };
+
+  const handleCalculateShipping = () => {
+    if (!formData.postalCode.trim()) {
+      setErrorMessage("Por favor ingresa un Código Postal para calcular el envío.");
+      return;
+    }
+    setErrorMessage("");
+    setIsCalculatingShipping(true);
+
+    setTimeout(() => {
+      setShippingCost(10000);
+      setIsShippingCalculated(true);
+      setIsCalculatingShipping(false);
+    }, 400);
+  };
 
   const totalDescuento = appliedCoupon ? appliedCoupon.discount : 0;
   const totalFinal = Math.max(0, totalProductos - totalDescuento + (shippingType === "envio" ? shippingCost : 0));
@@ -131,6 +159,10 @@ export default function CheckoutEntrega() {
   function handleInputChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "postalCode" && shippingType === "envio") {
+      setIsShippingCalculated(false);
+      setShippingCost(0);
+    }
   }
 
   async function handleSubmit(e) {
@@ -139,6 +171,11 @@ export default function CheckoutEntrega() {
 
     if (cart.length === 0) {
       setErrorMessage("El carrito está vacío.");
+      return;
+    }
+
+    if (shippingType === "envio" && !isShippingCalculated) {
+      setErrorMessage("Debes calcular el costo de envío antes de continuar.");
       return;
     }
 
@@ -253,7 +290,7 @@ export default function CheckoutEntrega() {
                   name="shippingType"
                   value="envio"
                   checked={shippingType === "envio"}
-                  onChange={() => setShippingType("envio")}
+                  onChange={() => handleShippingTypeChange("envio")}
                   className="accent-bib-red"
                 />
                 Envío a Domicilio
@@ -264,7 +301,7 @@ export default function CheckoutEntrega() {
                   name="shippingType"
                   value="retiro"
                   checked={shippingType === "retiro"}
-                  onChange={() => setShippingType("retiro")}
+                  onChange={() => handleShippingTypeChange("retiro")}
                   className="accent-bib-red"
                 />
                 Retiro Gratis
@@ -283,7 +320,7 @@ export default function CheckoutEntrega() {
                 onChange={handleInputChange}
                 className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
               />
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   name="city"
@@ -302,16 +339,33 @@ export default function CheckoutEntrega() {
                   onChange={handleInputChange}
                   className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
                 />
+              </div>
+
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   name="postalCode"
-                  placeholder="C.P."
+                  placeholder="Cód. Postal"
                   required={shippingType === "envio"}
                   value={formData.postalCode}
                   onChange={handleInputChange}
-                  className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
+                  className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50 w-1/2"
                 />
+                <button
+                  type="button"
+                  onClick={handleCalculateShipping}
+                  disabled={isCalculatingShipping || !formData.postalCode.trim()}
+                  className="w-1/2 bg-bib-white/10 hover:bg-bib-white/20 text-bib-white border border-bib-white/20 px-3 py-2.5 rounded text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                >
+                  <Truck size={14} />
+                  {isCalculatingShipping ? "Calculando..." : "Calcular Envío"}
+                </button>
               </div>
+              {isShippingCalculated && (
+                <p className="text-xs text-green-400 font-medium pt-1">
+                  ✓ Envío cotizado: $10.000 ARS
+                </p>
+              )}
             </div>
           )}
 
@@ -360,7 +414,7 @@ export default function CheckoutEntrega() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (shippingType === "envio" && !isShippingCalculated)}
             className="w-full bg-bib-red text-bib-black font-bold py-3.5 rounded mt-4 uppercase tracking-widest disabled:opacity-50 hover:bg-bib-white transition-all active:scale-[0.98]"
           >
             {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" : "Confirmar Pedido"}
@@ -432,7 +486,13 @@ export default function CheckoutEntrega() {
           )}
           <div className="flex justify-between text-bib-gray">
             <span>Envío</span>
-            <span className="text-bib-white">{shippingType === "envio" ? `$${shippingCost.toLocaleString("es-AR")}` : "Gratis"}</span>
+            <span className="text-bib-white">
+              {shippingType === "envio"
+                ? isShippingCalculated
+                  ? `$${shippingCost.toLocaleString("es-AR")}`
+                  : "Por calcular"
+                : "Gratis"}
+            </span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-3 border-t border-bib-white/10 text-bib-white">
             <span>Total</span>

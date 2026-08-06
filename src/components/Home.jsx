@@ -1,20 +1,43 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Star, CreditCard, Sparkles, ChevronRight } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
-
-const FEATURED_CATEGORIES = [
-  { name: 'Mates', image: 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Termos', image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Yerbas', image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Canastas', image: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Bombillas', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Accesorios', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400' },
-];
+import { supabase } from '../supabaseClient';
+import { CATEGORIES } from '../config/categories';
 
 const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
 
+// Imagen de respaldo si una categoría no tiene productos cargados
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
+
 export default function Home() {
+  const [categoryImages, setCategoryImages] = useState({});
+
+  useEffect(() => {
+    async function fetchCategoryImages() {
+      // Traemos id, category e image_url de productos con foto
+      const { data, error } = await supabase
+        .from('productos')
+        .select('category, image_url')
+        .not('image_url', 'is', null)
+        .neq('image_url', '');
+
+      if (!error && data) {
+        const imageMap = {};
+        // Guardamos la primera imagen encontrada para cada categoría
+        data.forEach(item => {
+          if (item.category && item.image_url && !imageMap[item.category.toLowerCase()]) {
+            imageMap[item.category.toLowerCase()] = item.image_url;
+          }
+        });
+        setCategoryImages(imageMap);
+      }
+    }
+
+    fetchCategoryImages();
+  }, []);
+
   return (
     <>
       {/* Ticker / Anuncio Superior */}
@@ -111,7 +134,7 @@ export default function Home() {
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías con Imágenes */}
+      {/* Tarjetas de Categorías Dinámicas desde Supabase */}
       <section className="max-w-6xl mx-auto py-16 px-6">
         <FadeIn>
           <div className="text-center mb-10 space-y-1">
@@ -123,26 +146,30 @@ export default function Home() {
         </FadeIn>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {FEATURED_CATEGORIES.map(({ name, image }, i) => (
-            <FadeIn key={name} delay={i * 50}>
-              <a
-                href={`/?category=${encodeURIComponent(name)}#seleccion`}
-                className="group relative h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
-              >
-                <img
-                  src={image}
-                  alt={name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
-                <div className="relative z-10 w-full">
-                  <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors">
-                    {name}
-                  </span>
-                </div>
-              </a>
-            </FadeIn>
-          ))}
+          {CATEGORIES.map((catName, i) => {
+            const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
+
+            return (
+              <FadeIn key={catName} delay={i * 50}>
+                <a
+                  href={`/?category=${encodeURIComponent(catName)}#seleccion`}
+                  className="group relative h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
+                >
+                  <img
+                    src={imageUrl}
+                    alt={catName}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
+                  <div className="relative z-10 w-full">
+                    <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors">
+                      {catName}
+                    </span>
+                  </div>
+                </a>
+              </FadeIn>
+            );
+          })}
         </div>
       </section>
 

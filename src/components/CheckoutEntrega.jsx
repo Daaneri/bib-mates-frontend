@@ -278,7 +278,7 @@ export default function CheckoutEntrega() {
                 type="text"
                 name="address"
                 placeholder="Dirección y Número"
-                required
+                required={shippingType === "envio"}
                 value={formData.address}
                 onChange={handleInputChange}
                 className="w-full bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
@@ -288,7 +288,7 @@ export default function CheckoutEntrega() {
                   type="text"
                   name="city"
                   placeholder="Ciudad"
-                  required
+                  required={shippingType === "envio"}
                   value={formData.city}
                   onChange={handleInputChange}
                   className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
@@ -297,7 +297,7 @@ export default function CheckoutEntrega() {
                   type="text"
                   name="state"
                   placeholder="Provincia"
-                  required
+                  required={shippingType === "envio"}
                   value={formData.state}
                   onChange={handleInputChange}
                   className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
@@ -306,7 +306,7 @@ export default function CheckoutEntrega() {
                   type="text"
                   name="postalCode"
                   placeholder="C.P."
-                  required
+                  required={shippingType === "envio"}
                   value={formData.postalCode}
                   onChange={handleInputChange}
                   className="bg-bib-dark border border-bib-white/10 p-2.5 rounded text-bib-white focus:border-bib-red focus:outline-none placeholder-bib-gray/50"
@@ -315,7 +315,6 @@ export default function CheckoutEntrega() {
             </div>
           )}
 
-          {/* OPCIONES DE PAGO ADAPTADAS AL MODO OSCURO */}
           <div className="pt-2">
             <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Medio de Pago</label>
             <div className="space-y-3">
@@ -369,7 +368,6 @@ export default function CheckoutEntrega() {
         </form>
       </div>
 
-      {/* RESUMEN DEL PEDIDO - MODO OSCURO FIX */}
       <div className="bg-bib-dark p-6 rounded border border-bib-white/10 h-fit">
         <h3 className="text-xl font-bold mb-4 font-heading tracking-wide border-b border-bib-white/10 pb-3">Resumen del Pedido</h3>
         <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">

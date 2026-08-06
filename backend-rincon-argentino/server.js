@@ -40,7 +40,7 @@ const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
 const mpClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN || "" });
 const DEFAULT_URL = process.env.SUPABASE_URL || "https://placeholder.supabase.co";
-const DEFAULT_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
+const DEFAULT_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
 
 const supabase = createClient(DEFAULT_URL, DEFAULT_KEY);
 
@@ -222,19 +222,19 @@ app.post("/api/payment/create-preference", async (req, res) => {
       }
     }
 
-    const total = totalProductos - montoDescuento + Number(shippingCost || 0);
+    const total = Math.max(0, totalProductos - montoDescuento + Number(shippingCost || 0));
 
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert({
-        nombre_del_cliente: customer.name,
-        dni: customer.dni,
-        telefono: customer.phone,
-        email: customer.email,
-        direccion: customer.address,
-        ciudad: customer.city,
-        provincia: customer.state,
-        codigo_postal: customer.postalCode,
+        nombre_del_cliente: customer.name || "",
+        dni: customer.dni || "",
+        telefono: customer.phone || "",
+        email: customer.email || "",
+        direccion: customer.address || "",
+        ciudad: customer.city || "",
+        provincia: customer.state || "",
+        codigo_postal: customer.postalCode || "",
         productos: items,
         costo_de_envio: Number(shippingCost || 0),
         descuento: montoDescuento,
@@ -245,26 +245,26 @@ app.post("/api/payment/create-preference", async (req, res) => {
       .select()
       .single();
 
-    if (orderError) throw new Error("Error guardando orden en Supabase");
+    if (orderError) {
+      console.error("Error al insertar orden MP en Supabase:", orderError);
+      throw new Error(`Supabase error: ${orderError.message}`);
+    }
 
     enviarEmailNotificacion(orderData).catch(console.error);
     enviarEmailConfirmacionCliente(orderData).catch(console.error);
 
-    const preferenceItems = items.map((item) => ({
-      title: String(item.name).substring(0, 256),
-      quantity: Number(item.quantity),
-      unit_price: Number(item.price),
-      currency_id: "ARS",
-    }));
+    // Calcular factor de descuento proporcional (evita ítems negativos)
+    const discountFactor = totalProductos > 0 ? (totalProductos - montoDescuento) / totalProductos : 1;
 
-    if (montoDescuento > 0) {
-      preferenceItems.push({
-        title: `Descuento cupón (${couponCode.toUpperCase()})`,
-        quantity: 1,
-        unit_price: -montoDescuento,
+    const preferenceItems = items.map((item) => {
+      const adjustedPrice = Math.round(Number(item.price) * discountFactor * 100) / 100;
+      return {
+        title: String(item.name).substring(0, 256),
+        quantity: Number(item.quantity),
+        unit_price: Math.max(0.01, adjustedPrice),
         currency_id: "ARS",
-      });
-    }
+      };
+    });
 
     if (Number(shippingCost) > 0) {
       preferenceItems.push({
@@ -289,15 +289,15 @@ app.post("/api/payment/create-preference", async (req, res) => {
         },
         auto_return: "approved",
         payment_methods: {
-          installments: 3 // Fuerza a la preferencia de Mercado Pago a 3 cuotas máximo
-        }
+          installments: 3,
+        },
       },
     });
 
     res.json({ init_point: result.init_point });
   } catch (err) {
     console.error("Error en create-preference:", err);
-    res.status(500).json({ error: "No se pudo iniciar el pago" });
+    res.status(500).json({ error: err.message || "No se pudo iniciar el pago" });
   }
 });
 
@@ -326,20 +326,20 @@ app.post("/api/payment/create-transfer-order", async (req, res) => {
       }
     }
 
-    const total = totalProductos - montoDescuento + Number(shippingCost || 0);
+    const total = Math.max(0, totalProductos - montoDescuento + Number(shippingCost || 0));
     const datosTransferencia = await obtenerDatosTransferencia();
 
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert({
-        nombre_del_cliente: customer.name,
-        dni: customer.dni,
-        telefono: customer.phone,
-        email: customer.email,
-        direccion: customer.address,
-        ciudad: customer.city,
-        provincia: customer.state,
-        codigo_postal: customer.postalCode,
+        nombre_del_cliente: customer.name || "",
+        dni: customer.dni || "",
+        telefono: customer.phone || "",
+        email: customer.email || "",
+        direccion: customer.address || "",
+        ciudad: customer.city || "",
+        provincia: customer.state || "",
+        codigo_postal: customer.postalCode || "",
         productos: items,
         costo_de_envio: Number(shippingCost || 0),
         descuento: montoDescuento,
@@ -350,7 +350,10 @@ app.post("/api/payment/create-transfer-order", async (req, res) => {
       .select()
       .single();
 
-    if (orderError) throw new Error("Error registrando orden en Supabase");
+    if (orderError) {
+      console.error("Error Supabase al insertar pedido por transferencia:", orderError);
+      throw new Error(`Supabase error: ${orderError.message}`);
+    }
 
     enviarEmailNotificacion(orderData).catch(console.error);
     enviarEmailTransferencia(orderData, datosTransferencia).catch(console.error);
@@ -362,7 +365,7 @@ app.post("/api/payment/create-transfer-order", async (req, res) => {
     });
   } catch (err) {
     console.error("Error creando pedido por transferencia:", err);
-    res.status(500).json({ error: "No se pudo registrar el pedido" });
+    res.status(500).json({ error: err.message || "No se pudo registrar el pedido" });
   }
 });
 

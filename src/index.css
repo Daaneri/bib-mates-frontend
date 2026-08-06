@@ -96,16 +96,50 @@
     }
   }
 }
+
 @keyframes loadingBar {
   0% { width: 0%; opacity: 1; }
   70% { width: 80%; opacity: 1; }
   100% { width: 100%; opacity: 0; }
 }
+
 .top-loading-bar {
   animation: loadingBar 0.6s ease-out forwards;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .top-loading-bar {
     display: none;
+  }
+}
+
+/* =========================================================
+   Alineación Vertical de Botones Flotantes (Móvil y PC)
+   ========================================================= */
+
+/* Forzar posicionamiento del widget inyectado de WhatsApp justo sobre el carrito */
+#whatsapp-widget,
+.whatsapp-button,
+[class*="whatsapp"],
+[id*="whatsapp"],
+iframe[src*="whatsapp"],
+a[href*="wa.me"],
+a[href*="whatsapp.com"] {
+  position: fixed !important;
+  bottom: 80px !important; /* Ubica a WhatsApp por encima del carrito en celular */
+  right: 16px !important;
+  z-index: 40 !important;
+}
+
+@media (min-width: 640px) {
+  #whatsapp-widget,
+  .whatsapp-button,
+  [class*="whatsapp"],
+  [id*="whatsapp"],
+  iframe[src*="whatsapp"],
+  a[href*="wa.me"],
+  a[href*="whatsapp.com"] {
+    bottom: 96px !important; /* Espaciado adaptado a escritorio */
+    right: 24px !important;
   }
 }

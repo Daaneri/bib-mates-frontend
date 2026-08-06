@@ -27,8 +27,8 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   // Precios y Cálculos
   const precioLista = product.price || 0;
   
-  // Si en DB tienes `price_cash`, se usa. Si no, aplica 20% de descuento al precio de lista.
-  const precioDescuento = product.price_cash 
+  // 20% de descuento pagando por Mercado Pago
+  const precioMercadoPago = product.price_cash 
     ? product.price_cash 
     : precioLista * 0.80;
 
@@ -62,11 +62,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
             </div>
           )}
 
-          {/* Badges de Descuento y Stock */}
-          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black font-bold text-[9px] sm:text-[10px] px-2 py-0.5 rounded uppercase tracking-wider z-10">
-            20% OFF
-          </span>
-
+          {/* Badges de Stock */}
           {sinStock && (
             <span className="absolute bottom-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 py-0.5 rounded z-10">
               Sin stock
@@ -79,7 +75,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
           )}
         </Link>
 
-        {/* Info y Precios Simplificados */}
+        {/* Info y Precios */}
         <div className="space-y-1.5 mb-4">
           <Link to={`/producto/${product.id}`} className="block">
             <h3 className="text-xs sm:text-sm font-medium text-bib-white line-clamp-1 hover:text-[#C4A278] transition-colors">
@@ -94,10 +90,10 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
             </p>
           </div>
 
-          {/* Destacado Mercado Pago / Transferencia (Línea Rápida) */}
+          {/* Descuento exclusivo Mercado Pago */}
           <p className="text-xs text-[#C4A278] font-medium">
-            ${precioDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}{' '}
-            <span className="text-[10px] text-bib-gray font-normal">pagando con Mercado Pago / Transferencia</span>
+            ${precioMercadoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}{' '}
+            <span className="text-[10px] text-bib-gray font-normal">pagando con Mercado Pago</span>
           </p>
 
           {/* Financiación */}

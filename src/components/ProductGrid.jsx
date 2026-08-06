@@ -9,11 +9,12 @@ const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
 
 function ProductCardSkeleton() {
   return (
-    <div className="bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 flex flex-col animate-pulse">
-      <div className="aspect-[4/5] bg-bib-card rounded mb-3 sm:mb-4 md:mb-6" />
+    <div className="bg-bib-dark p-3 sm:p-4 md:p-5 rounded md:rounded-md border border-bib-white/10 flex flex-col animate-pulse">
+      <div className="aspect-square bg-bib-card rounded mb-3 sm:mb-4" />
       <div className="h-3 bg-bib-card rounded w-3/4 mb-2" />
-      <div className="h-3 bg-bib-card rounded w-1/3 mb-4" />
-      <div className="h-8 bg-bib-card rounded" />
+      <div className="h-5 bg-bib-card rounded w-1/2 mb-3" />
+      <div className="h-12 bg-bib-card rounded mb-3" />
+      <div className="h-9 bg-bib-card rounded" />
     </div>
   );
 }
@@ -23,54 +24,98 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   const sinStock = (product.stock ?? 0) === 0;
   const stockBajo = mostrarStockBajo && !sinStock && (product.stock ?? 0) < umbralStockBajo;
 
+  // Precios y cálculos
+  const precioLista = product.price || 0;
+  const precioEfectivo = product.price_cash || precioLista;
+  const cuotaMonto = (precioLista / 3).toFixed(2);
+
   return (
-    <div className="group bg-bib-dark p-3 sm:p-4 md:p-6 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-bib-red/50 flex flex-col relative">
+    <div className="group bg-bib-dark p-3 sm:p-4 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative">
+      
+      {/* Botón Favoritos */}
       <button
         onClick={() => toggleWishlist(product.id)}
         className="absolute top-2 right-2 z-10 bg-bib-black/70 backdrop-blur-sm p-1.5 rounded-full text-bib-white hover:scale-110 transition-transform"
         aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       >
-        <Heart size={16} className={isWishlisted(product.id) ? 'fill-bib-red text-bib-red' : ''} />
+        <Heart size={16} className={isWishlisted(product.id) ? 'fill-[#C4A278] text-[#C4A278]' : ''} />
       </button>
 
-      <div className="aspect-[4/5] bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 md:mb-6 relative">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
-            <ImageOff size={28} strokeWidth={1.25} />
-            <span className="uppercase tracking-widest text-[10px]">Sin imagen</span>
-          </div>
-        )}
-        {sinStock && (
-          <span className="absolute top-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 sm:px-3 py-1 rounded">
-            Sin stock
-          </span>
-        )}
-        {stockBajo && (
-          <span className="absolute top-2 left-2 bg-yellow-500/90 text-black text-[9px] sm:text-[10px] font-medium uppercase tracking-widest px-2 sm:px-3 py-1 rounded">
-            ¡Últimas {product.stock}!
-          </span>
-        )}
-      </div>
-      <div className="flex-1 flex flex-col justify-between">
-        <div>
-          <h3 className="text-xs sm:text-sm md:text-lg font-medium text-bib-white mb-1 truncate">{product.name}</h3>
-          <p className="text-xs sm:text-sm md:text-lg font-medium text-bib-red mb-3 sm:mb-4">${product.price.toLocaleString('es-AR')}</p>
-        </div>
-        <Link to={`/producto/${product.id}`} className="block">
-          <button
-            disabled={sinStock}
-            className={`w-full border py-2 md:py-4 rounded font-medium text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 ${
-              sinStock
-                ? 'border-bib-white/10 text-bib-white/30 cursor-not-allowed'
-                : 'border-bib-white/20 text-bib-white hover:bg-bib-red hover:border-bib-red hover:text-bib-black'
-            }`}
-          >
-            {sinStock ? 'Sin stock' : 'Ver detalle'}
-          </button>
+      <div>
+        {/* Imagen del Producto */}
+        <Link to={`/producto/${product.id}`} className="block aspect-square bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 relative">
+          {product.image_url ? (
+            <img 
+              src={product.image_url} 
+              alt={product.name} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
+              <ImageOff size={28} strokeWidth={1.25} />
+              <span className="uppercase tracking-widest text-[10px]">Sin imagen</span>
+            </div>
+          )}
+
+          {/* Badges de Stock o Descuento */}
+          {sinStock && (
+            <span className="absolute top-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 sm:px-3 py-1 rounded z-10">
+              Sin stock
+            </span>
+          )}
+          {stockBajo && (
+            <span className="absolute top-2 left-2 bg-yellow-500/90 text-black text-[9px] sm:text-[10px] font-medium uppercase tracking-widest px-2 sm:px-3 py-1 rounded z-10">
+              ¡Últimas {product.stock}!
+            </span>
+          )}
         </Link>
+
+        {/* Información del Producto */}
+        <div className="space-y-2 mb-4">
+          {/* Título */}
+          <Link to={`/producto/${product.id}`} className="block">
+            <h3 className="text-xs sm:text-sm md:text-base font-medium text-bib-white line-clamp-2 hover:text-[#C4A278] transition-colors min-h-[2.5rem]">
+              {product.name}
+            </h3>
+          </Link>
+
+          {/* Precio de Lista */}
+          <div>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-bib-white tracking-tight">
+              ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
+          {/* Recuadro de Pago Transferencia / Efectivo */}
+          <div className="bg-bib-black/60 p-2.5 sm:p-3 rounded border-l-4 border-[#C4A278] flex flex-col justify-center">
+            <p className="text-sm sm:text-base md:text-lg font-bold text-bib-white leading-tight">
+              ${precioEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-[10px] sm:text-xs text-bib-gray mt-0.5">
+              con <span className="font-semibold text-bib-white">Transferencia o depósito</span>
+            </p>
+          </div>
+
+          {/* Cuotas sin interés */}
+          <p className="text-[10px] sm:text-xs text-bib-gray/80 pt-1">
+            3 x <span className="font-medium text-bib-white">${Number(cuotaMonto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span> sin interés
+          </p>
+        </div>
       </div>
+
+      {/* Botón Comprar */}
+      <Link to={`/producto/${product.id}`} className="block w-full">
+        <button
+          disabled={sinStock}
+          className={`w-full py-2.5 sm:py-3 rounded font-medium text-[10px] sm:text-xs uppercase tracking-widest transition-all duration-300 ${
+            sinStock
+              ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed border border-bib-white/10'
+              : 'bg-[#C4A278] hover:bg-bib-white text-bib-black font-semibold'
+          }`}
+        >
+          {sinStock ? 'Sin stock' : 'Comprar'}
+        </button>
+      </Link>
     </div>
   );
 }
@@ -88,7 +133,7 @@ export default function ProductGrid() {
   const [precioAbierto, setPrecioAbierto] = useState(false)
   const precioRef = useRef(null)
 
-  // Config del cartel de "últimas unidades" — editable desde el panel admin
+  // Config del cartel de "últimas unidades"
   const [mostrarStockBajo, setMostrarStockBajo] = useState(true)
   const [umbralStockBajo, setUmbralStockBajo] = useState(5)
 
@@ -126,8 +171,6 @@ export default function ProductGrid() {
     fetchSettings()
   }, [])
 
-  // Si llega un ?search= nuevo desde la lupa del Navbar (aunque ya estemos parados en esta página),
-  // actualizamos el campo de búsqueda para que se sincronice con la URL.
   useEffect(() => {
     const paramSearch = searchParams.get('search');
     if (paramSearch !== null) {
@@ -176,6 +219,7 @@ export default function ProductGrid() {
   return (
     <div className="px-4 sm:px-6 space-y-6 sm:space-y-8">
       <div className="max-w-5xl mx-auto space-y-4">
+        {/* Filtros de Categorías */}
         <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
           {CATEGORIAS_CON_TODOS.map(cat => (
             <button
@@ -183,7 +227,7 @@ export default function ProductGrid() {
               onClick={() => handleCategoryClick(cat)}
               className={`px-4 sm:px-6 py-2 rounded text-xs sm:text-sm tracking-wide uppercase transition-all border shrink-0 whitespace-nowrap ${
                 selectedCategory === cat
-                ? 'bg-bib-red text-bib-black font-medium border-bib-red'
+                ? 'bg-[#C4A278] text-bib-black font-semibold border-[#C4A278]'
                 : 'bg-bib-dark text-bib-white border-bib-white/10 hover:border-bib-white/30'
               }`}
             >
@@ -192,6 +236,7 @@ export default function ProductGrid() {
           ))}
         </div>
 
+        {/* Filtros de Subcategorías */}
         {subcategoriasDisponibles.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
             <button
@@ -220,13 +265,14 @@ export default function ProductGrid() {
           </div>
         )}
 
+        {/* Barra de Búsqueda y Filtros */}
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10">
           <div className="relative flex-1">
             <input
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
-              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-3 pl-10 rounded outline-none focus:border-bib-red transition-colors text-sm sm:text-base"
+              className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-3 pl-10 rounded outline-none focus:border-[#C4A278] transition-colors text-sm sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Search className="absolute left-3 top-3.5 text-bib-white/50" size={18} />
@@ -247,7 +293,7 @@ export default function ProductGrid() {
               onClick={() => setPrecioAbierto((prev) => !prev)}
               className={`w-full md:w-auto flex items-center justify-center gap-2 p-3 rounded border text-sm sm:text-base transition-colors ${
                 hayFiltroPrecio
-                  ? 'bg-bib-red/10 border-bib-red text-bib-red'
+                  ? 'bg-[#C4A278]/10 border-[#C4A278] text-[#C4A278]'
                   : 'bg-bib-black border-bib-white/20 text-bib-white hover:border-bib-white/40'
               }`}
             >
@@ -268,7 +314,7 @@ export default function ProductGrid() {
                     placeholder="Desde"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
+                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-[#C4A278] transition-colors text-sm"
                   />
                   <span className="text-bib-gray text-xs shrink-0">a</span>
                   <input
@@ -277,20 +323,20 @@ export default function ProductGrid() {
                     placeholder="Hasta"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-bib-red transition-colors text-sm"
+                    className="w-full bg-bib-black border border-bib-white/20 text-bib-white p-2.5 rounded outline-none focus:border-[#C4A278] transition-colors text-sm"
                   />
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <button
                     onClick={() => { setMinPrice(''); setMaxPrice(''); }}
                     disabled={!hayFiltroPrecio}
-                    className="text-bib-gray hover:text-bib-red disabled:opacity-30 disabled:hover:text-bib-gray text-xs uppercase tracking-widest transition-colors"
+                    className="text-bib-gray hover:text-[#C4A278] disabled:opacity-30 disabled:hover:text-bib-gray text-xs uppercase tracking-widest transition-colors"
                   >
                     Limpiar
                   </button>
                   <button
                     onClick={() => setPrecioAbierto(false)}
-                    className="bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                    className="bg-[#C4A278] hover:bg-bib-white text-bib-black font-semibold rounded px-4 py-2 text-xs uppercase tracking-widest transition-colors"
                   >
                     Listo
                   </button>
@@ -307,8 +353,9 @@ export default function ProductGrid() {
         )}
       </div>
 
+      {/* Render de Productos o Skeleton */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
           {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       ) : filteredProducts.length > 0 ? (
@@ -318,14 +365,14 @@ export default function ProductGrid() {
               {groupedByCategory.map(group => (
                 <section key={group.name}>
                   <h2 className="max-w-7xl mx-auto text-sm font-medium text-bib-white mb-4 sm:mb-6 tracking-widest uppercase">{group.name}</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
                     {group.items.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
               {filteredProducts.map(p => <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />)}
             </div>
           )}

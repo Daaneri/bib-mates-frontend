@@ -24,7 +24,7 @@
     @apply transition-all duration-300 active:scale-[0.98] cursor-pointer;
   }
 
-  /* Foco de teclado prolijo — visible solo al navegar con Tab, no al hacer click */
+  /* Foco de teclado prolijo */
   :focus-visible {
     outline: 2px solid var(--color-bib-red);
     outline-offset: 2px;
@@ -110,54 +110,5 @@
 @media (prefers-reduced-motion: reduce) {
   .top-loading-bar {
     display: none;
-  }
-}
-
-/* =========================================================
-   Alineación Vertical y Limpieza de Widget WhatsApp
-   ========================================================= */
-
-/* 1. Posicionamiento del widget de WhatsApp justo sobre el carrito */
-#whatsapp-widget,
-.whatsapp-button,
-[class*="whatsapp"],
-[id*="whatsapp"],
-iframe[src*="whatsapp"],
-a[href*="wa.me"],
-a[href*="whatsapp.com"] {
-  position: fixed !important;
-  bottom: 80px !important;
-  right: 16px !important;
-  z-index: 40 !important;
-  width: auto !important;
-  max-width: 60px !important;
-  overflow: hidden !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-/* 2. Ocultar el texto/número de teléfono para dejar solo la burbuja verde */
-#whatsapp-widget span,
-#whatsapp-widget p,
-.whatsapp-button span,
-.whatsapp-button p,
-[class*="whatsapp"] span:not([class*="icon"]),
-[class*="whatsapp"] p,
-[class*="whatsapp"] text,
-[id*="whatsapp"] span,
-[id*="whatsapp"] p {
-  display: none !important;
-}
-
-@media (min-width: 640px) {
-  #whatsapp-widget,
-  .whatsapp-button,
-  [class*="whatsapp"],
-  [id*="whatsapp"],
-  iframe[src*="whatsapp"],
-  a[href*="wa.me"],
-  a[href*="whatsapp.com"] {
-    bottom: 96px !important;
-    right: 24px !important;
   }
 }

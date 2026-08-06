@@ -28,14 +28,10 @@ import Favoritos from './components/Favoritos';
 import NotFound from './components/NotFound';
 import Grabados from './components/Grabados';
 
-// Componentes Administrativos (Carga perezosa / Code Splitting)
+// Componentes Administrativos
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Login = lazy(() => import('./pages/Login'));
 
-/**
- * Componente ErrorBoundary para prevenir que errores en componentes lazy 
- * rompan toda la aplicación.
- */
 class GlobalErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -72,7 +68,6 @@ class GlobalErrorBoundary extends Component {
 function PublicRoutes() {
   const location = useLocation();
 
-  // Sanitizar el número de WhatsApp removiendo cualquier caracter que no sea número
   const cleanWhatsappNumber = siteConfig?.whatsapp 
     ? String(siteConfig.whatsapp).replace(/[^0-9]/g, '') 
     : '';
@@ -85,16 +80,17 @@ function PublicRoutes() {
       <CartDrawer />
       <CookieBanner />
 
-      {/* Enlace seguro a WhatsApp */}
+      {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
       {cleanWhatsappNumber && (
         <a 
           href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
           target="_blank" 
           rel="noopener noreferrer nofollow"
           aria-label="Contactar por WhatsApp"
-          className="fixed bottom-24 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
         >
-          <MessageCircle size={24} />
+          <MessageCircle size={20} className="sm:hidden" />
+          <MessageCircle size={24} className="hidden sm:block" />
         </a>
       )}
 
@@ -109,18 +105,12 @@ function PublicRoutes() {
           <Route path="/checkout/exito" element={<PagoExito />} />
           <Route path="/checkout/error" element={<PagoError />} />
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
-          
-          {/* Rutas para Pago por Transferencia */}
           <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
           <Route path="/checkout/transferencia-confirmada" element={<PagoTransferencia />} />
-
           <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/grabados" element={<Grabados />} />
-          
-          {/* RUTAS LEGALES */}
           <Route path="/privacidad" element={<PrivacyPolicy />} />
           <Route path="/terminos" element={<TermsOfService />} />
-
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -144,7 +134,6 @@ function App() {
         <Router>
           <AnalyticsTracker />
           <Routes>
-            {/* RUTAS ADMINISTRATIVAS */}
             <Route 
               path="/login" 
               element={
@@ -163,8 +152,6 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-
-            {/* RUTAS PÚBLICAS */}
             <Route path="*" element={<PublicRoutes />} />
           </Routes>
         </Router>

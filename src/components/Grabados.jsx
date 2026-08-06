@@ -30,6 +30,31 @@ export default function Grabados() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
   };
 
+  // Función para asignar patrones de tamaño (Mosaico estilo la imagen)
+  const getTileClasses = (index) => {
+    const pattern = index % 8;
+    switch (pattern) {
+      case 0:
+        return 'col-span-2 row-span-2 md:col-span-2 md:row-span-2 min-h-[280px] md:min-h-[360px]'; // Bloque Grande Violeta
+      case 1:
+        return 'col-span-1 row-span-2 md:col-span-1 md:row-span-2 min-h-[280px] md:min-h-[360px]'; // Vertical Verde
+      case 2:
+        return 'col-span-1 row-span-1 min-h-[140px] md:min-h-[170px]'; // Rectángulo Chico Azul
+      case 3:
+        return 'col-span-1 row-span-1 md:col-span-2 min-h-[140px] md:min-h-[170px]'; // Horizontal Ancho Verde
+      case 4:
+        return 'col-span-1 row-span-2 md:col-span-1 md:row-span-2 min-h-[280px] md:min-h-[360px]'; // Vertical Naranja
+      case 5:
+        return 'col-span-2 row-span-2 md:col-span-2 md:row-span-2 min-h-[280px] md:min-h-[360px]'; // Bloque Grande
+      case 6:
+        return 'col-span-1 row-span-1 min-h-[140px] md:min-h-[170px]'; // Cuadrado Chico
+      case 7:
+        return 'col-span-2 row-span-1 min-h-[140px] md:min-h-[170px]'; // Horizontal Largo
+      default:
+        return 'col-span-1 row-span-1 min-h-[180px]';
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-12">
       <SeoHead
@@ -49,32 +74,35 @@ export default function Grabados() {
       </div>
 
       {loading ? (
-        <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-[140px] md:auto-rows-[170px]">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-64 rounded-2xl bg-bib-card animate-pulse break-inside-avoid" />
+            <div
+              key={i}
+              className={`rounded-2xl bg-bib-card animate-pulse ${getTileClasses(i)}`}
+            />
           ))}
         </div>
       ) : imagenes.length === 0 ? (
         <p className="text-center text-bib-gray py-16">Todavía no hay grabados cargados.</p>
       ) : (
         <FadeIn>
-          {/* Disposición Masonry usando CSS Columns */}
-          <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
-            {imagenes.map((img) => (
+          {/* Grilla Mosaico Dinámica */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 auto-rows-[140px] md:auto-rows-[170px] grid-flow-dense">
+            {imagenes.map((img, index) => (
               <div
                 key={img.id}
                 onClick={() => setImagenAmpliada(img.image_url)}
-                className="group relative cursor-pointer break-inside-avoid rounded-2xl overflow-hidden border border-bib-white/10 bg-bib-card hover:border-bib-red/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-bib-red/10"
+                className={`group relative cursor-pointer rounded-2xl overflow-hidden border border-bib-white/10 bg-bib-card hover:border-bib-red/50 transition-all duration-300 hover:shadow-xl hover:shadow-bib-red/10 ${getTileClasses(index)}`}
               >
                 <img
                   src={img.image_url}
                   alt="Grabado realizado"
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                
-                {/* Overlay flotante al hacer hover */}
+
+                {/* Overlay al pasar el mouse */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <span className="bg-black/60 text-bib-white px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border border-white/10 flex items-center gap-1.5">
                     <ZoomIn size={14} /> Ampliar
@@ -100,7 +128,7 @@ export default function Grabados() {
             <X size={26} />
           </button>
 
-          <div 
+          <div
             className="relative max-w-full max-h-[85vh] flex flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
           >
@@ -109,7 +137,7 @@ export default function Grabados() {
               alt="Grabado ampliado"
               className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl border border-white/10"
             />
-            
+
             <button
               onClick={() => handleConsultarWhatsApp(imagenAmpliada)}
               className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-full text-sm transition-all duration-300 shadow-lg active:scale-95"

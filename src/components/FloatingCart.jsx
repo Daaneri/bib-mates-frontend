@@ -24,11 +24,10 @@ export default function FloatingCart() {
       onClick={openDrawer}
       aria-label="Abrir carrito"
       /* 
-        - `bottom-24` en celular eleva el botón por encima de WhatsApp
-        - `sm:bottom-6` recupera la posición estándar en computadoras
-        - `z-50` asegura que quede siempre por encima de las tarjetas de producto
+        - `bottom-20`: eleva el carrito a 80px del suelo en celular (arriba de WhatsApp)
+        - `sm:bottom-6`: vuelve a la posición normal en computadoras
       */
-      className={`fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#C4A278] text-bib-black p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
+      className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-[#C4A278] text-bib-black p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
         bump ? 'scale-110' : ''
       }`}
     >

@@ -123,7 +123,7 @@ Hola ${order.nombre_del_cliente},
 ¡Gracias por tu compra! Tu pedido #${order.identificador} ha sido registrado exitosamente.
 
 Total: $${Number(order.total).toLocaleString("es-AR")}
-Método de Pago: Mercado Pago
+Método de Pago: Mercado Pago / Tarjeta
     `,
   };
 
@@ -253,7 +253,6 @@ app.post("/api/payment/create-preference", async (req, res) => {
     enviarEmailNotificacion(orderData).catch(console.error);
     enviarEmailConfirmacionCliente(orderData).catch(console.error);
 
-    // Calcular factor de descuento proporcional (evita ítems negativos)
     const discountFactor = totalProductos > 0 ? (totalProductos - montoDescuento) / totalProductos : 1;
 
     const preferenceItems = items.map((item) => {

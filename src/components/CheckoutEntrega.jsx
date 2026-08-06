@@ -383,10 +383,10 @@ export default function CheckoutEntrega() {
                     className="accent-blue-500"
                   />
                   <CreditCard size={18} className="text-blue-400" />
-                  <span className="font-medium text-bib-white text-sm">Tarjeta de Crédito / Mercado Pago</span>
+                  <span className="font-medium text-bib-white text-sm">Tarjeta de Crédito / Débito (Mercado Pago)</span>
                 </div>
                 <p className="text-xs text-bib-gray ml-6 mt-1">
-                  💳 Precio de Lista — <strong className="text-blue-400">3 cuotas sin interés</strong>
+                  💳 Débito y Crédito — <strong className="text-blue-400">Hasta 3 cuotas sin interés</strong>
                 </p>
               </label>
 
@@ -417,7 +417,7 @@ export default function CheckoutEntrega() {
             disabled={isSubmitting || (shippingType === "envio" && !isShippingCalculated)}
             className="w-full bg-bib-red text-bib-black font-bold py-3.5 rounded mt-4 uppercase tracking-widest disabled:opacity-50 hover:bg-bib-white transition-all active:scale-[0.98]"
           >
-            {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" : "Confirmar Pedido"}
+            {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Tarjeta / Mercado Pago" : "Confirmar Pedido"}
           </button>
         </form>
       </div>

@@ -1,128 +1,153 @@
 import { Link } from 'react-router-dom';
-import { Coffee, Thermometer, Leaf, ShoppingBasket, Package, Gem } from 'lucide-react';
+import { Truck, Star, CreditCard, Sparkles, ChevronRight } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
-import { siteConfig } from '../config/site';
 
 const FEATURED_CATEGORIES = [
-  { name: 'Mates', icon: Coffee },
-  { name: 'Termos', icon: Thermometer },
-  { name: 'Yerbas', icon: Leaf },
-  { name: 'Canastas', icon: ShoppingBasket },
-  { name: 'Kits', icon: Package },
-  { name: 'Accesorios', icon: Gem },
+  { name: 'Mates', image: 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Termos', image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Yerbas', image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Canastas', image: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Bombillas', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Accesorios', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400' },
 ];
 
-const MARQUEE_TEXT = "TOMAR MATE ES SIEMPRE UNA BUENA IDEA • ENVÍOS A TODO EL PAÍS • ENVÍO GRATIS DESDE $120.000 • HECHO PARA VOS • ";
+const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
 
 export default function Home() {
   return (
     <>
-      <div className="overflow-hidden bg-bib-red-dark py-2 whitespace-nowrap">
+      {/* Ticker / Anuncio Superior */}
+      <div className="overflow-hidden bg-[#C4A278] py-2 whitespace-nowrap">
         <div className="animate-marquee inline-block">
-          <span className="text-[11px] font-medium text-bib-black tracking-widest">
+          <span className="text-[11px] font-bold text-bib-black uppercase tracking-widest">
             {MARQUEE_TEXT.repeat(2)}
           </span>
         </div>
       </div>
 
+      {/* Hero Section */}
       <section
-        className="relative py-16 md:py-28 px-6 text-center overflow-hidden"
+        className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh]"
         style={{
-          background: 'radial-gradient(ellipse 600px 350px at 50% 0%, rgba(196,162,120,0.15), transparent), #0A0A0A',
+          background: 'radial-gradient(ellipse 700px 450px at 50% 20%, rgba(196,162,120,0.18), transparent), #0A0A0A',
         }}
       >
-        {/* Glow ambiental sutil, en movimiento lento */}
         <div
-          className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-40 animate-pulse [animation-duration:4s]"
+          className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 animate-pulse [animation-duration:5s]"
           style={{
-            background: 'radial-gradient(circle, rgba(196,162,120,0.18) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(196,162,120,0.25) 0%, transparent 70%)',
           }}
         />
 
         <FadeIn>
-          <p className="text-xs tracking-[0.3em] text-bib-red font-medium mb-3 uppercase">
-            Envíos a todo el país
-          </p>
+          <span className="inline-flex items-center gap-1.5 bg-[#C4A278]/10 border border-[#C4A278]/30 px-3 py-1 rounded-full text-[10px] sm:text-xs tracking-[0.25em] text-[#C4A278] font-semibold mb-6 uppercase">
+            <Sparkles size={12} /> Artesanías en Cuero y Alpaca
+          </span>
         </FadeIn>
 
         <FadeIn delay={100}>
-          <h1 className="text-4xl md:text-6xl font-heading font-bold text-bib-white tracking-tight mb-6 leading-tight relative">
-            {siteConfig.tagline.split(',').map((linea, i) => {
-              const texto = linea.trim();
-              const formateado = i === 0
-                ? texto.charAt(0).toUpperCase() + texto.slice(1)
-                : texto;
-              return (
-                <span key={i} className="block lowercase first-letter:uppercase">
-                  {i === 0 ? formateado : texto}{i === 0 ? ',' : ''}
-                </span>
-              );
-            })}
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-6 leading-[1.1] max-w-4xl">
+            Tomar mate,<br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
+              siempre es una buena idea.
+            </span>
           </h1>
         </FadeIn>
 
         <FadeIn delay={200}>
-          <p className="text-xs md:text-sm text-bib-gray tracking-[0.2em] uppercase mb-10">
-            Catálogo completo abajo
+          <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light">
+            Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
           </p>
         </FadeIn>
 
         <FadeIn delay={300}>
-          <a
-            href="#seleccion"
-            className="group inline-flex items-center gap-2 bg-bib-red text-bib-white px-10 py-3 rounded text-xs tracking-[0.2em] uppercase font-medium hover:bg-bib-white hover:text-bib-black transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.35)] hover:-translate-y-0.5"
-          >
-            Ver Catálogo
-            <span className="transition-transform duration-300 group-hover:translate-y-1">↓</span>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <a
+              href="#seleccion"
+              className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.4)] hover:-translate-y-0.5"
+            >
+              Ver Catálogo
+              <ChevronRight size={14} />
+            </a>
+            <Link
+              to="/grabados"
+              className="inline-flex items-center justify-center gap-2 bg-transparent border border-bib-white/20 text-bib-white px-8 py-3.5 rounded font-medium text-xs tracking-[0.2em] uppercase hover:border-[#C4A278] hover:text-[#C4A278] transition-all duration-300"
+            >
+              Ver Grabados
+            </Link>
+          </div>
         </FadeIn>
       </section>
 
+      {/* Métricas de Prueba Social */}
       <FadeIn>
-        <section className="grid grid-cols-3 divide-x divide-bib-white/10 border-y border-bib-white/10">
-          <div className="py-4 sm:py-6 text-center transition-colors duration-300 hover:bg-bib-white/[0.02]">
-            <p className="text-xl sm:text-2xl font-medium text-bib-white">+100</p>
-            <p className="text-[10px] sm:text-xs text-bib-gray tracking-widest uppercase mt-1">Productos</p>
-          </div>
-          <div className="py-4 sm:py-6 text-center transition-colors duration-300 hover:bg-bib-white/[0.02]">
-            <p className="text-xl sm:text-2xl font-medium text-bib-white">9</p>
-            <p className="text-[10px] sm:text-xs text-bib-gray tracking-widest uppercase mt-1">Categorías</p>
-          </div>
-          <div className="py-4 sm:py-6 text-center transition-colors duration-300 hover:bg-bib-white/[0.02]">
-            <p className="text-xl sm:text-2xl font-medium text-bib-white">2</p>
-            <p className="text-[10px] sm:text-xs text-bib-gray tracking-widest uppercase mt-1">Puntos de retiro</p>
+        <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div className="flex items-center justify-center gap-3 p-2">
+              <Truck size={24} className="text-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">+5.000 Envíos</p>
+                <p className="text-xs text-bib-gray">A todo el país por Correo/Andreani</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
+              <Star size={24} className="text-[#C4A278] fill-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">4.9 / 5 Estrellas</p>
+                <p className="text-xs text-bib-gray">Garantía de calidad artesanal</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 p-2">
+              <CreditCard size={24} className="text-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Hasta 3 Cuotas</p>
+                <p className="text-xs text-bib-gray">Sin interés con todas las tarjetas</p>
+              </div>
+            </div>
           </div>
         </section>
       </FadeIn>
 
-      <section className="max-w-4xl mx-auto py-12 sm:py-16 px-6">
+      {/* Tarjetas de Categorías con Imágenes */}
+      <section className="max-w-6xl mx-auto py-16 px-6">
         <FadeIn>
-          <h2 className="text-2xl font-heading font-bold text-bib-white mb-8 text-center lowercase">
-            explorá por categoría
-          </h2>
+          <div className="text-center mb-10 space-y-1">
+            <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Colección completa</p>
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+              Explorá por categoría
+            </h2>
+          </div>
         </FadeIn>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {FEATURED_CATEGORIES.map(({ name, icon: Icon }, i) => (
-            <FadeIn key={name} delay={i * 60}>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {FEATURED_CATEGORIES.map(({ name, image }, i) => (
+            <FadeIn key={name} delay={i * 50}>
               <a
-                href={`/?categoria=${encodeURIComponent(name)}#seleccion`}
-                className="group flex flex-col items-center gap-2 bg-bib-dark border border-bib-white/10 rounded p-4 hover:border-bib-red/50 hover:-translate-y-1 hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.6)] transition-all duration-300"
+                href={`/?category=${encodeURIComponent(name)}#seleccion`}
+                className="group relative h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
               >
-                <Icon size={22} className="text-bib-red transition-transform duration-300 group-hover:scale-110" />
-                <span className="text-[10px] text-bib-white tracking-widest uppercase">{name}</span>
+                <img
+                  src={image}
+                  alt={name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-75"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
+                <div className="relative z-10 w-full">
+                  <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors">
+                    {name}
+                  </span>
+                </div>
               </a>
             </FadeIn>
           ))}
         </div>
       </section>
 
-      <section id="seleccion" className="max-w-7xl mx-auto py-12 px-6">
-        <FadeIn>
-          <h2 className="text-2xl font-heading font-bold text-bib-white mb-10 text-center lowercase">
-            nuestra selección
-          </h2>
-        </FadeIn>
+      {/* Grid de Productos */}
+      <section id="seleccion" className="max-w-7xl mx-auto py-8 pb-20 px-4 sm:px-6">
         <ProductGrid />
       </section>
     </>

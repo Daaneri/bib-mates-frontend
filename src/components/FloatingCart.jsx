@@ -23,7 +23,8 @@ export default function FloatingCart() {
     <button
       onClick={openDrawer}
       aria-label="Abrir carrito"
-      className={`fixed bottom-6 right-4 sm:right-6 z-40 bg-bib-red text-bib-black p-3 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
+      /* `bottom-20` en móvil y `sm:bottom-8` en PC despeja completamente el botón de WhatsApp */
+      className={`fixed bottom-20 right-4 sm:bottom-8 sm:right-6 z-40 bg-[#C4A278] text-bib-black p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
         bump ? 'scale-110' : ''
       }`}
     >
@@ -33,7 +34,7 @@ export default function FloatingCart() {
 
         {totalItems > 0 && (
           <span
-            className={`absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-white text-bib-black text-[9px] sm:text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full font-medium transition-transform duration-300 ${
+            className={`absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-black text-[#C4A278] border border-[#C4A278] text-[9px] sm:text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full font-bold transition-transform duration-300 ${
               bump ? 'scale-125' : 'scale-100'
             }`}
           >

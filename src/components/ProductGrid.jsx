@@ -9,11 +9,11 @@ const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
 
 function ProductCardSkeleton() {
   return (
-    <div className="bg-bib-dark p-3 sm:p-4 md:p-5 rounded md:rounded-md border border-bib-white/10 flex flex-col animate-pulse">
-      <div className="aspect-square bg-bib-card rounded mb-3 sm:mb-4" />
+    <div className="bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10 flex flex-col animate-pulse">
+      <div className="aspect-square bg-bib-card rounded mb-3" />
       <div className="h-3 bg-bib-card rounded w-3/4 mb-2" />
-      <div className="h-5 bg-bib-card rounded w-1/2 mb-3" />
-      <div className="h-12 bg-bib-card rounded mb-3" />
+      <div className="h-5 bg-bib-card rounded w-1/2 mb-2" />
+      <div className="h-3 bg-bib-card rounded w-2/3 mb-4" />
       <div className="h-9 bg-bib-card rounded" />
     </div>
   );
@@ -24,13 +24,18 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   const sinStock = (product.stock ?? 0) === 0;
   const stockBajo = mostrarStockBajo && !sinStock && (product.stock ?? 0) < umbralStockBajo;
 
-  // Precios y cálculos
+  // Precios y Cálculos
   const precioLista = product.price || 0;
-  const precioEfectivo = product.price_cash || precioLista;
+  
+  // Si en DB tienes `price_cash`, se usa. Si no, aplica 20% de descuento al precio de lista.
+  const precioDescuento = product.price_cash 
+    ? product.price_cash 
+    : precioLista * 0.80;
+
   const cuotaMonto = (precioLista / 3).toFixed(2);
 
   return (
-    <div className="group bg-bib-dark p-3 sm:p-4 rounded md:rounded-md border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative">
+    <div className="group bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative">
       
       {/* Botón Favoritos */}
       <button
@@ -43,12 +48,12 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
 
       <div>
         {/* Imagen del Producto */}
-        <Link to={`/producto/${product.id}`} className="block aspect-square bg-bib-card rounded overflow-hidden mb-3 sm:mb-4 relative">
+        <Link to={`/producto/${product.id}`} className="block aspect-square bg-bib-card rounded overflow-hidden mb-3 relative">
           {product.image_url ? (
             <img 
               src={product.image_url} 
               alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 h-full text-bib-white/20">
@@ -57,48 +62,47 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
             </div>
           )}
 
-          {/* Badges de Stock o Descuento */}
+          {/* Badges de Descuento y Stock */}
+          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black font-bold text-[9px] sm:text-[10px] px-2 py-0.5 rounded uppercase tracking-wider z-10">
+            20% OFF
+          </span>
+
           {sinStock && (
-            <span className="absolute top-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 sm:px-3 py-1 rounded z-10">
+            <span className="absolute bottom-2 left-2 bg-bib-black/90 border border-bib-white/20 text-bib-white/80 text-[9px] sm:text-[10px] uppercase tracking-widest px-2 py-0.5 rounded z-10">
               Sin stock
             </span>
           )}
           {stockBajo && (
-            <span className="absolute top-2 left-2 bg-yellow-500/90 text-black text-[9px] sm:text-[10px] font-medium uppercase tracking-widest px-2 sm:px-3 py-1 rounded z-10">
+            <span className="absolute bottom-2 left-2 bg-yellow-500/90 text-black text-[9px] sm:text-[10px] font-medium uppercase tracking-widest px-2 py-0.5 rounded z-10">
               ¡Últimas {product.stock}!
             </span>
           )}
         </Link>
 
-        {/* Información del Producto */}
-        <div className="space-y-2 mb-4">
-          {/* Título */}
+        {/* Info y Precios Simplificados */}
+        <div className="space-y-1.5 mb-4">
           <Link to={`/producto/${product.id}`} className="block">
-            <h3 className="text-xs sm:text-sm md:text-base font-medium text-bib-white line-clamp-2 hover:text-[#C4A278] transition-colors min-h-[2.5rem]">
+            <h3 className="text-xs sm:text-sm font-medium text-bib-white line-clamp-1 hover:text-[#C4A278] transition-colors">
               {product.name}
             </h3>
           </Link>
 
-          {/* Precio de Lista */}
+          {/* Precio de Lista Principal */}
           <div>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-bib-white tracking-tight">
+            <p className="text-base sm:text-lg font-bold text-bib-white tracking-tight">
               ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
-          {/* Recuadro de Pago Transferencia / Efectivo */}
-          <div className="bg-bib-black/60 p-2.5 sm:p-3 rounded border-l-4 border-[#C4A278] flex flex-col justify-center">
-            <p className="text-sm sm:text-base md:text-lg font-bold text-bib-white leading-tight">
-              ${precioEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] sm:text-xs text-bib-gray mt-0.5">
-              con <span className="font-semibold text-bib-white">Transferencia o depósito</span>
-            </p>
-          </div>
+          {/* Destacado Mercado Pago / Transferencia (Línea Rápida) */}
+          <p className="text-xs text-[#C4A278] font-medium">
+            ${precioDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}{' '}
+            <span className="text-[10px] text-bib-gray font-normal">pagando con Mercado Pago / Transferencia</span>
+          </p>
 
-          {/* Cuotas sin interés */}
-          <p className="text-[10px] sm:text-xs text-bib-gray/80 pt-1">
-            3 x <span className="font-medium text-bib-white">${Number(cuotaMonto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span> sin interés
+          {/* Financiación */}
+          <p className="text-[10px] sm:text-xs text-bib-gray/80">
+            3 cuotas sin interés de <span className="font-medium text-bib-white">${Number(cuotaMonto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
           </p>
         </div>
       </div>
@@ -107,10 +111,10 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
       <Link to={`/producto/${product.id}`} className="block w-full">
         <button
           disabled={sinStock}
-          className={`w-full py-2.5 sm:py-3 rounded font-medium text-[10px] sm:text-xs uppercase tracking-widest transition-all duration-300 ${
+          className={`w-full py-2 sm:py-2.5 rounded font-semibold text-[10px] sm:text-xs uppercase tracking-widest transition-all duration-200 ${
             sinStock
               ? 'bg-bib-white/10 text-bib-white/30 cursor-not-allowed border border-bib-white/10'
-              : 'bg-[#C4A278] hover:bg-bib-white text-bib-black font-semibold'
+              : 'bg-[#C4A278] hover:bg-bib-white text-bib-black'
           }`}
         >
           {sinStock ? 'Sin stock' : 'Comprar'}
@@ -133,11 +137,9 @@ export default function ProductGrid() {
   const [precioAbierto, setPrecioAbierto] = useState(false)
   const precioRef = useRef(null)
 
-  // Config del cartel de "últimas unidades"
   const [mostrarStockBajo, setMostrarStockBajo] = useState(true)
   const [umbralStockBajo, setUmbralStockBajo] = useState(5)
 
-  // Cierra el dropdown de precio si tocás afuera
   useEffect(() => {
     function handleClickAfuera(e) {
       if (precioRef.current && !precioRef.current.contains(e.target)) {
@@ -219,7 +221,7 @@ export default function ProductGrid() {
   return (
     <div className="px-4 sm:px-6 space-y-6 sm:space-y-8">
       <div className="max-w-5xl mx-auto space-y-4">
-        {/* Filtros de Categorías */}
+        {/* Categorías */}
         <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
           {CATEGORIAS_CON_TODOS.map(cat => (
             <button
@@ -236,7 +238,7 @@ export default function ProductGrid() {
           ))}
         </div>
 
-        {/* Filtros de Subcategorías */}
+        {/* Subcategorías */}
         {subcategoriasDisponibles.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible scrollbar-hide">
             <button
@@ -265,7 +267,7 @@ export default function ProductGrid() {
           </div>
         )}
 
-        {/* Barra de Búsqueda y Filtros */}
+        {/* Buscador y Filtros */}
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 bg-bib-dark p-3 sm:p-4 rounded border border-bib-white/10">
           <div className="relative flex-1">
             <input
@@ -353,7 +355,7 @@ export default function ProductGrid() {
         )}
       </div>
 
-      {/* Render de Productos o Skeleton */}
+      {/* Grid de Productos */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
           {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}

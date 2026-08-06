@@ -47,7 +47,6 @@ class GlobalErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Podés conectar un servicio de reporte de errores como Sentry aquí
     console.error("Error capturado en ErrorBoundary:", error, errorInfo);
   }
 
@@ -86,7 +85,7 @@ function PublicRoutes() {
       <CartDrawer />
       <CookieBanner />
 
-      {/* Enlace seguro a WhatsApp con rel="noopener noreferrer nofollow" para prevenir Tabnabbing */}
+      {/* Enlace seguro a WhatsApp */}
       {cleanWhatsappNumber && (
         <a 
           href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
@@ -110,7 +109,11 @@ function PublicRoutes() {
           <Route path="/checkout/exito" element={<PagoExito />} />
           <Route path="/checkout/error" element={<PagoError />} />
           <Route path="/checkout/pendiente" element={<PagoPendiente />} />
+          
+          {/* Rutas para Pago por Transferencia */}
           <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
+          <Route path="/checkout/transferencia-confirmada" element={<PagoTransferencia />} />
+
           <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/grabados" element={<Grabados />} />
           

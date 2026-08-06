@@ -1,104 +1,190 @@
-import { useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import { Copy, Check, ArrowLeft } from 'lucide-react';
-import FadeIn from './FadeIn';
+import React, { useState } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { CheckCircle2, Copy, ArrowLeft, MessageCircle, Building2, CreditCard, User, AlertCircle } from "lucide-react";
+import { siteConfig } from "../config/site";
 
 export default function PagoTransferencia() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderId, total, datosTransferencia } = location.state || {};
-  const [copiado, setCopiado] = useState('');
+  const orderData = location.state;
 
-  if (!orderId || !datosTransferencia) {
+  const [copiedField, setCopiedField] = useState("");
+
+  // Si no vienen datos de orden por recarga de página o acceso directo
+  if (!orderData) {
     return (
-      <div className="w-full max-w-2xl mx-auto py-16 sm:py-24 px-4 sm:px-6 text-center">
-        <p className="text-bib-gray mb-6">No encontramos los datos de este pedido.</p>
-        <Link to="/" className="text-bib-red hover:text-bib-white uppercase tracking-widest text-sm">
-          Volver al inicio
+      <div className="max-w-md mx-auto my-16 p-8 bg-bib-dark border border-bib-white/10 rounded-xl text-center text-bib-white shadow-2xl">
+        <AlertCircle size={48} className="text-bib-red mx-auto mb-4" />
+        <h2 className="text-xl font-bold mb-2">No se encontraron datos del pedido</h2>
+        <p className="text-sm text-bib-gray mb-6">
+          Es posible que hayas recargado la página o ingresado directamente a esta ruta.
+        </p>
+        <Link
+          to="/"
+          className="inline-block bg-bib-red text-bib-black font-bold px-6 py-3 rounded-lg uppercase tracking-wider text-xs hover:bg-bib-white transition-all"
+        >
+          Volver a la tienda
         </Link>
       </div>
     );
   }
 
-  async function copiar(texto, campo) {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(campo);
-      setTimeout(() => setCopiado(''), 2000);
-    } catch (err) {
-      console.error('Error al copiar:', err);
-    }
-  }
+  const { orderId, total, datosTransferencia } = orderData;
 
-  const filaDato = (label, valor, campo) => (
-    <div className="flex items-center justify-between gap-3 bg-bib-black border border-bib-white/10 rounded px-4 py-3">
-      <div className="min-w-0">
-        <p className="text-[10px] text-bib-gray uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-sm sm:text-base text-bib-white break-all">{valor}</p>
-      </div>
-      <button
-        onClick={() => copiar(valor, campo)}
-        className="shrink-0 text-bib-gray hover:text-bib-red transition-colors p-2"
-        title={`Copiar ${label.toLowerCase()}`}
-      >
-        {copiado === campo ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
-      </button>
-    </div>
+  // Sanitizar número de WhatsApp
+  const cleanWhatsappNumber = siteConfig?.whatsapp
+    ? String(siteConfig.whatsapp).replace(/[^0-9]/g, "")
+    : "";
+
+  const copyToClipboard = (text, fieldName) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(""), 2500);
+  };
+
+  // Mensaje prediseñado para WhatsApp con el número de orden
+  const mensajeWhatsapp = encodeURIComponent(
+    `¡Hola! Realicé el pago por transferencia de la Orden #${orderId}. Adjunto mi comprobante de pago.`
   );
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-10 sm:py-16 px-4 sm:px-6">
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-10 sm:mb-16 text-xs sm:text-sm text-bib-gray uppercase tracking-widest">
-        <span>Carrito</span>
-        <div className="h-px w-8 sm:w-12 bg-bib-white/20" />
-        <span>Entrega</span>
-        <div className="h-px w-8 sm:w-12 bg-bib-white/20" />
-        <span className="text-bib-red font-medium">Pago</span>
+    <div className="max-w-2xl mx-auto my-10 p-6 md:p-8 bg-bib-dark border border-bib-white/10 rounded-xl text-bib-white shadow-2xl">
+      {/* Encabezado */}
+      <div className="text-center pb-6 border-b border-bib-white/10">
+        <CheckCircle2 size={60} className="text-green-400 mx-auto mb-3" />
+        <h1 className="text-2xl md:text-3xl font-bold font-heading tracking-wide">
+          ¡Pedido Registrado!
+        </h1>
+        <p className="text-sm text-bib-gray mt-2">
+          Número de Orden: <strong className="text-bib-white font-mono text-base">#{orderId}</strong>
+        </p>
       </div>
 
-      <FadeIn>
-        <div className="bg-bib-dark rounded border border-bib-white/10 p-6 sm:p-10 space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-lg sm:text-xl text-bib-white uppercase tracking-widest font-medium">
-              ¡Pedido registrado!
-            </h1>
-            <p className="text-sm text-bib-gray">
-              Pedido <span className="text-bib-white">#{orderId}</span> — transferí el total para confirmarlo
+      {/* Cartel con Monto Final (Con Descuento Aplicado) */}
+      <div className="my-6 bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
+        <p className="text-xs uppercase tracking-wider text-green-400 mb-1 font-semibold">
+          Monto Total a Transferir (20% OFF Aplicado)
+        </p>
+        <p className="text-3xl md:text-4xl font-extrabold text-green-400 font-mono">
+          ${Number(total || 0).toLocaleString("es-AR")} ARS
+        </p>
+      </div>
+
+      {/* Datos Bancarios */}
+      <div className="space-y-4 my-6">
+        <h3 className="text-xs uppercase tracking-wider font-semibold text-bib-gray border-b border-bib-white/10 pb-2">
+          Datos de la Cuenta Bancaria
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* CBU / CVU */}
+          <div className="bg-bib-card p-3.5 rounded-lg border border-bib-white/5 flex justify-between items-center">
+            <div>
+              <p className="text-xs text-bib-gray flex items-center gap-1.5 mb-1">
+                <CreditCard size={14} /> CBU / CVU
+              </p>
+              <p className="font-mono text-sm font-semibold tracking-wide">
+                {datosTransferencia?.cbu || siteConfig?.bankDetails?.cbu || "Consultar por WP"}
+              </p>
+            </div>
+            {(datosTransferencia?.cbu || siteConfig?.bankDetails?.cbu) && (
+              <button
+                onClick={() =>
+                  copyToClipboard(datosTransferencia?.cbu || siteConfig?.bankDetails?.cbu, "CBU")
+                }
+                className="p-2 text-bib-gray hover:text-bib-white hover:bg-bib-white/10 rounded transition-all"
+                title="Copiar CBU"
+              >
+                <Copy size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* ALIAS */}
+          <div className="bg-bib-card p-3.5 rounded-lg border border-bib-white/5 flex justify-between items-center">
+            <div>
+              <p className="text-xs text-bib-gray flex items-center gap-1.5 mb-1">
+                <Building2 size={14} /> Alias
+              </p>
+              <p className="font-mono text-sm font-semibold tracking-wide">
+                {datosTransferencia?.alias || siteConfig?.bankDetails?.alias || "Consultar por WP"}
+              </p>
+            </div>
+            {(datosTransferencia?.alias || siteConfig?.bankDetails?.alias) && (
+              <button
+                onClick={() =>
+                  copyToClipboard(datosTransferencia?.alias || siteConfig?.bankDetails?.alias, "Alias")
+                }
+                className="p-2 text-bib-gray hover:text-bib-white hover:bg-bib-white/10 rounded transition-all"
+                title="Copiar Alias"
+              >
+                <Copy size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Titular */}
+          <div className="bg-bib-card p-3.5 rounded-lg border border-bib-white/5">
+            <p className="text-xs text-bib-gray flex items-center gap-1.5 mb-1">
+              <User size={14} /> Titular
+            </p>
+            <p className="text-sm font-semibold">
+              {datosTransferencia?.titular || siteConfig?.bankDetails?.titular || "Bib Mates"}
             </p>
           </div>
 
-          <div className="text-center py-4 border-y border-bib-white/10">
-            <p className="text-xs text-bib-gray uppercase tracking-widest mb-1">Total a transferir</p>
-            <p className="text-3xl sm:text-4xl text-bib-red font-medium tracking-tight">
-              ${Number(total).toLocaleString('es-AR')}
+          {/* Banco */}
+          <div className="bg-bib-card p-3.5 rounded-lg border border-bib-white/5">
+            <p className="text-xs text-bib-gray flex items-center gap-1.5 mb-1">
+              <Building2 size={14} /> Banco / Entidad
+            </p>
+            <p className="text-sm font-semibold">
+              {datosTransferencia?.banco || siteConfig?.bankDetails?.banco || "Mercado Pago / Banco"}
             </p>
           </div>
-
-          <div className="space-y-3">
-            {filaDato('CVU', datosTransferencia.cvu, 'cvu')}
-            {filaDato('Alias', datosTransferencia.alias, 'alias')}
-            {filaDato('Titular', datosTransferencia.titular, 'titular')}
-          </div>
-
-          <div className="bg-bib-black border border-bib-white/10 rounded p-4 space-y-2">
-            <p className="text-xs sm:text-sm text-bib-gray leading-relaxed">
-              Una vez hecha la transferencia, mandanos el comprobante por WhatsApp o respondiendo el correo de confirmación que te enviamos a tu casilla. Así validamos el pago y preparamos tu pedido.
-            </p>
-          </div>
-
-          <button
-            onClick={() => navigate('/')}
-            className="w-full flex items-center justify-center gap-2 bg-bib-red hover:bg-bib-white text-bib-black font-medium rounded px-6 py-3.5 transition-colors text-sm uppercase tracking-widest"
-          >
-            <ArrowLeft size={16} />
-            Volver al inicio
-          </button>
         </div>
-      </FadeIn>
+
+        {/* Notificación de copiado */}
+        {copiedField && (
+          <p className="text-xs text-green-400 text-center font-medium animate-pulse">
+            ¡{copiedField} copiado al portapapeles!
+          </p>
+        )}
+      </div>
+
+      {/* Pasos a seguir */}
+      <div className="bg-bib-white/5 p-4 rounded-lg text-xs text-bib-gray space-y-2 border border-bib-white/10 my-6">
+        <p className="font-semibold text-bib-white uppercase tracking-wider mb-1">
+          Instrucciones para completar tu compra:
+        </p>
+        <p>1. Realizá la transferencia por el monto exacto de <strong>${Number(total || 0).toLocaleString("es-AR")}</strong>.</p>
+        <p>2. Enviá el comprobante de pago haciendo clic en el botón de abajo o por WhatsApp.</p>
+        <p>3. Indicá el número de orden (<strong>#{orderId}</strong>) en tu mensaje.</p>
+      </div>
+
+      {/* Botones de Acción */}
+      <div className="flex flex-col sm:flex-row gap-3 mt-8">
+        {cleanWhatsappNumber && (
+          <a
+            href={`https://wa.me/${cleanWhatsappNumber}?text=${mensajeWhatsapp}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg"
+          >
+            <MessageCircle size={18} />
+            Enviar Comprobante por WhatsApp
+          </a>
+        )}
+
+        <button
+          onClick={() => navigate("/")}
+          className="flex-1 bg-bib-white/10 hover:bg-bib-white/20 text-bib-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all border border-bib-white/20"
+        >
+          <ArrowLeft size={16} />
+          Volver a la Tienda
+        </button>
+      </div>
     </div>
   );
 }

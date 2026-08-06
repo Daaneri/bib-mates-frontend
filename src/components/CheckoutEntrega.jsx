@@ -35,16 +35,21 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
+  // Cálculo de ítems: aplica el 20% OFF si es transferencia (usando price_cash o calculando 0.8 * price)
   const itemsFormat = cart.map((item) => {
-    const price = paymentMethod === "transferencia" && item.price_cash 
-      ? item.price_cash 
-      : item.price;
+    const basePrice = Number(item.price) || 0;
+    let price = basePrice;
+
+    if (paymentMethod === "transferencia") {
+      price = item.price_cash ? Number(item.price_cash) : Math.round(basePrice * 0.8);
+    }
 
     return {
       id: item.id,
       name: item.name,
       quantity: item.quantity,
       price: price,
+      originalPrice: basePrice,
     };
   });
 
@@ -183,15 +188,16 @@ export default function CheckoutEntrega() {
 
     const payload = {
       items: itemsFormat,
+      total: totalFinal,
       shippingCost: shippingType === "envio" ? shippingCost : 0,
       shippingDescription: shippingType === "envio" ? "Envío a domicilio" : "Retiro en sucursal",
       customer: formData,
       couponCode: appliedCoupon ? appliedCoupon.code : null,
+      paymentMethod: paymentMethod,
     };
 
     try {
       if (paymentMethod === "mercadopago") {
-        // Genera la preferencia y REDIRIGE DIRECTO A MERCADO PAGO
         const res = await fetch(`${API_URL}/api/payment/create-preference`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -201,14 +207,12 @@ export default function CheckoutEntrega() {
 
         if (res.ok && data.init_point) {
           localStorage.removeItem(COUPON_STORAGE_KEY);
-          // AQUÍ SE REDIRIGE AL SITIO DE MERCADO PAGO
           window.location.href = data.init_point;
         } else {
           setErrorMessage(data.error || "Error al conectar con Mercado Pago.");
           setIsSubmitting(false);
         }
       } else {
-        // Transfiere internamente y va a la pantalla de éxito
         const res = await fetch(`${API_URL}/api/payment/create-transfer-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -407,7 +411,7 @@ export default function CheckoutEntrega() {
                   <span className="font-medium text-bib-white text-sm">Transferencia Bancaria</span>
                 </div>
                 <p className="text-xs text-green-400 ml-6 mt-1">
-                  🔥 <strong>Precio Especial con Descuento</strong>
+                  🔥 <strong>20% de Descuento Especial</strong>
                 </p>
               </label>
             </div>
@@ -482,7 +486,7 @@ export default function CheckoutEntrega() {
 
         <div className="space-y-2 text-sm border-t border-bib-white/10 pt-4">
           <div className="flex justify-between text-bib-gray">
-            <span>Subtotal ({paymentMethod === "transferencia" ? "Transferencia" : "Lista"})</span>
+            <span>Subtotal ({paymentMethod === "transferencia" ? "20% OFF Transferencia" : "Precio de Lista"})</span>
             <span className="text-bib-white">${totalProductos.toLocaleString("es-AR")}</span>
           </div>
           {appliedCoupon && (

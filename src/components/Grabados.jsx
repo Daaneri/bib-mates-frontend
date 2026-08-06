@@ -4,7 +4,7 @@ import { X, ZoomIn, MessageCircle } from 'lucide-react';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
-const WHATSAPP_NUMBER = "5491132585236"; // Reemplaza con tu número si es necesario
+const WHATSAPP_NUMBER = "5491132585236";
 
 export default function Grabados() {
   const [imagenes, setImagenes] = useState([]);
@@ -49,31 +49,32 @@ export default function Grabados() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] rounded-xl bg-bib-card animate-pulse" />
+            <div key={i} className="h-64 rounded-2xl bg-bib-card animate-pulse break-inside-avoid" />
           ))}
         </div>
       ) : imagenes.length === 0 ? (
         <p className="text-center text-bib-gray py-16">Todavía no hay grabados cargados.</p>
       ) : (
         <FadeIn>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+          {/* Disposición Masonry usando CSS Columns */}
+          <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
             {imagenes.map((img) => (
               <div
                 key={img.id}
                 onClick={() => setImagenAmpliada(img.image_url)}
-                className="group relative cursor-pointer aspect-[3/4] rounded-xl overflow-hidden border border-bib-white/10 bg-bib-card hover:border-bib-red/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-bib-red/10"
+                className="group relative cursor-pointer break-inside-avoid rounded-2xl overflow-hidden border border-bib-white/10 bg-bib-card hover:border-bib-red/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-bib-red/10"
               >
                 <img
                   src={img.image_url}
                   alt="Grabado realizado"
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 
-                {/* Overlay oscuro y botón al pasar el mouse */}
+                {/* Overlay flotante al hacer hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <span className="bg-black/60 text-bib-white px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border border-white/10 flex items-center gap-1.5">
                     <ZoomIn size={14} /> Ampliar
@@ -85,7 +86,7 @@ export default function Grabados() {
         </FadeIn>
       )}
 
-      {/* Modal / Lightbox de imagen ampliada */}
+      {/* Modal Lightbox */}
       {imagenAmpliada && (
         <div
           className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -109,7 +110,6 @@ export default function Grabados() {
               className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl border border-white/10"
             />
             
-            {/* Botón para pedir presupuesto de esa foto en particular */}
             <button
               onClick={() => handleConsultarWhatsApp(imagenAmpliada)}
               className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-full text-sm transition-all duration-300 shadow-lg active:scale-95"

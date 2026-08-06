@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Star, CreditCard, Sparkles, ChevronRight } from 'lucide-react';
+import { Truck, Star, CreditCard, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
@@ -13,6 +13,7 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90
 
 export default function Home() {
   const [categoryImages, setCategoryImages] = useState({});
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     async function fetchCategoryImages() {
@@ -37,6 +38,14 @@ export default function Home() {
 
     fetchCategoryImages();
   }, []);
+
+  // Función para desplazarse lateralmente
+  const scroll = (direction) => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -200 : 200;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   return (
     <>
@@ -134,7 +143,7 @@ export default function Home() {
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías Dinámicas en una sola línea tipo carrusel deslizable */}
+      {/* Tarjetas de Categorías Dinámicas con Flechas de Navegación */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
           <div className="text-center mb-8 space-y-1">
@@ -145,36 +154,60 @@ export default function Home() {
           </div>
         </FadeIn>
 
-        {/* Contenedor Flex en una sola línea horizontal con scroll oculto */}
-        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
-          {CATEGORIES.map((catName, i) => {
-            const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
+        {/* Contenedor relativo para posicionar las flechas sobre el carrusel */}
+        <div className="relative group">
+          {/* Flecha Izquierda */}
+          <button
+            onClick={() => scroll('left')}
+            aria-label="Anterior"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
+          >
+            <ChevronLeft size={18} />
+          </button>
 
-            return (
-              <FadeIn key={catName} delay={i * 40} className="shrink-0 w-36 sm:w-44 lg:w-48 snap-start">
-                <a
-                  href={`/?category=${encodeURIComponent(catName)}#seleccion`}
-                  className="group relative h-36 sm:h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
-                >
-                  <img
-                    src={imageUrl}
-                    alt={catName}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-80"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
-                  <div className="relative z-10 w-full">
-                    <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover:text-[#C4A278] transition-colors truncate">
-                      {catName}
-                    </span>
-                  </div>
-                </a>
-              </FadeIn>
-            );
-          })}
+          {/* Carrusel Deslizable */}
+          <div
+            ref={carouselRef}
+            className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+          >
+            {CATEGORIES.map((catName, i) => {
+              const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
+
+              return (
+                <FadeIn key={catName} delay={i * 40} className="shrink-0 w-36 sm:w-44 lg:w-48 snap-start">
+                  <a
+                    href={`/?category=${encodeURIComponent(catName)}#seleccion`}
+                    className="group/item relative h-36 sm:h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={catName}
+                      className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500 opacity-60 group-hover/item:opacity-80"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
+                    <div className="relative z-10 w-full">
+                      <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover/item:text-[#C4A278] transition-colors truncate">
+                        {catName}
+                      </span>
+                    </div>
+                  </a>
+                </FadeIn>
+              );
+            })}
+          </div>
+
+          {/* Flecha Derecha */}
+          <button
+            onClick={() => scroll('right')}
+            aria-label="Siguiente"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
       </section>
 
-      {/* Grid de Productos - Se deshabilita la barra de botones repetidos */}
+      {/* Grid de Productos */}
       <section id="seleccion" className="max-w-7xl mx-auto py-4 pb-20 px-4 sm:px-6">
         <ProductGrid hideCategoryBar={true} />
       </section>

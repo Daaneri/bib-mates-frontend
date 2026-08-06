@@ -18,7 +18,9 @@ export default function AdminDashboard() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [file, setFile] = useState(null);
   const [extraFiles, setExtraFiles] = useState([]);
-  const [grabadoFile, setGrabadoFile] = useState(null);
+  
+  // Modificado: array de archivos para subida múltiple en grabados
+  const [grabadoFiles, setGrabadoFiles] = useState([]);
   
   // Categorías Dinámicas
   const [categorias, setCategorias] = useState(CATEGORIAS_INICIALES);
@@ -269,31 +271,36 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
-  async function handleAddGrabado(e) {
+  // Subida Múltiple de Grabados
+  async function handleAddGrabados(e) {
     e.preventDefault();
-    if (!grabadoFile) return;
+    if (!grabadoFiles || grabadoFiles.length === 0) return;
     setLoading(true);
-    const { data, error: uploadError } = await supabase.storage
-      .from('grabados')
-      .upload(`${Date.now()}_${grabadoFile.name}`, grabadoFile);
 
-    if (uploadError) {
-      mostrarMensaje("Error al subir: " + uploadError.message);
-      setLoading(false);
-      return;
-    }
+    try {
+      const uploadPromises = grabadoFiles.map(async (f) => {
+        const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${f.name}`;
+        const { data, error: uploadError } = await supabase.storage
+          .from('grabados')
+          .upload(filePath, f);
 
-    const imageUrl = supabase.storage.from('grabados').getPublicUrl(data.path).data.publicUrl;
-    const { error } = await supabase.from('grabados').insert([{ image_url: imageUrl }]);
+        if (uploadError) throw uploadError;
 
-    if (error) mostrarMensaje("Error: " + error.message);
-    else {
-      mostrarMensaje("Foto agregada a la galería");
-      setGrabadoFile(null);
+        const imageUrl = supabase.storage.from('grabados').getPublicUrl(data.path).data.publicUrl;
+        return supabase.from('grabados').insert([{ image_url: imageUrl }]);
+      });
+
+      await Promise.all(uploadPromises);
+
+      mostrarMensaje(`¡Se subieron ${grabadoFiles.length} foto(s) correctamente!`);
+      setGrabadoFiles([]);
       e.target.reset();
       fetchData();
+    } catch (error) {
+      mostrarMensaje("Error al subir grabados: " + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function handleDeleteGrabado(id) {
@@ -1025,16 +1032,28 @@ export default function AdminDashboard() {
 
         {view === 'Grabados' && (
           <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-            <form onSubmit={handleAddGrabado} className="max-w-2xl mx-auto bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
-              <h3 className="text-sm md:text-base mb-2 md:mb-4 uppercase tracking-widest font-medium">Nueva foto de grabado</h3>
+            <form onSubmit={handleAddGrabados} className="max-w-2xl mx-auto bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+              <h3 className="text-sm md:text-base mb-2 md:mb-4 uppercase tracking-widest font-medium">Fotos de grabados</h3>
               <div className="flex flex-col items-center gap-2">
-                <input type="file" id="grabadoFileInput" className="hidden" accept="image/*" onChange={(e) => setGrabadoFile(e.target.files[0])} />
+                <input
+                  type="file"
+                  id="grabadoFileInput"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setGrabadoFiles(Array.from(e.target.files))}
+                />
                 <label htmlFor="grabadoFileInput" className="cursor-pointer bg-bib-black px-6 py-2 rounded border border-bib-white/20 hover:border-bib-red transition text-xs md:text-sm text-center break-all">
-                  {grabadoFile ? grabadoFile.name : "Seleccionar foto"}
+                  {grabadoFiles.length > 0
+                    ? `${grabadoFiles.length} foto(s) seleccionada(s)`
+                    : "Seleccionar fotos"}
                 </label>
               </div>
-              <button disabled={loading || !grabadoFile} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors disabled:opacity-40">
-                SUBIR A LA GALERÍA
+              <button
+                disabled={loading || grabadoFiles.length === 0}
+                className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors disabled:opacity-40"
+              >
+                {loading ? "SUBIENDO..." : `SUBIR ${grabadoFiles.length || ""} A LA GALERÍA`}
               </button>
             </form>
 

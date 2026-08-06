@@ -191,6 +191,7 @@ export default function CheckoutEntrega() {
 
     try {
       if (paymentMethod === "mercadopago") {
+        // Genera la preferencia y REDIRIGE DIRECTO A MERCADO PAGO
         const res = await fetch(`${API_URL}/api/payment/create-preference`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -200,12 +201,14 @@ export default function CheckoutEntrega() {
 
         if (res.ok && data.init_point) {
           localStorage.removeItem(COUPON_STORAGE_KEY);
+          // AQUÍ SE REDIRIGE AL SITIO DE MERCADO PAGO
           window.location.href = data.init_point;
         } else {
-          setErrorMessage(data.error || "Error al generar el pago con Mercado Pago.");
+          setErrorMessage(data.error || "Error al conectar con Mercado Pago.");
           setIsSubmitting(false);
         }
       } else {
+        // Transfiere internamente y va a la pantalla de éxito
         const res = await fetch(`${API_URL}/api/payment/create-transfer-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -218,7 +221,7 @@ export default function CheckoutEntrega() {
           clearCart();
           navigate("/checkout/transferencia-confirmada", { state: data });
         } else {
-          setErrorMessage(data.error || "Error al procesar el pedido por transferencia.");
+          setErrorMessage(data.error || "Error al procesar el pedido.");
           setIsSubmitting(false);
         }
       }
@@ -370,7 +373,7 @@ export default function CheckoutEntrega() {
           )}
 
           <div className="pt-2">
-            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Medio de Pago</label>
+            <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Selecciona Medio de Pago</label>
             <div className="space-y-3">
               <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
                 <div className="flex items-center gap-2">
@@ -383,10 +386,10 @@ export default function CheckoutEntrega() {
                     className="accent-blue-500"
                   />
                   <CreditCard size={18} className="text-blue-400" />
-                  <span className="font-medium text-bib-white text-sm">Tarjeta de Crédito / Débito (Mercado Pago)</span>
+                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Tarjetas, Débito, Saldo)</span>
                 </div>
                 <p className="text-xs text-bib-gray ml-6 mt-1">
-                  💳 Débito y Crédito — <strong className="text-blue-400">Hasta 3 cuotas sin interés</strong>
+                  Pagas de forma segura en la web de Mercado Pago (Débito, Crédito o 3 cuotas sin interés).
                 </p>
               </label>
 
@@ -417,7 +420,11 @@ export default function CheckoutEntrega() {
             disabled={isSubmitting || (shippingType === "envio" && !isShippingCalculated)}
             className="w-full bg-bib-red text-bib-black font-bold py-3.5 rounded mt-4 uppercase tracking-widest disabled:opacity-50 hover:bg-bib-white transition-all active:scale-[0.98]"
           >
-            {isSubmitting ? "Procesando..." : paymentMethod === "mercadopago" ? "Pagar con Tarjeta / Mercado Pago" : "Confirmar Pedido"}
+            {isSubmitting
+              ? "Cargando..."
+              : paymentMethod === "mercadopago"
+              ? "Ir a Pagar a Mercado Pago ➔"
+              : "Confirmar Pedido por Transferencia"}
           </button>
         </form>
       </div>

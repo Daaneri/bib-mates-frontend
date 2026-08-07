@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../hooks/useWishlist';
-import { MessageCircle, ShoppingCart, ArrowLeft, Sparkles, Heart, Share2, ChevronRight, CreditCard, Banknote } from 'lucide-react';
+import { MessageCircle, ShoppingCart, ArrowLeft, Heart, Share2, ChevronRight, CreditCard, Banknote } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
@@ -286,16 +286,6 @@ export default function ProductDetail() {
                 {product.description || `Cada producto de ${siteConfig.businessName} está pensado para que se note tu onda a la hora de cebar. Si tenés dudas sobre materiales o stock, escribinos.`}
               </p>
             </div>
-
-            {esPersonalizable && (
-              <div className="flex gap-3 bg-bib-red/10 border border-bib-red/30 rounded p-4 sm:p-5">
-                <Sparkles size={20} className="text-bib-red shrink-0 mt-0.5" />
-                <p className="text-xs sm:text-sm text-bib-white/80 leading-relaxed">
-                  <span className="text-bib-red font-medium uppercase tracking-wide">¿Lo querés personalizado o grabado?</span><br />
-                  Una vez realizada la compra te contactamos por WhatsApp para definir el diseño. Demora de 2 a 5 días hábiles.
-                </p>
-              </div>
-            )}
 
             <div className="space-y-4">
               {esPersonalizable && (

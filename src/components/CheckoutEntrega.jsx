@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, Banknote, Truck } from "lucide-react";
+import { supabase } from "../supabaseClient";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const COUPON_STORAGE_KEY = "applied_coupon_code";
@@ -10,8 +11,8 @@ export default function CheckoutEntrega() {
   const { cart, clearCart } = useCart();
   const navigate = useNavigate();
 
-  const [paymentMethod, setPaymentMethod] = useState("mercadopago"); // 'mercadopago' | 'transferencia'
-  const [shippingType, setShippingType] = useState("envio"); // 'envio' | 'retiro'
+  const [paymentMethod, setPaymentMethod] = useState("mercadopago");
+  const [shippingType, setShippingType] = useState("envio");
   const [shippingCost, setShippingCost] = useState(0);
   const [isShippingCalculated, setIsShippingCalculated] = useState(false);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
@@ -35,7 +36,6 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
-  // Cálculo de ítems: 20% OFF cuando se paga con Mercado Pago, precio normal con transferencia
   const itemsFormat = cart.map((item) => {
     const basePrice = Number(item.price) || 0;
     let price = basePrice;
@@ -68,6 +68,30 @@ export default function CheckoutEntrega() {
       setAppliedCoupon((prev) => ({ ...prev, discount: nuevoDescuento }));
     }
   }, [paymentMethod, totalProductos]);
+
+  // REGISTRO DE CARRITO ABANDONADO EN SUPABASE
+  useEffect(() => {
+    const guardarCarritoPendiente = async () => {
+      if (formData.name.trim() && formData.phone.length >= 8 && itemsFormat.length > 0) {
+        try {
+          await supabase.from("carritos_abandonados").insert([
+            {
+              cliente_nombre: formData.name,
+              cliente_telefono: formData.phone,
+              items: itemsFormat,
+              monto_total: totalProductos,
+              recuperado: false,
+            },
+          ]);
+        } catch (err) {
+          console.error("Error registrando carrito pendiente:", err);
+        }
+      }
+    };
+
+    const timeout = setTimeout(guardarCarritoPendiente, 1000);
+    return () => clearTimeout(timeout);
+  }, [formData.phone, formData.name]);
 
   const handleShippingTypeChange = (type) => {
     setShippingType(type);
@@ -497,7 +521,7 @@ export default function CheckoutEntrega() {
           )}
           <div className="flex justify-between text-bib-gray">
             <span>Envío</span>
-            <span className="text-bib-white">
+            <span className="text-[#C4A278] font-semibold">
               {shippingType === "envio"
                 ? isShippingCalculated
                   ? `$${shippingCost.toLocaleString("es-AR")}`

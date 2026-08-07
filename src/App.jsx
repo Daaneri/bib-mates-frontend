@@ -30,6 +30,7 @@ import Grabados from './components/Grabados';
 
 // Componentes Administrativos
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminCarritos = lazy(() => import('./pages/AdminCarritos'));
 const Login = lazy(() => import('./pages/Login'));
 
 // Componente para forzar el scroll arriba en cada cambio de ruta
@@ -152,6 +153,16 @@ function App() {
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <Login />
                 </Suspense>
+              } 
+            />
+            <Route 
+              path="/admin/carritos" 
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminCarritos />
+                  </Suspense>
+                </ProtectedRoute>
               } 
             />
             <Route 

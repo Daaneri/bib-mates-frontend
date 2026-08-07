@@ -204,6 +204,9 @@ export default function ProductGrid({ hideCategoryBar = false }) {
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
+      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+      if (sortBy === 'newest') return (b.id || 0) - (a.id || 0);
       return 0;
     });
 
@@ -293,12 +296,16 @@ export default function ProductGrid({ hideCategoryBar = false }) {
 
           <div className="flex gap-2">
             <select
+              value={sortBy}
               className="w-1/2 md:w-auto bg-bib-black border border-bib-white/20 text-bib-white p-2 sm:p-3 rounded outline-none cursor-pointer hover:border-bib-white/40 transition-colors text-xs sm:text-base"
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="default">Destacados</option>
               <option value="price-low">Menor precio</option>
               <option value="price-high">Mayor precio</option>
+              <option value="name-asc">Nombre (A - Z)</option>
+              <option value="name-desc">Nombre (Z - A)</option>
+              <option value="newest">Más recientes</option>
             </select>
 
             <div className="relative w-1/2 md:w-auto" ref={precioRef}>

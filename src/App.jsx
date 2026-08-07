@@ -1,250 +1,186 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, Search, X, ChevronDown, Heart, MessageCircle } from 'lucide-react';
-import { CartProvider, useCart } from './context/CartContext';
-import { useWishlist } from './hooks/useWishlist';
+import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
+import { CartProvider } from './context/CartContext';
+import { Toaster } from 'sonner';
+import CheckoutEntrega from './components/CheckoutEntrega';
 import { siteConfig } from './config/site';
-import { CATEGORIES, SUBCATEGORIES } from './config/categories';
-import logo from './assets/bib-mates-logo.png';
 
+// Componentes Públicos
+import Navbar from './components/Navbar';
 import Home from './components/Home';
-import About from './components/About';
-import Grabados from './components/Grabados';
-import Opiniones from './components/Opiniones';
-import Favoritos from './components/Favoritos';
-import CartDrawer from './components/CartDrawer';
-// 1. IMPORTA AQUÍ TUS COMPONENTES DE CARRITO Y CHECKOUT
+import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
-import CheckoutEntrega from './components/CheckoutEntrega'; // Ajusta la ruta si está en otra carpeta
+import About from './components/About';
+import Opiniones from './components/Opiniones';
+import Footer from './components/Footer';
+import FloatingCart from './components/FloatingCart';
+import ProtectedRoute from './components/ProtectedRoute';
+import CartDrawer from './components/CartDrawer';
+import AnalyticsTracker from './components/AnalyticsTracker';
+import CookieBanner from './components/CookieBanner';
+import { PrivacyPolicy, TermsOfService } from './pages/LegalPages';
+import PagoExito from './components/PagoExito';
+import PagoError from './components/PagoError';
+import PagoPendiente from './components/PagoPendiente';
+import PagoTransferencia from './components/PagoTransferencia';
+import Favoritos from './components/Favoritos';
+import NotFound from './components/NotFound';
+import Grabados from './components/Grabados';
 
-const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";
+// Componentes Administrativos
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminCarritos = lazy(() => import('./pages/AdminCarritos'));
+const Login = lazy(() => import('./pages/Login'));
 
-function Navbar() {
-  const { cart, openDrawer } = useCart();
-  const { wishlist } = useWishlist();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [categoriaAbierta, setCategoriaAbierta] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-  const navigate = useNavigate();
+// Componente para forzar el scroll arriba en cada cambio de ruta
+function ScrollToTop() {
+  const { pathname } = useLocation();
 
-  function cerrarMenu() {
-    setMenuOpen(false);
-    setCategoriaAbierta(null);
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
+class GlobalErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
   }
 
-  function abrirBusqueda() {
-    setMenuOpen(false);
-    setSearchOpen(true);
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
-  function cerrarBusqueda() {
-    setSearchOpen(false);
-    setSearchValue('');
+  componentDidCatch(error, errorInfo) {
+    console.error("Error capturado en ErrorBoundary:", error, errorInfo);
   }
 
-  function handleBuscar(e) {
-    e.preventDefault();
-    if (!searchValue.trim()) return;
-    navigate(`/?search=${encodeURIComponent(searchValue.trim())}#seleccion`);
-    cerrarBusqueda();
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-bib-black text-bib-white flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-xl font-bold mb-2">Ocurrió un problema temporal</h2>
+          <p className="text-bib-gray text-sm mb-4">Por favor recargá la página para continuar.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-bib-red text-bib-white px-4 py-2 rounded font-semibold hover:opacity-90 transition-opacity"
+          >
+            Recargar
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
   }
+}
+
+function PublicRoutes() {
+  const location = useLocation();
+
+  const cleanWhatsappNumber = siteConfig?.whatsapp 
+    ? String(siteConfig.whatsapp).replace(/[^0-9]/g, '') 
+    : '';
 
   return (
-    <header className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
-      {/* Ticker / Anuncio Superior Único */}
-      <div className="overflow-hidden bg-[#C4A278] py-1.5 w-full whitespace-nowrap">
-        <div className="animate-marquee flex">
-          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest px-4 shrink-0">
-            {MARQUEE_TEXT}
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest px-4 shrink-0">
-            {MARQUEE_TEXT}
-          </span>
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col font-sans bg-bib-black text-bib-white selection:bg-bib-red selection:text-bib-black">
+      <Toaster position="bottom-right" richColors />
+      <Navbar />
+      <FloatingCart />
+      <CartDrawer />
+      <CookieBanner />
 
-      <div className="p-4 sm:p-6 flex justify-between items-center">
-        <div className="flex items-center gap-4 sm:gap-5 flex-1">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
-            aria-label="Abrir menú"
-          >
-            <span className={`inline-block transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`}>
-              {menuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
-            </span>
-          </button>
-          <button
-            onClick={abrirBusqueda}
-            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
-            aria-label="Buscar productos"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-        </div>
+      {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
+      {cleanWhatsappNumber && (
+        <a 
+          href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
+          target="_blank" 
+          rel="noopener noreferrer nofollow"
+          aria-label="Contactar por WhatsApp"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
+        >
+          <MessageCircle size={20} className="sm:hidden" />
+          <MessageCircle size={24} className="hidden sm:block" />
+        </a>
+      )}
 
-        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
-          <img
-            src={logo}
-            alt={`${siteConfig.businessName} Logo`}
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-bib-red/50 object-cover shadow-md shadow-black/50 transition-transform duration-300 group-hover:scale-105"
-          />
-          <span className="font-heading font-bold text-bib-white tracking-tight text-lg sm:text-xl hidden md:block truncate lowercase">
-            {siteConfig.businessName}
-          </span>
-        </Link>
-
-        {/* Sección restaurada con Favoritos y Carrito */}
-        <div className="flex items-center gap-4 sm:gap-5 flex-1 justify-end">
-          <Link to="/favoritos" className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Ver favoritos">
-            <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-            {wishlist.length > 0 && (
-              <span className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-red text-bib-black text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full">
-                {wishlist.length}
-              </span>
-            )}
-          </Link>
-          <button onClick={openDrawer} className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Abrir carrito">
-            <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
-            {cart.length > 0 && (
-              <span className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-red text-bib-black text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full">
-                {cart.length}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Buscador desplegable */}
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out border-t ${
-          searchOpen ? 'max-h-24 opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
-        }`}
-      >
-        <form onSubmit={handleBuscar} className="p-4 sm:p-6 flex items-center gap-3">
-          <Search size={18} className="text-bib-gray shrink-0" />
-          <input
-            type="text"
-            autoFocus={searchOpen}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Buscar productos..."
-            className="flex-1 min-w-0 bg-transparent text-bib-white placeholder:text-bib-white/40 outline-none text-sm sm:text-base"
-          />
-          <button
-            type="button"
-            onClick={cerrarBusqueda}
-            className="text-bib-gray hover:text-bib-white transition-colors shrink-0"
-            aria-label="Cerrar buscador"
-          >
-            <X size={18} />
-          </button>
-        </form>
-      </div>
-
-      {/* Menú Desplegable con Categorías */}
-      <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out border-t ${
-          menuOpen ? 'max-h-[80vh] opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
-        }`}
-      >
-        <div className="flex flex-col text-bib-gray uppercase tracking-widest text-sm max-h-[80vh] overflow-y-auto">
-          <div className="flex flex-col gap-4 px-6 py-4">
-            <Link to="/" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Inicio</Link>
-            <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
-            <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
-            <Link to="/grabados" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Grabados</Link>
-            <Link to="/favoritos" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Favoritos</Link>
-          </div>
-
-          <div className="border-t border-bib-white/10 px-6 py-4">
-            <p className="text-[10px] text-bib-gray/60 mb-3">Categorías</p>
-            <div className="flex flex-col gap-1">
-              {CATEGORIES.map(cat => {
-                const subs = SUBCATEGORIES[cat];
-                const abierta = categoriaAbierta === cat;
-                return (
-                  <div key={cat}>
-                    <div className="flex items-center justify-between py-2">
-                      <Link
-                        to={`/?category=${encodeURIComponent(cat)}#seleccion`}
-                        onClick={cerrarMenu}
-                        className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 flex-1 w-fit"
-                      >
-                        {cat}
-                      </Link>
-                      {subs && (
-                        <button
-                          onClick={() => setCategoriaAbierta(abierta ? null : cat)}
-                          className="p-1 text-bib-gray hover:text-bib-white transition-colors"
-                          aria-label="Ver subcategorías"
-                        >
-                          <ChevronDown size={16} className={`transition-transform duration-300 ${abierta ? 'rotate-180' : ''}`} />
-                        </button>
-                      )}
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${abierta && subs ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      {subs && (
-                        <div className="flex flex-col gap-1 pl-4 pb-2 normal-case tracking-normal text-xs">
-                          {subs.map(sub => (
-                            <Link
-                              key={sub}
-                              to={`/?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(sub)}#seleccion`}
-                              onClick={cerrarMenu}
-                              className="text-bib-gray hover:text-bib-red hover:translate-x-1 transition-all duration-300 py-1 w-fit"
-                            >
-                              {sub}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+      <main key={encodeURIComponent(location.pathname)} className="flex-grow animate-page-fade-in">
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><CartPage /></div>} />
+          <Route path="/producto/:id" element={<div className="p-8 max-w-6xl mx-auto min-h-[60vh] mt-10"><ProductDetail /></div>} />
+          <Route path="/about" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><About /></div>} />
+          <Route path="/opiniones" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><Opiniones /></div>} />
+          <Route path="/checkout/entrega" element={<CheckoutEntrega />} />
+          <Route path="/checkout/exito" element={<PagoExito />} />
+          <Route path="/checkout/error" element={<PagoError />} />
+          <Route path="/checkout/pendiente" element={<PagoPendiente />} />
+          <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
+          <Route path="/checkout/transferencia-confirmada" element={<PagoTransferencia />} />
+          <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/grabados" element={<Grabados />} />
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
+          <Route path="/terminos" element={<TermsOfService />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
-export default function App() {
+function AdminLoadingFallback() {
   return (
-    <CartProvider>
-      <Router>
-        <div className="min-h-screen bg-bib-dark text-bib-white flex flex-col relative">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/grabados" element={<Grabados />} />
-              <Route path="/opiniones" element={<Opiniones />} />
-              <Route path="/favoritos" element={<Favoritos />} />
-              <Route path="/producto/:id" element={<Home />} />
-              
-              {/* 2. RUTAS AGREGADAS PARA EL CARRITO Y EL CHECKOUT */}
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout/entrega" element={<CheckoutEntrega />} />
-            </Routes>
-          </main>
-          <CartDrawer />
-
-          {/* Botón flotante de WhatsApp */}
-          <a
-            href={`https://wa.me/${siteConfig.whatsappNumber || ''}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-lg shadow-black/50 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center"
-            aria-label="Contactar por WhatsApp"
-          >
-            <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
-          </a>
-        </div>
-      </Router>
-    </CartProvider>
+    <div className="min-h-screen bg-bib-black flex items-center justify-center">
+      <p className="text-bib-gray text-sm uppercase tracking-widest animate-pulse">Cargando módulo seguro...</p>
+    </div>
   );
 }
+
+function App() {
+  return (
+    <GlobalErrorBoundary>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <AnalyticsTracker />
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <Login />
+                </Suspense>
+              } 
+            />
+            <Route 
+              path="/admin/carritos" 
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminCarritos />
+                  </Suspense>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/*" 
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminDashboard />
+                  </Suspense>
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="*" element={<PublicRoutes />} />
+          </Routes>
+        </Router>
+      </CartProvider>
+    </GlobalErrorBoundary>
+  );
+}
+
+export default App;

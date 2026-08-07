@@ -11,7 +11,6 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Grabados from './pages/Grabados';
 import Opiniones from './pages/Opiniones';
-import Favoritos from './pages/Favoritos';
 import CartDrawer from './components/CartDrawer';
 
 const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";
@@ -49,7 +48,7 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
-      {/* Ticker / Anuncio Superior (Único) */}
+      {/* Ticker / Anuncio Superior */}
       <div className="overflow-hidden bg-[#C4A278] py-1.5 whitespace-nowrap">
         <div className="animate-marquee inline-block">
           <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest">
@@ -136,7 +135,7 @@ function Navbar() {
         </form>
       </div>
 
-      {/* Menú Desplegable con Categorías (Acordeón) */}
+      {/* Menú Desplegable con Categorías */}
       <div
         className={`overflow-hidden transition-all duration-500 ease-in-out border-t ${
           menuOpen ? 'max-h-[80vh] opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
@@ -216,7 +215,7 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/grabados" element={<Grabados />} />
               <Route path="/opiniones" element={<Opiniones />} />
-              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/favoritos" element={<div className="p-12 text-center">Sección de Favoritos en construcción</div>} />
             </Routes>
           </main>
           <CartDrawer />

@@ -220,6 +220,7 @@ export default function App() {
               <Route path="/grabados" element={<Grabados />} />
               <Route path="/opiniones" element={<Opiniones />} />
               <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/producto/:id" element={<Home />} />
             </Routes>
           </main>
           <CartDrawer />

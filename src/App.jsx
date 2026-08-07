@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, Search, X, ChevronDown, Heart } from 'lucide-react';
+import { ShoppingCart, Menu, Search, X, ChevronDown, Heart, MessageCircle } from 'lucide-react';
 import { CartProvider, useCart } from './context/CartContext';
 import { useWishlist } from './hooks/useWishlist';
 import { siteConfig } from './config/site';
@@ -92,6 +92,7 @@ function Navbar() {
           </span>
         </Link>
 
+        {/* Sección restaurada con Favoritos y Carrito */}
         <div className="flex items-center gap-4 sm:gap-5 flex-1 justify-end">
           <Link to="/favoritos" className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Ver favoritos">
             <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -211,7 +212,7 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="min-h-screen bg-bib-dark text-bib-white flex flex-col">
+        <div className="min-h-screen bg-bib-dark text-bib-white flex flex-col relative">
           <Navbar />
           <main className="flex-grow">
             <Routes>
@@ -224,6 +225,17 @@ export default function App() {
             </Routes>
           </main>
           <CartDrawer />
+
+          {/* Botón flotante de WhatsApp */}
+          <a
+            href={`https://wa.me/${siteConfig.whatsappNumber || ''}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-lg shadow-black/50 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center"
+            aria-label="Contactar por WhatsApp"
+          >
+            <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
+          </a>
         </div>
       </Router>
     </CartProvider>

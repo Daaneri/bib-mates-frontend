@@ -1,61 +1,35 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, ChevronRight } from 'lucide-react';
-import FadeIn from './FadeIn';
 
 export default function HeroBanner() {
   return (
-    <section
-      className="relative py-16 sm:py-24 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[55vh] md:min-h-[75vh] bg-bib-black"
-      style={{
-        background: 'radial-gradient(ellipse 700px 450px at 50% 20%, rgba(196,162,120,0.18), transparent), #0A0A0A',
-      }}
-    >
-      {/* Glow / Resplandor de fondo */}
-      <div
-        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] rounded-full opacity-30 animate-pulse [animation-duration:5s]"
-        style={{
-          background: 'radial-gradient(circle, rgba(196,162,120,0.25) 0%, transparent 70%)',
-        }}
+    <section className="relative w-full h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden bg-bib-black">
+      {/* Imagen de fondo posicinada hacia la derecha */}
+      <img
+        src="/banner-mate-cliente.jpg" 
+        alt="Mate artesanal personalizado"
+        className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
       />
 
-      <FadeIn>
-        <span className="inline-flex items-center gap-1.5 bg-[#C4A278]/10 border border-[#C4A278]/30 px-3 py-1 rounded-full text-[10px] sm:text-xs tracking-[0.25em] text-[#C4A278] font-semibold mb-6 uppercase">
-          <Sparkles size={12} /> Artesanías en Cuero y Alpaca
-        </span>
-      </FadeIn>
+      {/* Sombra oscura fuerte a la izquierda para poder leer el texto sin tapar el mate */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
 
-      <FadeIn delay={100}>
-        <h1 className="text-3xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-4 sm:mb-6 leading-[1.15] sm:leading-[1.1] max-w-4xl">
-          Tomar mate,<br className="hidden sm:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
-            siempre es una buena idea.
-          </span>
+      {/* Texto a la izquierda */}
+      <div className="relative z-10 max-w-7xl mx-auto h-full px-6 sm:px-12 flex flex-col justify-center items-start text-left">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-extrabold text-white tracking-widest uppercase mb-2 sm:mb-3 drop-shadow-md">
+          HACELO ÚNICO
         </h1>
-      </FadeIn>
 
-      <FadeIn delay={200}>
-        <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-8 sm:mb-10 leading-relaxed font-light">
-          Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
+        <p className="text-xs sm:text-sm md:text-base text-white/90 tracking-[0.2em] font-light uppercase mb-6 sm:mb-8 drop-shadow">
+          PERSONALIZADOS CON GRABADOS O APLIQUES
         </p>
-      </FadeIn>
 
-      <FadeIn delay={300}>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-          <a
-            href="#seleccion"
-            className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.4)] hover:-translate-y-0.5"
-          >
-            Ver Catálogo
-            <ChevronRight size={14} />
-          </a>
-          <Link
-            to="/grabados"
-            className="inline-flex items-center justify-center gap-2 bg-transparent border border-bib-white/20 text-bib-white px-8 py-3.5 rounded font-medium text-xs tracking-[0.2em] uppercase hover:border-[#C4A278] hover:text-[#C4A278] transition-all duration-300"
-          >
-            Ver Grabados
-          </Link>
-        </div>
-      </FadeIn>
+        <Link
+          to="/grabados"
+          className="text-xs sm:text-sm tracking-[0.25em] text-white uppercase border-b border-white/70 pb-1 hover:border-white hover:text-[#C4A278] transition-all duration-300"
+        >
+          shop now
+        </Link>
+      </div>
     </section>
   );
 }

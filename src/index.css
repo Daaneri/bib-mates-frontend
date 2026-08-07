@@ -80,7 +80,7 @@
   }
   .animate-marquee {
     display: inline-flex;
-    white-space: nowrap;
+    width: max-content;
     animation: marquee 25s linear infinite;
   }
 

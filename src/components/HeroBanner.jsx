@@ -7,7 +7,7 @@ export default function HeroBanner() {
     <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
       {/* Foto de fondo del cliente */}
       <img
-        src="/banner-mate-cliente.jpg"
+        src="/banner-mate-cliente.jpg.jpeg"
         alt="Mate artesanal"
         className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
       />

@@ -1,15 +1,33 @@
+import { Link } from 'react-router-dom';
+import { CreditCard, Wallet, Banknote, ShieldCheck } from 'lucide-react';
 import { siteConfig } from '../config/site';
 
 export default function Footer() {
   return (
     <footer className="mt-12 sm:mt-20 py-10 sm:py-16 bg-bib-dark border-t border-bib-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 text-center md:text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-12 text-center md:text-left">
 
+        {/* Sección Marca */}
         <div className="flex flex-col gap-2 items-center md:items-start">
           <h3 className="text-xl sm:text-2xl font-heading font-bold text-bib-white lowercase">{siteConfig.businessName}</h3>
           <p className="text-sm text-bib-gray">{siteConfig.tagline}</p>
         </div>
 
+        {/* Sección Enlaces / FAQ */}
+        <div className="flex flex-col gap-3 items-center md:items-start">
+          <h4 className="font-medium uppercase tracking-widest text-xs text-bib-gray mb-1">Navegación</h4>
+          <Link to="/" className="text-bib-gray hover:text-bib-red transition text-sm">
+            Inicio
+          </Link>
+          <Link to="/faq" className="text-[#C4A278] hover:text-bib-white transition text-sm font-semibold">
+            Preguntas Frecuentes
+          </Link>
+          <Link to="/grabados" className="text-bib-gray hover:text-bib-red transition text-sm">
+            Grabados Personalizados
+          </Link>
+        </div>
+
+        {/* Sección Contacto */}
         <div className="flex flex-col gap-3 items-center md:items-start">
           <h4 className="font-medium uppercase tracking-widest text-xs text-bib-gray mb-1">Contacto</h4>
 
@@ -29,13 +47,44 @@ export default function Footer() {
           </a>
         </div>
 
-        <div className="flex flex-col gap-2 items-center md:items-end">
-          <p className="text-xs sm:text-sm text-bib-gray/60">© 2026 {siteConfig.businessName.toLowerCase().replace(/\s+/g, '.')}.</p>
-          <p className="text-[10px] sm:text-xs text-bib-gray/40 mt-1">
+        {/* Sección Compra Segura */}
+        <div className="flex flex-col gap-2 items-center md:items-start">
+          <h4 className="font-medium uppercase tracking-widest text-xs text-bib-gray mb-1">Compra Segura</h4>
+          <div className="flex items-center gap-2 text-xs text-[#C4A278]">
+            <ShieldCheck size={18} />
+            <span>Garantía de calidad en todos los productos</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* BLOQUE DE MEDIOS DE PAGO */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 mt-8 border-t border-bib-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 text-bib-white/80">
+          <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Medios de pago:</span>
+          
+          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
+            <CreditCard size={14} className="text-[#C4A278]" />
+            <span>Tarjetas de Crédito / Débito</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
+            <Wallet size={14} className="text-[#009EE3]" />
+            <span>Mercado Pago</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
+            <Banknote size={14} className="text-green-500" />
+            <span>Transferencia / Efectivo</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1 text-center md:text-right">
+          <p className="text-xs sm:text-sm text-bib-gray/60">© {new Date().getFullYear()} {siteConfig.businessName.toLowerCase().replace(/\s+/g, '.')}.</p>
+          <p className="text-[10px] sm:text-xs text-bib-gray/40">
             Hecho por <a href="https://www.instagram.com/desarrollando.andoo/" target="_blank" rel="noopener noreferrer" className="hover:text-bib-white underline transition-colors">Desarrollando.andoo</a>
           </p>
         </div>
-
       </div>
     </footer>
   );

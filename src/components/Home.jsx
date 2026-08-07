@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Star, CreditCard, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
@@ -17,7 +17,6 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchCategoryImages() {
-      // Traemos category e image_url de productos con foto
       const { data, error } = await supabase
         .from('productos')
         .select('category, image_url')
@@ -26,7 +25,6 @@ export default function Home() {
 
       if (!error && data) {
         const imageMap = {};
-        // Guardamos la primera imagen encontrada para cada categoría
         data.forEach(item => {
           if (item.category && item.image_url && !imageMap[item.category.toLowerCase()]) {
             imageMap[item.category.toLowerCase()] = item.image_url;
@@ -39,7 +37,6 @@ export default function Home() {
     fetchCategoryImages();
   }, []);
 
-  // Función para desplazarse lateralmente
   const scroll = (direction) => {
     if (carouselRef.current) {
       const scrollAmount = direction === 'left' ? -200 : 200;
@@ -62,17 +59,14 @@ export default function Home() {
       <section
         className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black"
       >
-        {/* Foto de fondo del cliente */}
         <img
           src="/banner-mate-cliente.jpg.jpeg"
           alt="Mate artesanal con sol"
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
 
-        {/* Overlay oscuro para mantener legibles tus textos e íconos */}
         <div className="absolute inset-0 bg-black/60" />
 
-        {/* RESPLANDOR/GLOW DORADO SUPERIOR */}
         <div 
           className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#C4A278]/25 rounded-full blur-[120px] opacity-80"
           aria-hidden="true"
@@ -114,33 +108,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Métricas de Prueba Social */}
+      {/* Métricas de Confianza (Actualizadas sin repetir cuotas) */}
       <FadeIn>
         <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            
             <div className="flex items-center justify-center gap-3 p-2">
-              <Truck size={24} className="text-[#C4A278] shrink-0" />
+              <Hammer size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">+5.000 Envíos</p>
-                <p className="text-xs text-bib-gray">A todo el país por Correo/Andreani</p>
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">100% Artesanales</p>
+                <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
               </div>
             </div>
 
             <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
-              <Star size={24} className="text-[#C4A278] fill-[#C4A278] shrink-0" />
+              <Sparkles size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">4.9 / 5 Estrellas</p>
-                <p className="text-xs text-bib-gray">Garantía de calidad artesanal</p>
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
+                <p className="text-xs text-bib-gray">Personalización única en el acto</p>
               </div>
             </div>
 
             <div className="flex items-center justify-center gap-3 p-2">
-              <CreditCard size={24} className="text-[#C4A278] shrink-0" />
+              <ShieldCheck size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Hasta 3 Cuotas</p>
-                <p className="text-xs text-bib-gray">Sin interés con todas las tarjetas</p>
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Compra Segura</p>
+                <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
               </div>
             </div>
+
           </div>
         </section>
       </FadeIn>
@@ -156,9 +152,7 @@ export default function Home() {
           </div>
         </FadeIn>
 
-        {/* Contenedor relativo para posicionar las flechas sobre el carrusel */}
         <div className="relative group">
-          {/* Flecha Izquierda */}
           <button
             onClick={() => scroll('left')}
             aria-label="Anterior"
@@ -167,7 +161,6 @@ export default function Home() {
             <ChevronLeft size={18} />
           </button>
 
-          {/* Carrusel Deslizable */}
           <div
             ref={carouselRef}
             className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
@@ -198,7 +191,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* Flecha Derecha */}
           <button
             onClick={() => scroll('right')}
             aria-label="Siguiente"

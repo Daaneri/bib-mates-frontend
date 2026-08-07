@@ -13,6 +13,9 @@ import Grabados from './components/Grabados';
 import Opiniones from './components/Opiniones';
 import Favoritos from './components/Favoritos';
 import CartDrawer from './components/CartDrawer';
+// 1. IMPORTA AQUÍ TUS COMPONENTES DE CARRITO Y CHECKOUT
+import CartPage from './components/CartPage';
+import CheckoutEntrega from './components/CheckoutEntrega'; // Ajusta la ruta si está en otra carpeta
 
 const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";
 
@@ -222,6 +225,10 @@ export default function App() {
               <Route path="/opiniones" element={<Opiniones />} />
               <Route path="/favoritos" element={<Favoritos />} />
               <Route path="/producto/:id" element={<Home />} />
+              
+              {/* 2. RUTAS AGREGADAS PARA EL CARRITO Y EL CHECKOUT */}
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout/entrega" element={<CheckoutEntrega />} />
             </Routes>
           </main>
           <CartDrawer />

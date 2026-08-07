@@ -1,13 +1,13 @@
 import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { MessageCircle } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { MessageCircle, ShoppingBag, Heart, Search } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
 import { Toaster } from 'sonner';
 import CheckoutEntrega from './components/CheckoutEntrega';
 import { siteConfig } from './config/site';
 
 // Componentes Públicos
-import Navbar from './components/Navbar';
+import NavbarOriginal from './components/Navbar';
 import Home from './components/Home';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
@@ -42,6 +42,65 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
+}
+
+// Navbar personalizado con Grabados ubicado abajo de Mates
+function Navbar() {
+  return (
+    <header className="sticky top-0 z-50 bg-bib-black/90 backdrop-blur-md border-b border-bib-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        
+        {/* Logotipo */}
+        <Link to="/" className="flex items-center gap-2">
+          <span className="font-heading font-bold text-xl tracking-wider text-bib-white">
+            {siteConfig?.businessName || 'BIB MATES'}
+          </span>
+        </Link>
+
+        {/* Enlaces de Navegación Principales - Grabados justo abajo de Mates */}
+        <nav className="hidden md:flex items-center gap-8">
+          <Link 
+            to="/?category=Mates#seleccion" 
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
+          >
+            Mates
+          </Link>
+
+          <Link 
+            to="/grabados" 
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
+          >
+            Grabados
+          </Link>
+
+          <Link 
+            to="/?category=Bombillas#seleccion" 
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
+          >
+            Bombillas
+          </Link>
+
+          <Link 
+            to="/?category=Termos#seleccion" 
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
+          >
+            Termos
+          </Link>
+        </nav>
+
+        {/* Acciones */}
+        <div className="flex items-center gap-4">
+          <Link to="/favoritos" aria-label="Favoritos" className="text-bib-white hover:text-[#C4A278] transition-colors">
+            <Heart size={20} />
+          </Link>
+          <Link to="/cart" aria-label="Carrito" className="relative text-bib-white hover:text-[#C4A278] transition-colors">
+            <ShoppingBag size={20} />
+          </Link>
+        </div>
+
+      </div>
+    </header>
+  );
 }
 
 class GlobalErrorBoundary extends Component {
@@ -92,14 +151,13 @@ function PublicRoutes() {
       <CartDrawer />
       <CookieBanner />
 
-      {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
       {cleanWhatsappNumber && (
         <a 
           href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
           target="_blank" 
           rel="noopener noreferrer nofollow"
           aria-label="Contactar por WhatsApp"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none flex items-center justify-center"
         >
           <MessageCircle size={20} className="sm:hidden" />
           <MessageCircle size={24} className="hidden sm:block" />

@@ -6,8 +6,6 @@ import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../config/categories';
 
-const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
-
 // Imagen de respaldo si una categoría no tiene productos cargados
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
 
@@ -46,15 +44,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Ticker / Anuncio Superior */}
-      <div className="overflow-hidden bg-[#C4A278] py-2 whitespace-nowrap">
-        <div className="animate-marquee inline-block">
-          <span className="text-[11px] font-bold text-bib-black uppercase tracking-widest">
-            {MARQUEE_TEXT.repeat(2)}
-          </span>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section
         className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black"
@@ -108,7 +97,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Métricas de Confianza (Actualizadas sin repetir cuotas) */}
+      {/* Métricas de Confianza */}
       <FadeIn>
         <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">

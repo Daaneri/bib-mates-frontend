@@ -51,9 +51,12 @@ function Navbar() {
     <header className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
       {/* Ticker / Anuncio Superior Único */}
       <div className="overflow-hidden bg-[#C4A278] py-1.5 whitespace-nowrap">
-        <div className="animate-marquee inline-block">
-          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest">
-            {MARQUEE_TEXT.repeat(2)}
+        <div className="animate-marquee">
+          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest px-4">
+            {MARQUEE_TEXT}
+          </span>
+          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest px-4">
+            {MARQUEE_TEXT}
           </span>
         </div>
       </div>

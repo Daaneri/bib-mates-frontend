@@ -46,8 +46,8 @@ export default function CheckoutEntrega() {
 
     return {
       id: item.id,
-      name: item.name,
-      quantity: item.quantity,
+      name: item.name || item.nombre,
+      quantity: item.quantity || item.cantidad || 1,
       price: price,
       originalPrice: basePrice,
     };
@@ -69,29 +69,34 @@ export default function CheckoutEntrega() {
     }
   }, [paymentMethod, totalProductos]);
 
-  // REGISTRO DE CARRITO ABANDONADO EN SUPABASE
+  // CAPTURA Y ACTUALIZACIÓN EN SUPABASE (UPSERT SIN DUPLICADOS)
   useEffect(() => {
     const guardarCarritoPendiente = async () => {
-      if (formData.name.trim() && formData.phone.length >= 8 && itemsFormat.length > 0) {
+      const phoneClean = formData.phone.trim();
+      if (formData.name.trim() && phoneClean.length >= 8 && itemsFormat.length > 0) {
         try {
-          await supabase.from("carritos_abandonados").insert([
-            {
-              cliente_nombre: formData.name,
-              cliente_telefono: formData.phone,
-              items: itemsFormat,
-              monto_total: totalProductos,
-              recuperado: false,
-            },
-          ]);
+          await supabase.from("carritos_abandonados").upsert(
+            [
+              {
+                cliente_nombre: formData.name.trim(),
+                cliente_telefono: phoneClean,
+                items: itemsFormat,
+                monto_total: totalProductos,
+                recuperado: false,
+                created_at: new Date().toISOString()
+              },
+            ],
+            { onConflict: 'cliente_telefono' }
+          );
         } catch (err) {
           console.error("Error registrando carrito pendiente:", err);
         }
       }
     };
 
-    const timeout = setTimeout(guardarCarritoPendiente, 1000);
+    const timeout = setTimeout(guardarCarritoPendiente, 800);
     return () => clearTimeout(timeout);
-  }, [formData.phone, formData.name]);
+  }, [formData.phone, formData.name, totalProductos]);
 
   const handleShippingTypeChange = (type) => {
     setShippingType(type);

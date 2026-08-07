@@ -6,7 +6,6 @@ import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../config/categories';
 
-const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
 
 export default function Home() {
@@ -61,20 +60,11 @@ export default function Home() {
 
   return (
     <>
-      {/* Ticker / Anuncio Superior */}
-      <div className="overflow-hidden bg-[#C4A278] py-2 whitespace-nowrap">
-        <div className="animate-marquee inline-block">
-          <span className="text-[11px] font-bold text-bib-black uppercase tracking-widest">
-            {MARQUEE_TEXT.repeat(2)}
-          </span>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
         <img
           src="/banner-mate-cliente.jpg.jpeg"
-          alt="Mate artesanal con sol"
+          alt="Mate artesanal"
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-black/60" />

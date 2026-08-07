@@ -1,13 +1,12 @@
 import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
-import { MessageCircle, ShoppingBag, Heart, Search } from 'lucide-react';
+import { MessageCircle, ShoppingBag, Heart, Menu, X } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
 import { Toaster } from 'sonner';
 import CheckoutEntrega from './components/CheckoutEntrega';
 import { siteConfig } from './config/site';
 
 // Componentes Públicos
-import NavbarOriginal from './components/Navbar';
 import Home from './components/Home';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
@@ -33,57 +32,51 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminCarritos = lazy(() => import('./pages/AdminCarritos'));
 const Login = lazy(() => import('./pages/Login'));
 
-// Componente para forzar el scroll arriba en cada cambio de ruta
+const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
+
 function ScrollToTop() {
   const { pathname } = useLocation();
-
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-
   return null;
 }
 
-// Navbar personalizado con Grabados ubicado abajo de Mates
+// Navbar con Header unificado y Modal integrado
 function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
   return (
-    <header className="sticky top-0 z-50 bg-bib-black/90 backdrop-blur-md border-b border-bib-white/10">
+    <header className="sticky top-0 z-50 bg-bib-black/95 backdrop-blur-md border-b border-bib-white/10">
+      {/* Ticker / Anuncio Superior */}
+      <div className="overflow-hidden bg-[#C4A278] py-1.5 whitespace-nowrap">
+        <div className="animate-marquee inline-block">
+          <span className="text-[10px] sm:text-[11px] font-bold text-bib-black uppercase tracking-widest">
+            {MARQUEE_TEXT.repeat(2)}
+          </span>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-        
         {/* Logotipo */}
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-heading font-bold text-xl tracking-wider text-bib-white">
+          <span className="font-heading font-bold text-lg sm:text-xl tracking-wider text-bib-white">
             {siteConfig?.businessName || 'BIB MATES'}
           </span>
         </Link>
 
-        {/* Enlaces de Navegación Principales - Grabados justo abajo de Mates */}
+        {/* Enlaces de Navegación Principales */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link 
-            to="/?category=Mates#seleccion" 
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
-          >
+          <Link to="/?category=Mates#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
             Mates
           </Link>
-
-          <Link 
-            to="/grabados" 
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
-          >
+          <Link to="/grabados" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
             Grabados
           </Link>
-
-          <Link 
-            to="/?category=Bombillas#seleccion" 
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
-          >
+          <Link to="/?category=Bombillas#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
             Bombillas
           </Link>
-
-          <Link 
-            to="/?category=Termos#seleccion" 
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium"
-          >
+          <Link to="/?category=Termos#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
             Termos
           </Link>
         </nav>
@@ -96,9 +89,49 @@ function Navbar() {
           <Link to="/cart" aria-label="Carrito" className="relative text-bib-white hover:text-[#C4A278] transition-colors">
             <ShoppingBag size={20} />
           </Link>
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            aria-label="Menú"
+            className="md:hidden text-bib-white hover:text-[#C4A278] transition-colors p-1"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-
       </div>
+
+      {/* Modal / Menú Desplegable para dispositivos móviles */}
+      {mobileMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-bib-black border-b border-bib-white/10 shadow-2xl py-6 px-6 flex flex-col gap-4 animate-fadeIn">
+          <Link 
+            to="/?category=Mates#seleccion" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
+          >
+            Mates
+          </Link>
+          <Link 
+            to="/grabados" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
+          >
+            Grabados
+          </Link>
+          <Link 
+            to="/?category=Bombillas#seleccion" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
+          >
+            Bombillas
+          </Link>
+          <Link 
+            to="/?category=Termos#seleccion" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2"
+          >
+            Termos
+          </Link>
+        </div>
+      )}
     </header>
   );
 }
@@ -108,25 +141,14 @@ class GlobalErrorBoundary extends Component {
     super(props);
     this.state = { hasError: false };
   }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Error capturado en ErrorBoundary:", error, errorInfo);
-  }
-
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) { console.error("Error:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-bib-black text-bib-white flex flex-col items-center justify-center p-6 text-center">
           <h2 className="text-xl font-bold mb-2">Ocurrió un problema temporal</h2>
-          <p className="text-bib-gray text-sm mb-4">Por favor recargá la página para continuar.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-bib-red text-bib-white px-4 py-2 rounded font-semibold hover:opacity-90 transition-opacity"
-          >
+          <button onClick={() => window.location.reload()} className="bg-bib-red text-bib-white px-4 py-2 rounded font-semibold mt-4">
             Recargar
           </button>
         </div>
@@ -138,10 +160,7 @@ class GlobalErrorBoundary extends Component {
 
 function PublicRoutes() {
   const location = useLocation();
-
-  const cleanWhatsappNumber = siteConfig?.whatsapp 
-    ? String(siteConfig.whatsapp).replace(/[^0-9]/g, '') 
-    : '';
+  const cleanWhatsappNumber = siteConfig?.whatsapp ? String(siteConfig.whatsapp).replace(/[^0-9]/g, '') : '';
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-bib-black text-bib-white selection:bg-bib-red selection:text-bib-black">
@@ -156,15 +175,14 @@ function PublicRoutes() {
           href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
           target="_blank" 
           rel="noopener noreferrer nofollow"
-          aria-label="Contactar por WhatsApp"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none flex items-center justify-center"
+          aria-label="WhatsApp"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300"
         >
-          <MessageCircle size={20} className="sm:hidden" />
-          <MessageCircle size={24} className="hidden sm:block" />
+          <MessageCircle size={22} />
         </a>
       )}
 
-      <main key={encodeURIComponent(location.pathname)} className="flex-grow animate-page-fade-in">
+      <main className="flex-grow">
         <Routes location={location}>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><CartPage /></div>} />
@@ -205,34 +223,9 @@ function App() {
           <ScrollToTop />
           <AnalyticsTracker />
           <Routes>
-            <Route 
-              path="/login" 
-              element={
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <Login />
-                </Suspense>
-              } 
-            />
-            <Route 
-              path="/admin/carritos" 
-              element={
-                <ProtectedRoute>
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminCarritos />
-                  </Suspense>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/*" 
-              element={
-                <ProtectedRoute>
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminDashboard />
-                  </Suspense>
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/login" element={<Suspense fallback={<AdminLoadingFallback />}><Login /></Suspense>} />
+            <Route path="/admin/carritos" element={<ProtectedRoute><Suspense fallback={<AdminLoadingFallback />}><AdminCarritos /></Suspense></ProtectedRoute>} />
+            <Route path="/admin/*" element={<ProtectedRoute><Suspense fallback={<AdminLoadingFallback />}><AdminDashboard /></Suspense></ProtectedRoute>} />
             <Route path="*" element={<PublicRoutes />} />
           </Routes>
         </Router>

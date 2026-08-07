@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, Component } from 'react';
+import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
@@ -31,6 +31,17 @@ import Grabados from './components/Grabados';
 // Componentes Administrativos
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Login = lazy(() => import('./pages/Login'));
+
+// Componente para forzar el scroll arriba en cada cambio de ruta
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 class GlobalErrorBoundary extends Component {
   constructor(props) {
@@ -132,6 +143,7 @@ function App() {
     <GlobalErrorBoundary>
       <CartProvider>
         <Router>
+          <ScrollToTop />
           <AnalyticsTracker />
           <Routes>
             <Route 

@@ -24,12 +24,16 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
   const sinStock = (product.stock ?? 0) === 0;
   const stockBajo = mostrarStockBajo && !sinStock && (product.stock ?? 0) < umbralStockBajo;
 
+  // 1. Precio Principal
   const precioLista = product.price || 0;
-  const precioMercadoPago = product.price_cash 
+
+  // 2. Cálculo de 3 Cuotas Sin Interés
+  const cuotaMonto = precioLista / 3;
+
+  // 3. Precio con 20% OFF por Transferencia
+  const precioTransferencia = product.price_cash 
     ? product.price_cash 
     : precioLista * 0.80;
-
-  const cuotaMonto = (precioLista / 3).toFixed(2);
 
   return (
     <div className="group bg-bib-dark p-2 sm:p-4 rounded border border-bib-white/10 transition-all duration-300 hover:border-[#C4A278]/50 flex flex-col justify-between relative h-full">
@@ -71,7 +75,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
           )}
         </Link>
 
-        {/* Información de precios adaptada a móvil */}
+        {/* Información de Precios */}
         <div className="space-y-1 mb-3">
           <Link to={`/producto/${product.id}`} className="block">
             <h3 className="text-[11px] sm:text-sm font-medium text-bib-white line-clamp-1 hover:text-[#C4A278] transition-colors">
@@ -79,19 +83,24 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
             </h3>
           </Link>
 
+          {/* Precio Lista */}
           <div>
-            <p className="text-xs sm:text-lg font-bold text-bib-white tracking-tight">
-              ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            <p className="text-base sm:text-lg font-bold text-bib-white tracking-tight">
+              ${Math.round(precioLista).toLocaleString('es-AR')}
             </p>
           </div>
 
-          <p className="text-[9px] sm:text-xs text-[#C4A278] font-medium leading-tight">
-            ${precioMercadoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}{' '}
-            <span className="text-[8px] sm:text-[10px] text-bib-gray font-normal block sm:inline">pagando con MP</span>
+          {/* Cuotas sin Interés */}
+          <p className="text-[10px] sm:text-xs text-[#C4A278] font-medium leading-tight">
+            3 cuotas sin interés de <span className="font-bold">${Math.round(cuotaMonto).toLocaleString('es-AR')}</span>
           </p>
 
-          <p className="text-[8px] sm:text-xs text-bib-gray/80 line-clamp-1">
-            3 cuotas de <span className="font-medium text-bib-white">${Number(cuotaMonto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+          {/* Descuento por Transferencia */}
+          <p className="text-[10px] sm:text-xs text-emerald-400 font-medium leading-tight pt-0.5">
+            <span className="bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20 text-[9px] font-bold mr-1">
+              20% OFF
+            </span>
+            ${Math.round(precioTransferencia).toLocaleString('es-AR')} abonando con transferencia
           </p>
         </div>
       </div>
@@ -218,7 +227,7 @@ export default function ProductGrid({ hideCategoryBar = false }) {
     <div className="px-1.5 sm:px-6 space-y-4 sm:space-y-8 pb-28 sm:pb-12">
       <div className="max-w-5xl mx-auto space-y-3 sm:space-y-4">
         
-        {/* Renderizado condicional de los botones de Categorías y Subcategorías */}
+        {/* Categorías y Subcategorías */}
         {!hideCategoryBar && (
           <>
             {/* Categorías */}
@@ -269,7 +278,7 @@ export default function ProductGrid({ hideCategoryBar = false }) {
           </>
         )}
 
-        {/* Buscador y Ordenar */}
+        {/* Buscador y Filtro Ordenar */}
         <div className="flex flex-col md:flex-row gap-2 sm:gap-4 bg-bib-dark p-2.5 sm:p-4 rounded border border-bib-white/10">
           <div className="relative flex-1">
             <input
@@ -349,7 +358,7 @@ export default function ProductGrid({ hideCategoryBar = false }) {
         </div>
       </div>
 
-      {/* Grid Móvil: 2 Columnas (`grid-cols-2 gap-2`) */}
+      {/* Grid de Productos */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-7xl mx-auto">
           {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}

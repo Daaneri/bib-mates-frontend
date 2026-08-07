@@ -1,16 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../config/categories';
 
+const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
+
 // Imagen de respaldo si una categoría no tiene productos cargados
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
 
+const FAQS = [
+  {
+    question: "¿Cómo se curan los mates de calabaza?",
+    answer: "Te recomendamos engrasar ligeramente el interior con un poco de aceite o manteca, luego llenarlo con yerba usada previamente húmeda durante 24 horas. Pasado ese tiempo, retirá la yerba, enjuagá con agua tibia y repetí el proceso una vez más antes de usarlo."
+  },
+  {
+    question: "¿De qué material son los herrajes de los mates?",
+    answer: "Nuestros mates imperiales y camioneros cuentan con virolas y apliques de alpaca cincelada de primera calidad, lo que garantiza que no se oxiden y mantengan su brillo con el paso del tiempo."
+  },
+  {
+    question: "¿Cómo funciona el grabado láser personalizado?",
+    answer: "Podés grabar nombres, fechas, escudos o logos en la virola de alpaca o en el cuerpo de cuero. Podés ver las opciones y realizar tu diseño directamente desde nuestra sección de 'Ver Grabados'."
+  },
+  {
+    question: "Hacen envíos a todo el país?",
+    answer: "¡Sí! Realizamos envíos a todo el país a través de correo privado (Andreani / Correo Argentino). Además, contamos con envío gratis en compras superiores a $120.000."
+  },
+  {
+    question: "¿Cuáles son los medios de pago disponibles?",
+    answer: "Podés abonar con tarjetas de crédito en hasta 3 cuotas sin interés, tarjetas de débito, o aprovechar un 20% de descuento abonando a través de Mercado Pago."
+  }
+];
+
 export default function Home() {
   const [categoryImages, setCategoryImages] = useState({});
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -42,8 +68,21 @@ export default function Home() {
     }
   };
 
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
   return (
     <>
+      {/* Ticker / Anuncio Superior */}
+      <div className="overflow-hidden bg-[#C4A278] py-2 whitespace-nowrap">
+        <div className="animate-marquee inline-block">
+          <span className="text-[11px] font-bold text-bib-black uppercase tracking-widest">
+            {MARQUEE_TEXT.repeat(2)}
+          </span>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section
         className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black"
@@ -193,6 +232,50 @@ export default function Home() {
       {/* Grid de Productos */}
       <section id="seleccion" className="max-w-7xl mx-auto py-4 pb-20 px-4 sm:px-6">
         <ProductGrid hideCategoryBar={true} />
+      </section>
+
+      {/* Sección de Preguntas Frecuentes (FAQ) */}
+      <section className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10">
+        <FadeIn>
+          <div className="text-center mb-10 space-y-2">
+            <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Resolvé tus dudas</p>
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+              Preguntas Frecuentes
+            </h2>
+          </div>
+        </FadeIn>
+
+        <div className="space-y-4">
+          {FAQS.map((faq, index) => {
+            const isOpen = openFaqIndex === index;
+            return (
+              <FadeIn key={index} delay={index * 50}>
+                <div className="border border-bib-white/10 rounded-lg overflow-hidden bg-bib-black/40 transition-colors hover:border-[#C4A278]/40">
+                  <button
+                    onClick={() => toggleFaq(index)}
+                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left focus:outline-none"
+                  >
+                    <span className="text-sm sm:text-base font-semibold text-bib-white">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      size={18}
+                      className={`text-[#C4A278] shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  
+                  {isOpen && (
+                    <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-bib-gray leading-relaxed border-t border-bib-white/5 pt-3">
+                      {faq.answer}
+                    </div>
+                  )}
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
       </section>
     </>
   );

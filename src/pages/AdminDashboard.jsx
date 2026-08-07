@@ -6,6 +6,7 @@ import { Star, Check, X, Download, Plus, Trash2, ShoppingCart } from 'lucide-rea
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/categories';
 import AdminCoupons from '../components/AdminCoupons';
+import AdminFaqs from '../components/AdminFaqs';
 import AdminCarritos from './AdminCarritos';
 
 export default function AdminDashboard() {
@@ -541,7 +542,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Categorías', 'Cupones', 'Pedidos', 'Carritos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
+          {['Inventario', 'Categorías', 'Cupones', 'FAQs', 'Pedidos', 'Carritos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
             <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left flex items-center gap-2 ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
               {item === 'Carritos' && <ShoppingCart size={16} />}
               {item}
@@ -865,6 +866,24 @@ export default function AdminDashboard() {
               [&_button[type='submit']]:!bg-bib-red [&_button[type='submit']]:hover:!bg-bib-white [&_button[type='submit']]:!text-bib-white [&_button[type='submit']]:hover:!text-bib-black [&_button[type='submit']]:!transition-colors [&_button[type='submit']]:!uppercase [&_button[type='submit']]:!tracking-widest [&_button[type='submit']]:!font-medium [&_button[type='submit']]:!py-3 [&_button[type='submit']]:!px-8 [&_button[type='submit']]:!rounded [&_button[type='submit']]:!border-none
               [&_button]:!bg-bib-red [&_button]:hover:!bg-bib-white [&_button]:!text-bib-white [&_button]:hover:!text-bib-black">
               <AdminCoupons token={session?.access_token} />
+            </div>
+          </div>
+        )}
+
+        {view === 'FAQs' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
+              [&_div]:!bg-transparent
+              [&_form]:!bg-transparent [&_form]:!p-0 [&_form]:!border-none [&_form]:!shadow-none [&_form]:!outline-none
+              [&_form_div]:!border-none
+              [&_h2]:!text-bib-white [&_h2]:!text-base [&_h2]:!uppercase [&_h2]:!tracking-widest [&_h2]:!font-medium
+              [&_h3]:!text-bib-white [&_h3]:!text-sm [&_h3]:!uppercase [&_h3]:!tracking-widest [&_h3]:!font-medium [&_h3]:!mb-4
+              [&_label]:!text-bib-gray [&_label]:!text-xs [&_label]:!uppercase [&_label]:!tracking-wide
+              [&_input]:!bg-bib-black [&_input]:!text-bib-white [&_input]:!border [&_input]:!border-bib-white/20 [&_input]:!rounded [&_input]:!p-3 [&_input]:!text-sm
+              [&_select]:!bg-bib-black =&gt; !text-bib-white =&gt; !border =&gt; !border-bib-white/20 =&gt; !rounded =&gt; !p-3 =&gt; !text-sm
+              [&_button[type='submit']]:!bg-bib-red =&gt; hover:!bg-bib-white =&gt; !text-bib-white =&gt; hover:!text-bib-black =&gt; !transition-colors =&gt; !uppercase =&gt; !tracking-widest =&gt; !font-medium =&gt; !py-3 =&gt; !px-8 =&gt; !rounded =&gt; !border-none
+              [&_button]:!bg-bib-red =&gt; hover:!bg-bib-white =&gt; !text-bib-white =&gt; hover:!text-bib-black">
+              <AdminFaqs token={session?.access_token} />
             </div>
           </div>
         )}

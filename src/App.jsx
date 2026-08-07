@@ -1,18 +1,54 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Menu, X, Heart, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Menu, Search, X, ChevronDown, Heart } from 'lucide-react';
+import { CartProvider, useCart } from './context/CartContext';
+import { useWishlist } from './hooks/useWishlist';
+import { siteConfig } from './config/site';
+import { CATEGORIES, SUBCATEGORIES } from './config/categories';
+import logo from './assets/bib-mates-logo.png';
+
 import Home from './pages/Home';
-// Importá tus otras páginas y componentes según corresponda...
+import About from './pages/About';
+import Grabados from './pages/Grabados';
+import Opiniones from './pages/Opiniones';
+import Favoritos from './pages/Favoritos';
+import CartDrawer from './components/CartDrawer';
 
 const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";
 
-// Navbar unificado con un solo Ticker integrado
 function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [categoriesOpen, setCategoriesOpen] = React.useState(false);
+  const { cart, openDrawer } = useCart();
+  const { wishlist } = useWishlist();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [categoriaAbierta, setCategoriaAbierta] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const navigate = useNavigate();
+
+  function cerrarMenu() {
+    setMenuOpen(false);
+    setCategoriaAbierta(null);
+  }
+
+  function abrirBusqueda() {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  }
+
+  function cerrarBusqueda() {
+    setSearchOpen(false);
+    setSearchValue('');
+  }
+
+  function handleBuscar(e) {
+    e.preventDefault();
+    if (!searchValue.trim()) return;
+    navigate(`/?search=${encodeURIComponent(searchValue.trim())}#seleccion`);
+    cerrarBusqueda();
+  }
 
   return (
-    <header className="sticky top-0 z-50 bg-bib-black/95 backdrop-blur-md border-b border-bib-white/15">
+    <header className="sticky top-0 z-50 bg-bib-dark shadow-lg shadow-black/40 border-b border-bib-red/20">
       {/* Ticker / Anuncio Superior (Único) */}
       <div className="overflow-hidden bg-[#C4A278] py-1.5 whitespace-nowrap">
         <div className="animate-marquee inline-block">
@@ -22,119 +58,170 @@ function Navbar() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between relative">
-        {/* Logotipo */}
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-heading font-bold text-lg sm:text-xl tracking-wider text-bib-white">
-            BIB MATES
+      <div className="p-4 sm:p-6 flex justify-between items-center">
+        <div className="flex items-center gap-4 sm:gap-5 flex-1">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
+            aria-label="Abrir menú"
+          >
+            <span className={`inline-block transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`}>
+              {menuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </span>
+          </button>
+          <button
+            onClick={abrirBusqueda}
+            className="text-bib-white hover:text-bib-red transition-all duration-300 hover:scale-110"
+            aria-label="Buscar productos"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+        </div>
+
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
+          <img
+            src={logo}
+            alt={`${siteConfig.businessName} Logo`}
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-bib-red/50 object-cover shadow-md shadow-black/50 transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="font-heading font-bold text-bib-white tracking-tight text-lg sm:text-xl hidden md:block truncate lowercase">
+            {siteConfig.businessName}
           </span>
         </Link>
 
-        {/* Enlaces de Navegación Principales */}
-        <nav className="hidden md:flex items-center gap-8">
-          <div className="relative">
-            <button 
-              onClick={() => setCategoriesOpen(!categoriesOpen)}
-              className="flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium py-2 focus:outline-none"
-            >
-              Categorías
-              <Menu size={14} className={`transition-transform duration-200 ${categoriesOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Modal / Menú desplegable de Categorías */}
-            {categoriesOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-bib-black border border-bib-white/10 shadow-2xl rounded py-2 flex flex-col z-50">
-                <Link 
-                  to="/?category=Mates#seleccion" 
-                  onClick={() => setCategoriesOpen(false)}
-                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
-                >
-                  Mates
-                </Link>
-                <Link 
-                  to="/?category=Bombillas#seleccion" 
-                  onClick={() => setCategoriesOpen(false)}
-                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
-                >
-                  Bombillas
-                </Link>
-                <Link 
-                  to="/?category=Termos#seleccion" 
-                  onClick={() => setCategoriesOpen(false)}
-                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
-                >
-                  Termos
-                </Link>
-                <Link 
-                  to="/?category=Accesorios#seleccion" 
-                  onClick={() => setCategoriesOpen(false)}
-                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
-                >
-                  Accesorios
-                </Link>
-              </div>
+        <div className="flex items-center gap-4 sm:gap-5 flex-1 justify-end">
+          <Link to="/favoritos" className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Ver favoritos">
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-red text-bib-black text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full">
+                {wishlist.length}
+              </span>
             )}
-          </div>
-
-          <Link to="/grabados" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Grabados
           </Link>
-          <Link to="/about" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Nosotros
-          </Link>
-          <Link to="/opiniones" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Opiniones
-          </Link>
-        </nav>
-
-        {/* Acciones */}
-        <div className="flex items-center gap-4">
-          <Link to="/favoritos" aria-label="Favoritos" className="text-bib-white hover:text-[#C4A278] transition-colors">
-            <Heart size={20} />
-          </Link>
-          <Link to="/cart" aria-label="Carrito" className="relative text-bib-white hover:text-[#C4A278] transition-colors">
-            <ShoppingBag size={20} />
-          </Link>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            aria-label="Menú"
-            className="md:hidden text-bib-white hover:text-[#C4A278] transition-colors p-1"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button onClick={openDrawer} className="relative group transition-all duration-300 hover:scale-110 active:scale-95 shrink-0 text-bib-white hover:text-bib-red" aria-label="Abrir carrito">
+            <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+            {cart.length > 0 && (
+              <span className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 bg-bib-red text-bib-black text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full">
+                {cart.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Menú Móvil */}
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-bib-black border-b border-bib-white/10 shadow-2xl py-6 px-6 flex flex-col gap-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#C4A278] font-bold">Categorías</div>
-          <Link to="/?category=Mates#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Mates</Link>
-          <Link to="/?category=Bombillas#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Bombillas</Link>
-          <Link to="/?category=Termos#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Termos</Link>
-          <Link to="/?category=Accesorios#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2 border-b border-bib-white/10 pb-4">Accesorios</Link>
-          
-          <Link to="/grabados" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Grabados</Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Nosotros</Link>
-          <Link to="/opiniones" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Opiniones</Link>
+      {/* Buscador desplegable */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out border-t ${
+          searchOpen ? 'max-h-24 opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
+        }`}
+      >
+        <form onSubmit={handleBuscar} className="p-4 sm:p-6 flex items-center gap-3">
+          <Search size={18} className="text-bib-gray shrink-0" />
+          <input
+            type="text"
+            autoFocus={searchOpen}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Buscar productos..."
+            className="flex-1 min-w-0 bg-transparent text-bib-white placeholder:text-bib-white/40 outline-none text-sm sm:text-base"
+          />
+          <button
+            type="button"
+            onClick={cerrarBusqueda}
+            className="text-bib-gray hover:text-bib-white transition-colors shrink-0"
+            aria-label="Cerrar buscador"
+          >
+            <X size={18} />
+          </button>
+        </form>
+      </div>
+
+      {/* Menú Desplegable con Categorías (Acordeón) */}
+      <div
+        className={`overflow-hidden transition-all duration-500 ease-in-out border-t ${
+          menuOpen ? 'max-h-[80vh] opacity-100 border-bib-white/10' : 'max-h-0 opacity-0 border-transparent'
+        }`}
+      >
+        <div className="flex flex-col text-bib-gray uppercase tracking-widest text-sm max-h-[80vh] overflow-y-auto">
+          <div className="flex flex-col gap-4 px-6 py-4">
+            <Link to="/" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Inicio</Link>
+            <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
+            <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
+            <Link to="/grabados" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Grabados</Link>
+            <Link to="/favoritos" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Favoritos</Link>
+          </div>
+
+          <div className="border-t border-bib-white/10 px-6 py-4">
+            <p className="text-[10px] text-bib-gray/60 mb-3">Categorías</p>
+            <div className="flex flex-col gap-1">
+              {CATEGORIES.map(cat => {
+                const subs = SUBCATEGORIES[cat];
+                const abierta = categoriaAbierta === cat;
+                return (
+                  <div key={cat}>
+                    <div className="flex items-center justify-between py-2">
+                      <Link
+                        to={`/?category=${encodeURIComponent(cat)}#seleccion`}
+                        onClick={cerrarMenu}
+                        className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 flex-1 w-fit"
+                      >
+                        {cat}
+                      </Link>
+                      {subs && (
+                        <button
+                          onClick={() => setCategoriaAbierta(abierta ? null : cat)}
+                          className="p-1 text-bib-gray hover:text-bib-white transition-colors"
+                          aria-label="Ver subcategorías"
+                        >
+                          <ChevronDown size={16} className={`transition-transform duration-300 ${abierta ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${abierta && subs ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      {subs && (
+                        <div className="flex flex-col gap-1 pl-4 pb-2 normal-case tracking-normal text-xs">
+                          {subs.map(sub => (
+                            <Link
+                              key={sub}
+                              to={`/?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(sub)}#seleccion`}
+                              onClick={cerrarMenu}
+                              className="text-bib-gray hover:text-bib-red hover:translate-x-1 transition-all duration-300 py-1 w-fit"
+                            >
+                              {sub}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
 
 export default function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-bib-black text-bib-white flex flex-col">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            {/* Agregá el resto de tus rutas aquí */}
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <CartProvider>
+      <Router>
+        <div className="min-h-screen bg-bib-dark text-bib-white flex flex-col">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/grabados" element={<Grabados />} />
+              <Route path="/opiniones" element={<Opiniones />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+            </Routes>
+          </main>
+          <CartDrawer />
+        </div>
+      </Router>
+    </CartProvider>
   );
 }

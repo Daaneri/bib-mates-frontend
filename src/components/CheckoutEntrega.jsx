@@ -36,13 +36,14 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
+  // LÓGICA DE PRECIOS:
+  // Transferencia = price_cash (si existe y es mayor a 0).
+  // Mercado Pago = price (Precio de lista).
   const itemsFormat = cart.map((item) => {
     const basePrice = Number(item.price) || 0;
-    let price = basePrice;
+    const cashPrice = item.price_cash && Number(item.price_cash) > 0 ? Number(item.price_cash) : basePrice;
 
-    if (paymentMethod === "mercadopago") {
-      price = item.price_cash ? Number(item.price_cash) : Math.round(basePrice * 0.8);
-    }
+    const price = paymentMethod === "transferencia" ? cashPrice : basePrice;
 
     return {
       id: item.id,
@@ -50,6 +51,7 @@ export default function CheckoutEntrega() {
       quantity: item.quantity || item.cantidad || 1,
       price: price,
       originalPrice: basePrice,
+      price_cash: cashPrice,
     };
   });
 
@@ -69,7 +71,6 @@ export default function CheckoutEntrega() {
     }
   }, [paymentMethod, totalProductos]);
 
-  // CAPTURA Y ACTUALIZACIÓN EN SUPABASE (UPSERT SIN DUPLICADOS)
   useEffect(() => {
     const guardarCarritoPendiente = async () => {
       const phoneClean = formData.phone.trim();
@@ -419,11 +420,8 @@ export default function CheckoutEntrega() {
                     className="accent-blue-500"
                   />
                   <CreditCard size={18} className="text-blue-400" />
-                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Tarjetas, Débito, Saldo)</span>
+                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Precio de Lista / Tarjetas)</span>
                 </div>
-                <p className="text-xs text-blue-400 ml-6 mt-1">
-                  🔥 <strong>20% de Descuento Especial</strong>
-                </p>
               </label>
 
               <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "transferencia" ? "border-green-500 bg-green-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
@@ -439,8 +437,8 @@ export default function CheckoutEntrega() {
                   <Banknote size={18} className="text-green-400" />
                   <span className="font-medium text-bib-white text-sm">Transferencia Bancaria</span>
                 </div>
-                <p className="text-xs text-bib-gray ml-6 mt-1">
-                  Pago por CBU/Alias. Precio de lista normal.
+                <p className="text-xs text-green-400 ml-6 mt-1">
+                  🔥 <strong>Aplica Precio de Contado / Efectivo</strong>
                 </p>
               </label>
             </div>
@@ -515,7 +513,7 @@ export default function CheckoutEntrega() {
 
         <div className="space-y-2 text-sm border-t border-bib-white/10 pt-4">
           <div className="flex justify-between text-bib-gray">
-            <span>Subtotal ({paymentMethod === "mercadopago" ? "20% OFF Mercado Pago" : "Precio de Lista"})</span>
+            <span>Subtotal ({paymentMethod === "transferencia" ? "Precio Contado" : "Precio Lista"})</span>
             <span className="text-bib-white">${totalProductos.toLocaleString("es-AR")}</span>
           </div>
           {appliedCoupon && (

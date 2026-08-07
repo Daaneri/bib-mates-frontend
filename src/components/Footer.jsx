@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
 import { CreditCard, Wallet, Banknote, ShieldCheck } from 'lucide-react';
 import { siteConfig } from '../config/site';
-import { useFaqsModal } from '../context/FaqsModalContext';
 
 export default function Footer() {
-  const { openModal } = useFaqsModal();
   return (
     <footer className="mt-12 sm:mt-20 py-10 sm:py-16 bg-bib-dark border-t border-bib-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-12 text-center md:text-left">
@@ -21,9 +19,9 @@ export default function Footer() {
           <Link to="/" className="text-bib-gray hover:text-bib-red transition text-sm">
             Inicio
           </Link>
-          <button onClick={openModal} className="text-[#C4A278] hover:text-bib-white transition text-sm font-semibold text-center md:text-left">
+          <a href="/#faqs" className="text-[#C4A278] hover:text-bib-white transition text-sm font-semibold text-center md:text-left">
             Preguntas Frecuentes
-          </button>
+          </a>
           <Link to="/grabados" className="text-bib-gray hover:text-bib-red transition text-sm">
             Grabados Personalizados
           </Link>

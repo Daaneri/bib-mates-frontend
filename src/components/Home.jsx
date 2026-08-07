@@ -231,7 +231,7 @@ export default function Home() {
 
       {/* Sección de Preguntas Frecuentes (FAQ) - ahora dinámica desde Supabase/admin */}
       {!loadingFaqs && faqs.length > 0 && (
-        <section className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10">
+        <section id="faqs" className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10 scroll-mt-24">
           <FadeIn>
             <div className="text-center mb-10 space-y-2">
               <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Resolvé tus dudas</p>

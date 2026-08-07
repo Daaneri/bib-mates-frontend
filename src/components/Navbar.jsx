@@ -5,7 +5,6 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../hooks/useWishlist';
 import { siteConfig } from '../config/site';
 import { CATEGORIES, SUBCATEGORIES } from '../config/categories';
-import { useFaqsModal } from '../context/FaqsModalContext';
 import logo from '../assets/bib-mates-logo.png';
 
 export default function Navbar() {
@@ -131,7 +130,7 @@ export default function Navbar() {
             <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
             <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
             <Link to="/grabados" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Grabados</Link>
-            <button onClick={() => { cerrarMenu(); openModal(); }} className="text-left hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">FAQs</button>
+            <a href="/#faqs" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">FAQs</a>
             <Link to="/favoritos" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Favoritos</Link>
           </div>
 

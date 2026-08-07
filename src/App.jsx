@@ -7,10 +7,11 @@ import { siteConfig } from './config/site';
 import { CATEGORIES, SUBCATEGORIES } from './config/categories';
 import logo from './assets/bib-mates-logo.png';
 
-import Home from './Home';
-import About from './About';
-import Grabados from './Grabados';
-import Opiniones from './Opiniones';
+import Home from './components/Home';
+import About from './components/About';
+import Grabados from './components/Grabados';
+import Opiniones from './components/Opiniones';
+import Favoritos from './components/Favoritos';
 import CartDrawer from './components/CartDrawer';
 
 const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";
@@ -215,7 +216,7 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/grabados" element={<Grabados />} />
               <Route path="/opiniones" element={<Opiniones />} />
-              <Route path="/favoritos" element={<div className="p-12 text-center">Sección de Favoritos en construcción</div>} />
+              <Route path="/favoritos" element={<Favoritos />} />
             </Routes>
           </main>
           <CartDrawer />

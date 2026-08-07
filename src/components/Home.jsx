@@ -64,10 +64,10 @@ export default function Home() {
       >
         {/* Foto de fondo del cliente */}
         <img
-          src="/banner-mate-cliente.jpg.jpeg"
-          alt="Mate artesanal"
-          className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
-        />
+  src="/banner-mate-cliente.jpg.jpeg"
+  alt="Mate artesanal con sol"
+  className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
+/>
 
         {/* Overlay oscuro para mantener legibles tus textos e íconos */}
         <div className="absolute inset-0 bg-black/60" />

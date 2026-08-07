@@ -7,10 +7,10 @@ import { siteConfig } from './config/site';
 import { CATEGORIES, SUBCATEGORIES } from './config/categories';
 import logo from './assets/bib-mates-logo.png';
 
-import Home from './pages/Home';
-import About from './pages/About';
-import Grabados from './pages/Grabados';
-import Opiniones from './pages/Opiniones';
+import Home from './Home';
+import About from './About';
+import Grabados from './Grabados';
+import Opiniones from './Opiniones';
 import CartDrawer from './components/CartDrawer';
 
 const MARQUEE_TEXT = "• ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • 🔥 20% OFF PAGANDO CON MERCADO PAGO ";

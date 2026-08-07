@@ -1,51 +1,40 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
+import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../config/categories';
 
 const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON MERCADO PAGO • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
+
+// Imagen de respaldo si una categoría no tiene productos cargados
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
 
 export default function Home() {
   const [categoryImages, setCategoryImages] = useState({});
-  const [openFaqIndex, setOpenFaqIndex] = useState(null);
-  const [faqs, setFaqs] = useState([]);
   const carouselRef = useRef(null);
 
   useEffect(() => {
-    async function fetchData() {
-      // Cargar imágenes de categorías
-      const { data: prodData, error: prodError } = await supabase
+    async function fetchCategoryImages() {
+      const { data, error } = await supabase
         .from('productos')
         .select('category, image_url')
         .not('image_url', 'is', null)
         .neq('image_url', '');
 
-      if (!prodError && prodData) {
+      if (!error && data) {
         const imageMap = {};
-        prodData.forEach(item => {
+        data.forEach(item => {
           if (item.category && item.image_url && !imageMap[item.category.toLowerCase()]) {
             imageMap[item.category.toLowerCase()] = item.image_url;
           }
         });
         setCategoryImages(imageMap);
       }
-
-      // Cargar Preguntas Frecuentes desde Supabase
-      const { data: faqData, error: faqError } = await supabase
-        .from('faqs')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (!faqError && faqData) {
-        setFaqs(faqData);
-      }
     }
 
-    fetchData();
+    fetchCategoryImages();
   }, []);
 
   const scroll = (direction) => {
@@ -53,10 +42,6 @@ export default function Home() {
       const scrollAmount = direction === 'left' ? -200 : 200;
       carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
-  };
-
-  const toggleFaq = (index) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
   return (
@@ -71,13 +56,21 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
+      <section
+        className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black"
+      >
         <img
           src="/banner-mate-cliente.jpg.jpeg"
           alt="Mate artesanal con sol"
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
+
         <div className="absolute inset-0 bg-black/60" />
+
+        <div 
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#C4A278]/25 rounded-full blur-[120px] opacity-80"
+          aria-hidden="true"
+        />
 
         <div className="relative z-10 flex flex-col items-center justify-center">
           <FadeIn delay={100}>
@@ -99,7 +92,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <a
                 href="#seleccion"
-                className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.4)] hover:-translate-y-0.5"
               >
                 Ver Catálogo
                 <ChevronRight size={14} />
@@ -115,10 +108,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Métricas de Confianza */}
+      {/* Métricas de Confianza (Actualizadas sin repetir cuotas) */}
       <FadeIn>
         <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            
             <div className="flex items-center justify-center gap-3 p-2">
               <Hammer size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
@@ -126,6 +120,7 @@ export default function Home() {
                 <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
               </div>
             </div>
+
             <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
               <Sparkles size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
@@ -133,6 +128,7 @@ export default function Home() {
                 <p className="text-xs text-bib-gray">Personalización única en el acto</p>
               </div>
             </div>
+
             <div className="flex items-center justify-center gap-3 p-2">
               <ShieldCheck size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
@@ -140,16 +136,19 @@ export default function Home() {
                 <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
               </div>
             </div>
+
           </div>
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías Dinámicas */}
+      {/* Tarjetas de Categorías Dinámicas con Flechas de Navegación */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
           <div className="text-center mb-8 space-y-1">
             <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Colección completa</p>
-            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">Explorá por categoría</h2>
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+              Explorá por categoría
+            </h2>
           </div>
         </FadeIn>
 
@@ -162,9 +161,13 @@ export default function Home() {
             <ChevronLeft size={18} />
           </button>
 
-          <div ref={carouselRef} className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth">
+          <div
+            ref={carouselRef}
+            className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+          >
             {CATEGORIES.map((catName, i) => {
               const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
+
               return (
                 <FadeIn key={catName} delay={i * 40} className="shrink-0 w-36 sm:w-44 lg:w-48 snap-start">
                   <a
@@ -202,45 +205,6 @@ export default function Home() {
       <section id="seleccion" className="max-w-7xl mx-auto py-4 pb-20 px-4 sm:px-6">
         <ProductGrid hideCategoryBar={true} />
       </section>
-
-      {/* Sección Dinámica de Preguntas Frecuentes (FAQ) */}
-      {faqs.length > 0 && (
-        <section className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10">
-          <FadeIn>
-            <div className="text-center mb-10 space-y-2">
-              <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Resolvé tus dudas</p>
-              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">Preguntas Frecuentes</h2>
-            </div>
-          </FadeIn>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaqIndex === index;
-              return (
-                <FadeIn key={faq.id || index} delay={index * 50}>
-                  <div className="border border-bib-white/10 rounded-lg overflow-hidden bg-bib-black/40 transition-colors hover:border-[#C4A278]/40">
-                    <button
-                      onClick={() => toggleFaq(index)}
-                      className="w-full flex items-center justify-between p-4 sm:p-5 text-left focus:outline-none"
-                    >
-                      <span className="text-sm sm:text-base font-semibold text-bib-white">{faq.question}</span>
-                      <ChevronDown
-                        size={18}
-                        className={`text-[#C4A278] shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-bib-gray leading-relaxed border-t border-bib-white/5 pt-3">
-                        {faq.answer}
-                      </div>
-                    )}
-                  </div>
-                </FadeIn>
-              );
-            })}
-          </div>
-        </section>
-      )}
     </>
   );
 }

@@ -43,8 +43,10 @@ function ScrollToTop() {
 }
 
 // Navbar con Header unificado y Modal integrado
+// Navbar con Header unificado y Modal de Categorías Completo
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [categoriesOpen, setCategoriesOpen] = React.useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-bib-black/95 backdrop-blur-md border-b border-bib-white/10">
@@ -57,7 +59,7 @@ function Navbar() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between relative">
         {/* Logotipo */}
         <Link to="/" className="flex items-center gap-2">
           <span className="font-heading font-bold text-lg sm:text-xl tracking-wider text-bib-white">
@@ -65,19 +67,60 @@ function Navbar() {
           </span>
         </Link>
 
-        {/* Enlaces de Navegación Principales */}
+        {/* Enlaces de Navegación Principales con Dropdown de Categorías */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/?category=Mates#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Mates
-          </Link>
+          <div className="relative">
+            <button 
+              onClick={() => setCategoriesOpen(!categoriesOpen)}
+              className="flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium py-2 focus:outline-none"
+            >
+              Categorías
+              <Menu size={14} className={`transition-transform duration-200 ${categoriesOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Modal / Menú desplegable de Categorías */}
+            {categoriesOpen && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-bib-black border border-bib-white/10 shadow-2xl rounded py-2 flex flex-col z-50">
+                <Link 
+                  to="/?category=Mates#seleccion" 
+                  onClick={() => setCategoriesOpen(false)}
+                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
+                >
+                  Mates
+                </Link>
+                <Link 
+                  to="/?category=Bombillas#seleccion" 
+                  onClick={() => setCategoriesOpen(false)}
+                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
+                >
+                  Bombillas
+                </Link>
+                <Link 
+                  to="/?category=Termos#seleccion" 
+                  onClick={() => setCategoriesOpen(false)}
+                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
+                >
+                  Termos
+                </Link>
+                <Link 
+                  to="/?category=Accesorios#seleccion" 
+                  onClick={() => setCategoriesOpen(false)}
+                  className="px-4 py-2 text-xs uppercase tracking-[0.15em] text-bib-white hover:bg-[#C4A278] hover:text-bib-black transition-colors"
+                >
+                  Accesorios
+                </Link>
+              </div>
+            )}
+          </div>
+
           <Link to="/grabados" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
             Grabados
           </Link>
-          <Link to="/?category=Bombillas#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Bombillas
+          <Link to="/about" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
+            Nosotros
           </Link>
-          <Link to="/?category=Termos#seleccion" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
-            Termos
+          <Link to="/opiniones" className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] transition-colors font-medium">
+            Opiniones
           </Link>
         </nav>
 
@@ -99,42 +142,24 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Modal / Menú Desplegable para dispositivos móviles */}
+      {/* Menú Móvil */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-bib-black border-b border-bib-white/10 shadow-2xl py-6 px-6 flex flex-col gap-4 animate-fadeIn">
-          <Link 
-            to="/?category=Mates#seleccion" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
-          >
-            Mates
-          </Link>
-          <Link 
-            to="/grabados" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
-          >
-            Grabados
-          </Link>
-          <Link 
-            to="/?category=Bombillas#seleccion" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2 border-b border-bib-white/5"
-          >
-            Bombillas
-          </Link>
-          <Link 
-            to="/?category=Termos#seleccion" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2"
-          >
-            Termos
-          </Link>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#C4A278] font-bold">Categorías</div>
+          <Link to="/?category=Mates#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Mates</Link>
+          <Link to="/?category=Bombillas#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Bombillas</Link>
+          <Link to="/?category=Termos#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2">Termos</Link>
+          <Link to="/?category=Accesorios#seleccion" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-1 pl-2 border-b border-bib-white/10 pb-4">Accesorios</Link>
+          
+          <Link to="/grabados" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Grabados</Link>
+          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Nosotros</Link>
+          <Link to="/opiniones" onClick={() => setMobileMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-bib-white hover:text-[#C4A278] font-medium py-2">Opiniones</Link>
         </div>
       )}
     </header>
   );
 }
+  
 
 class GlobalErrorBoundary extends Component {
   constructor(props) {

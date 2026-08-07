@@ -64,19 +64,18 @@ export default function Home() {
       >
         {/* Foto de fondo del cliente */}
         <img
-  src="/banner-mate-cliente.jpg.jpeg"
-  alt="Mate artesanal con sol"
-  className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
-/>
+          src="/banner-mate-cliente.jpg.jpeg"
+          alt="Mate artesanal con sol"
+          className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
+        />
 
         {/* Overlay oscuro para mantener legibles tus textos e íconos */}
         <div className="absolute inset-0 bg-black/60" />
 
-        <div
-          className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 animate-pulse [animation-duration:5s]"
-          style={{
-            background: 'radial-gradient(circle, rgba(196,162,120,0.25) 0%, transparent 70%)',
-          }}
+        {/* RESPLANDOR/GLOW DORADO SUPERIOR */}
+        <div 
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#C4A278]/25 rounded-full blur-[120px] opacity-80"
+          aria-hidden="true"
         />
 
         <div className="relative z-10 flex flex-col items-center justify-center">

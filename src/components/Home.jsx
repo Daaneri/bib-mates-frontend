@@ -64,7 +64,7 @@ export default function Home() {
       >
         {/* Foto de fondo del cliente */}
         <img
-          src="/banner-mate-cliente.jpg"
+          src="/banner-mate-cliente.jpg.jpeg"
           alt="Mate artesanal"
           className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
         />

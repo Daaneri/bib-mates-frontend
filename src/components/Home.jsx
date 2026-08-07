@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Star, CreditCard, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Truck, Star, CreditCard, ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
 import { supabase } from '../supabaseClient';
@@ -17,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchCategoryImages() {
-      // Traemos id, category e image_url de productos con foto
+      // Traemos category e image_url de productos con foto
       const { data, error } = await supabase
         .from('productos')
         .select('category, image_url')
@@ -79,12 +79,6 @@ export default function Home() {
         />
 
         <div className="relative z-10 flex flex-col items-center justify-center">
-          <FadeIn>
-            <span className="inline-flex items-center gap-1.5 bg-[#C4A278]/10 border border-[#C4A278]/30 px-3 py-1 rounded-full text-[10px] sm:text-xs tracking-[0.25em] text-[#C4A278] font-semibold mb-6 uppercase backdrop-blur-sm">
-              <Sparkles size={12} /> Artesanías en Cuero y Alpaca
-            </span>
-          </FadeIn>
-
           <FadeIn delay={100}>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-6 leading-[1.1] max-w-4xl drop-shadow-md">
               Tomar mate,<br className="hidden sm:block" />

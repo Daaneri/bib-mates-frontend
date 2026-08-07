@@ -2,8 +2,6 @@ import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
-import { FaqsModalProvider } from './context/FaqsModalContext';
-import FaqsModal from './components/FaqsModal';
 import { Toaster } from 'sonner';
 import CheckoutEntrega from './components/CheckoutEntrega';
 import { siteConfig } from './config/site';
@@ -93,8 +91,7 @@ function PublicRoutes() {
       <FloatingCart />
       <CartDrawer />
       <CookieBanner />
-      <FaqsModal />
-
+     
       {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
       {cleanWhatsappNumber && (
         <a 
@@ -146,7 +143,7 @@ function App() {
   return (
     <GlobalErrorBoundary>
       <CartProvider>
-      <FaqsModalProvider>
+      
         <Router>
           <ScrollToTop />
           <AnalyticsTracker />
@@ -182,7 +179,7 @@ function App() {
             <Route path="*" element={<PublicRoutes />} />
           </Routes>
         </Router>
-      </FaqsModalProvider>
+      
       </CartProvider>
     </GlobalErrorBoundary>
   );

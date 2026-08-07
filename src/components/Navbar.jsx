@@ -15,7 +15,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
-  const { openModal } = useFaqsModal();
+
 
   function cerrarMenu() {
     setMenuOpen(false);

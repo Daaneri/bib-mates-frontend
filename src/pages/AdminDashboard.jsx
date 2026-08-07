@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check, X, Download, Plus, Trash2 } from 'lucide-react';
+import { Star, Check, X, Download, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { siteConfig } from '../config/site';
 import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/categories';
 import AdminCoupons from '../components/AdminCoupons';
+import AdminCarritos from './AdminCarritos';
 
 export default function AdminDashboard() {
   const [view, setView] = useState('Inventario');
@@ -19,7 +20,7 @@ export default function AdminDashboard() {
   const [file, setFile] = useState(null);
   const [extraFiles, setExtraFiles] = useState([]);
   
-  // Modificado: array de archivos para subida múltiple en grabados
+  // Array de archivos para subida múltiple en grabados
   const [grabadoFiles, setGrabadoFiles] = useState([]);
   
   // Categorías Dinámicas
@@ -540,8 +541,9 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 md:min-h-screen border-b md:border-b-0 md:border-r border-bib-white/10 p-4 md:p-6 flex flex-col shrink-0">
         <h1 className="text-lg md:text-xl mb-4 md:mb-12 uppercase tracking-widest font-medium">{siteConfig.businessName} Admin</h1>
         <nav className="flex md:flex-col gap-3 md:gap-0 md:space-y-6 flex-grow overflow-x-auto pb-2">
-          {['Inventario', 'Categorías', 'Cupones', 'Pedidos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
-            <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
+          {['Inventario', 'Categorías', 'Cupones', 'Pedidos', 'Carritos', 'Reseñas', 'Grabados', 'Configuración', 'Métricas'].map(item => (
+            <button key={item} onClick={() => setView(item)} className={`relative transition whitespace-nowrap text-sm uppercase tracking-widest text-left flex items-center gap-2 ${view === item ? 'text-bib-red font-medium' : 'text-bib-gray hover:text-bib-white'}`}>
+              {item === 'Carritos' && <ShoppingCart size={16} />}
               {item}
               {item === 'Reseñas' && resenasPendientes.length > 0 && (
                 <span className="ml-2 inline-flex items-center justify-center bg-bib-red text-bib-white text-[10px] font-medium w-4 h-4 rounded-full">
@@ -966,6 +968,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {view === 'Carritos' && (
+          <div className="max-w-5xl mx-auto">
+            <AdminCarritos />
+          </div>
+        )}
+
         {view === 'Reseñas' && (
           <div className="max-w-4xl mx-auto space-y-8">
             <div>
@@ -1211,7 +1219,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {pickerMode === 'extra' && (
+           {pickerMode === 'extra' && (
               <div className="pt-4 flex justify-end">
                 <button onClick={() => setPickerMode(null)} className="bg-bib-red text-bib-white px-6 py-2 rounded font-medium text-sm uppercase tracking-wide">Listo</button>
               </div>

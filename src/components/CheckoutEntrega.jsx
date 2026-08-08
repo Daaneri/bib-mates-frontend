@@ -420,7 +420,7 @@ export default function CheckoutEntrega() {
                     className="accent-blue-500"
                   />
                   <CreditCard size={18} className="text-blue-400" />
-                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Precio de Lista / Tarjetas)</span>
+                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Tarjetas hasta 3 cuotas sin interes)</span>
                 </div>
               </label>
 

@@ -147,8 +147,8 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
               <Sparkles size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
-                <p className="text-xs text-bib-gray">Personalización única en el acto</p>
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Personaliza tu mate</p>
+                <p className="text-xs text-bib-gray">Tu nombre,frase o logo grabado en el mate</p>
               </div>
             </div>
 

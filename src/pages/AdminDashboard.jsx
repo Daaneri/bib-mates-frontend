@@ -232,6 +232,7 @@ export default function AdminDashboard() {
     const subcategory = formData.get('subcategory') || null;
     const description = formData.get('description');
     const personalizable = formData.get('personalizable') === 'on';
+    const destacado = formData.get('destacado') === 'on';
     const descuentoPorcentaje = Math.min(100, Math.max(0, parseFloat(formData.get('descuento_porcentaje')) || 0));
 
     let imageUrl = '';
@@ -258,6 +259,7 @@ export default function AdminDashboard() {
       image_urls: imageUrlsExtra, 
       description, 
       personalizable, 
+      destacado,
       descuento_porcentaje: descuentoPorcentaje 
     }]);
 
@@ -374,6 +376,7 @@ export default function AdminDashboard() {
           image_url: editData.image_url || '',
           image_urls: Array.isArray(editData.image_urls) ? editData.image_urls : [],
           personalizable: Boolean(editData.personalizable),
+          destacado: Boolean(editData.destacado),
           descuento_porcentaje: isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount)),
         })
         .eq('id', product.id);
@@ -603,6 +606,11 @@ export default function AdminDashboard() {
                 <input type="checkbox" name="personalizable" className="w-4 h-4 accent-bib-red" />
                 ¿Es personalizable / grabable?
               </label>
+
+              <label className="flex items-center gap-2 text-sm text-bib-gray">
+                <input type="checkbox" name="destacado" className="w-4 h-4 accent-bib-red" />
+                ¿Mostrar en "Productos Destacados" de la home?
+              </label>
               
               <div className="flex flex-col items-center gap-2">
                 <input type="file" id="fileInput" className="hidden" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
@@ -706,6 +714,11 @@ export default function AdminDashboard() {
                         ¿Es personalizable / grabable?
                       </label>
 
+                      <label className="flex items-center gap-2 text-xs text-bib-gray">
+                        <input type="checkbox" checked={editData.destacado} onChange={(e) => setEditData({...editData, destacado: e.target.checked})} className="w-4 h-4 accent-bib-red" />
+                        ¿Mostrar en "Productos Destacados" de la home?
+                      </label>
+
                       <div className="space-y-2 bg-bib-black p-3 rounded border border-bib-white/10">
                         <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Foto principal</p>
                         <div className="flex items-center gap-3">
@@ -788,10 +801,13 @@ export default function AdminDashboard() {
                           {p.personalizable && (
                             <span className="px-2 py-1 rounded text-[10px] border border-bib-red/40 text-bib-red uppercase tracking-wide">Personalizable</span>
                           )}
+                          {p.destacado && (
+                            <span className="px-2 py-1 rounded text-[10px] border border-[#C4A278]/50 text-[#C4A278] uppercase tracking-wide">★ Destacado</span>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, destacado: p.destacado === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>

@@ -18,6 +18,7 @@ export default function Home() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [faqs, setFaqs] = useState([]);
   const [loadingFaqs, setLoadingFaqs] = useState(true);
+  const [destacados, setDestacados] = useState([]);
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -39,6 +40,16 @@ export default function Home() {
       }
     }
 
+    async function fetchDestacados() {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('destacado', true)
+        .or('archivado.eq.false,archivado.is.null');
+
+      if (!error && data) setDestacados(data);
+    }
+
     async function fetchFaqs() {
       try {
         setLoadingFaqs(true);
@@ -53,6 +64,7 @@ export default function Home() {
     }
 
     fetchCategoryImages();
+    fetchDestacados();
     fetchFaqs();
   }, []);
 
@@ -107,8 +119,26 @@ export default function Home() {
 
           <FadeIn delay={200}>
             <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light drop-shadow">
-              Mates imperiales, torpedos, camioneros, algarrobos, termos, canastas, yerbas uruguayas y más.
+              Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
             </p>
+          </FadeIn>
+
+          <FadeIn delay={300}>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <a
+                href="#seleccion"
+                className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.4)] hover:-translate-y-0.5"
+              >
+                Ver Catálogo
+                <ChevronRight size={14} />
+              </a>
+              <Link
+                to="/grabados"
+                className="inline-flex items-center justify-center gap-2 bg-transparent border border-bib-white/20 text-bib-white px-8 py-3.5 rounded font-medium text-xs tracking-[0.2em] uppercase hover:border-[#C4A278] hover:text-[#C4A278] transition-all duration-300 backdrop-blur-sm"
+              >
+                Ver Grabados
+              </Link>
+            </div>
           </FadeIn>
         </div>
       </section>
@@ -129,8 +159,8 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
               <Sparkles size={24} className="text-[#C4A278] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Personaliza tu mate</p>
-                <p className="text-xs text-bib-gray">Tu nombre,frase o logo grabado en el mate</p>
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
+                <p className="text-xs text-bib-gray">Personalización única en el acto</p>
               </div>
             </div>
 
@@ -145,6 +175,65 @@ export default function Home() {
           </div>
         </section>
       </FadeIn>
+
+      {/* Productos Destacados */}
+      {destacados.length > 0 && (
+        <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
+          <FadeIn>
+            <div className="text-center mb-8 space-y-1">
+              <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Selección especial</p>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+                Productos Destacados
+              </h2>
+            </div>
+          </FadeIn>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+            {destacados.map((p, i) => {
+              const precioFinal = p.descuento_porcentaje > 0
+                ? p.price * (1 - p.descuento_porcentaje / 100)
+                : p.price;
+
+              return (
+                <FadeIn key={p.id} delay={i * 60}>
+                  <Link
+                    to={`/producto/${p.id}`}
+                    className="group/dest block rounded overflow-hidden border border-bib-white/10 hover:border-[#C4A278] transition-all duration-300 bg-bib-dark"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-bib-black">
+                      <img
+                        src={p.image_url || FALLBACK_IMAGE}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-500"
+                      />
+                      {p.descuento_porcentaje > 0 && (
+                        <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
+                          {p.descuento_porcentaje}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5 sm:p-3">
+                      <p className="text-xs sm:text-sm font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors">
+                        {p.name}
+                      </p>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        {p.descuento_porcentaje > 0 && (
+                          <span className="text-[10px] text-bib-gray line-through">
+                            ${Number(p.price).toLocaleString('es-AR')}
+                          </span>
+                        )}
+                        <span className="text-xs sm:text-sm font-bold text-bib-white">
+                          ${Number(precioFinal).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </FadeIn>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Tarjetas de Categorías Dinámicas con Flechas de Navegación */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">

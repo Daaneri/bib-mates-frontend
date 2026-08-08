@@ -58,7 +58,7 @@ export default function Footer() {
 
       </div>
 
-      {/* BLOQUE DE MEDIOS DE PAGO Y ENVÍO CON LOGOS REALES */}
+      {/* BLOQUE DE MEDIOS DE PAGO Y ENVÍO */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 mt-8 border-t border-bib-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
         
         <div className="flex flex-col md:flex-row items-center gap-6">
@@ -79,27 +79,27 @@ export default function Footer() {
             {/* Mastercard */}
             <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+                src="https://img.icons8.com/color/48/mastercard-logo.png" 
                 alt="Mastercard" 
-                className="h-4 object-contain" 
+                className="h-5 object-contain" 
               />
             </div>
 
             {/* Visa */}
             <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
+                src="https://img.icons8.com/color/48/visa.png" 
                 alt="Visa" 
-                className="h-3 object-contain" 
+                className="h-5 object-contain" 
               />
             </div>
 
             {/* American Express */}
             <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282018%29.svg" 
+                src="https://img.icons8.com/color/48/amex.png" 
                 alt="American Express" 
-                className="h-4 object-contain" 
+                className="h-5 object-contain" 
               />
             </div>
           </div>
@@ -107,8 +107,6 @@ export default function Footer() {
           {/* Método de envío */}
           <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
             <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Envío:</span>
-            
-            {/* Correo Argentino */}
             <div className="bg-[#003366] px-2.5 py-1 rounded h-7 flex items-center justify-center border border-bib-white/20">
               <span className="text-white font-bold text-[10px] tracking-wider uppercase">Correo Argentino</span>
             </div>

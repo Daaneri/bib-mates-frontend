@@ -110,6 +110,14 @@ export default function AdminFaqs({ token }) {
 
   return (
     <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto", padding: "20px", textTransform: "none" }}>
+      <style>{`
+        .admin-faq-edit-btn:hover,
+        .admin-faq-delete-btn:hover,
+        .admin-faq-save-btn:hover,
+        .admin-faq-cancel-btn:hover {
+          color: #000 !important;
+        }
+      `}</style>
       <h2 style={{ color: "#333", borderBottom: "2px solid #C4A278", paddingBottom: "8px", marginBottom: "20px" }}>
         Gestión de Preguntas Frecuentes
       </h2>
@@ -192,12 +200,14 @@ export default function AdminFaqs({ token }) {
                   />
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
+                      className="admin-faq-save-btn"
                       onClick={() => saveEdit(faq.id)}
                       style={{ background: "#C4A278", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }}
                     >
                       Guardar
                     </button>
                     <button
+                      className="admin-faq-cancel-btn"
                       onClick={cancelEdit}
                       style={{ background: "#f0f0f0", color: "#333", border: "none", padding: "6px 14px", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }}
                     >
@@ -211,12 +221,14 @@ export default function AdminFaqs({ token }) {
                   <p style={{ color: "#555", margin: "0 0 12px 0", whiteSpace: "pre-wrap" }}>{faq.answer}</p>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
+                      className="admin-faq-edit-btn"
                       onClick={() => startEdit(faq)}
                       style={{ background: "#f0f0f0", color: "#333", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }}
                     >
                       Editar
                     </button>
                     <button
+                      className="admin-faq-delete-btn"
                       onClick={() => deleteFaq(faq.id)}
                       style={{ background: "#d9534f", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }}
                     >

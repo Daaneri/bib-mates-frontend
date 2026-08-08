@@ -173,7 +173,11 @@ export default function AdminDashboard() {
   }
 
   async function handleDeleteCategory(catNombre) {
-    const productosConEstaCat = productos.filter(p => p.category === catNombre && !p.archivado);
+    const productosConEstaCat = productos.filter(p =>
+      p.category &&
+      p.category.trim().toLowerCase() === catNombre.trim().toLowerCase() &&
+      !p.archivado
+    );
     if (productosConEstaCat.length > 0) {
       mostrarMensaje(`No se puede eliminar: Hay ${productosConEstaCat.length} producto(s) asignado(s) a esta categoría.`);
       return;
@@ -850,7 +854,11 @@ export default function AdminDashboard() {
               <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Categorías Existentes</h3>
               <div className="divide-y divide-bib-white/10">
                 {categorias.map(cat => {
-                  const cantidadProductos = productos.filter(p => p.category === cat && !p.archivado).length;
+                  const cantidadProductos = productos.filter(p =>
+                    p.category &&
+                    p.category.trim().toLowerCase() === cat.trim().toLowerCase() &&
+                    !p.archivado
+                  ).length;
                   return (
                     <div key={cat} className="py-3 flex items-center justify-between">
                       <div>

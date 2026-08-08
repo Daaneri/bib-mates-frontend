@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CreditCard, Wallet, ShieldCheck, Truck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { siteConfig } from '../config/site';
 
 export default function Footer() {
@@ -58,43 +58,62 @@ export default function Footer() {
 
       </div>
 
-      {/* BLOQUE DE MEDIOS DE PAGO Y ENVÍO */}
+      {/* BLOQUE DE MEDIOS DE PAGO Y ENVÍO CON LOGOS REALES */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 mt-8 border-t border-bib-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
         
         <div className="flex flex-col md:flex-row items-center gap-6">
+          
           {/* Medios de pago */}
           <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
             <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Pagos:</span>
             
-            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
-              <Wallet size={13} className="text-[#009EE3]" />
-              <span>Mercado Pago</span>
+            {/* Mercado Pago */}
+            <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
+              <img 
+                src="https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.0/mercadopago/logo__small.png" 
+                alt="Mercado Pago" 
+                className="h-4 object-contain" 
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
-              <CreditCard size={13} className="text-[#EB001B]" />
-              <span>Mastercard</span>
+            {/* Mastercard */}
+            <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+                alt="Mastercard" 
+                className="h-4 object-contain" 
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
-              <CreditCard size={13} className="text-[#1A1F71]" />
-              <span>Visa</span>
+            {/* Visa */}
+            <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
+                alt="Visa" 
+                className="h-3 object-contain" 
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
-              <CreditCard size={13} className="text-[#006FCF]" />
-              <span>Amex</span>
+            {/* American Express */}
+            <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282018%29.svg" 
+                alt="American Express" 
+                className="h-4 object-contain" 
+              />
             </div>
           </div>
 
           {/* Método de envío */}
           <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
             <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Envío:</span>
-            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
-              <Truck size={13} className="text-[#C4A278]" />
-              <span>Correo Argentino</span>
+            
+            {/* Correo Argentino */}
+            <div className="bg-[#003366] px-2.5 py-1 rounded h-7 flex items-center justify-center border border-bib-white/20">
+              <span className="text-white font-bold text-[10px] tracking-wider uppercase">Correo Argentino</span>
             </div>
           </div>
+
         </div>
 
         <div className="flex flex-col gap-1 text-center md:text-right">

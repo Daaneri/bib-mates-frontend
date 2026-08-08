@@ -8,6 +8,7 @@ import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/cat
 import AdminCoupons from '../components/AdminCoupons';
 import AdminFaqs from '../components/AdminFaqs';
 import AdminCarritos from './AdminCarritos';
+import { compressToWebp, compressManyToWebp } from '../utils/imageCompress';
 
 export default function AdminDashboard() {
   const [view, setView] = useState('Inventario');
@@ -237,14 +238,16 @@ export default function AdminDashboard() {
 
     let imageUrl = '';
     if (file) {
-      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${file.name}`, file);
+      const optimizedFile = await compressToWebp(file);
+      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${optimizedFile.name}`, optimizedFile);
       if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
     }
 
     const imageUrlsExtra = [];
     const seleccionadas = extraFiles.filter((item) => item.selected);
-    for (const item of seleccionadas) {
-      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${item.file.name}`, item.file);
+    const seleccionadasOptimizadas = await compressManyToWebp(seleccionadas.map((item) => item.file));
+    for (const optimizedFile of seleccionadasOptimizadas) {
+      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${optimizedFile.name}`, optimizedFile);
       if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
     }
 
@@ -282,7 +285,8 @@ export default function AdminDashboard() {
     setLoading(true);
 
     try {
-      const uploadPromises = grabadoFiles.map(async (f) => {
+      const optimizedFiles = await compressManyToWebp(grabadoFiles);
+      const uploadPromises = optimizedFiles.map(async (f) => {
         const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${f.name}`;
         const { data, error: uploadError } = await supabase.storage
           .from('grabados')
@@ -870,37 +874,13 @@ export default function AdminDashboard() {
 
         {view === 'Cupones' && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
-              [&_div]:!bg-transparent
-              [&_form]:!bg-transparent [&_form]:!p-0 [&_form]:!border-none [&_form]:!shadow-none [&_form]:!outline-none
-              [&_form_div]:!border-none
-              [&_h2]:!text-bib-white [&_h2]:!text-base [&_h2]:!uppercase [&_h2]:!tracking-widest [&_h2]:!font-medium
-              [&_h3]:!text-bib-white [&_h3]:!text-sm [&_h3]:!uppercase [&_h3]:!tracking-widest [&_h3]:!font-medium [&_h3]:!mb-4
-              [&_label]:!text-bib-gray [&_label]:!text-xs [&_label]:!uppercase [&_label]:!tracking-wide
-              [&_input]:!bg-bib-black [&_input]:!text-bib-white [&_input]:!border [&_input]:!border-bib-white/20 [&_input]:!rounded [&_input]:!p-3 [&_input]:!text-sm
-              [&_select]:!bg-bib-black [&_select]:!text-bib-white [&_select]:!border [&_select]:!border-bib-white/20 [&_select]:!rounded [&_select]:!p-3 [&_select]:!text-sm
-              [&_button[type='submit']]:!bg-bib-red [&_button[type='submit']]:hover:!bg-bib-white [&_button[type='submit']]:!text-bib-white [&_button[type='submit']]:hover:!text-bib-black [&_button[type='submit']]:!transition-colors [&_button[type='submit']]:!uppercase [&_button[type='submit']]:!tracking-widest [&_button[type='submit']]:!font-medium [&_button[type='submit']]:!py-3 [&_button[type='submit']]:!px-8 [&_button[type='submit']]:!rounded [&_button[type='submit']]:!border-none
-              [&_button]:!bg-bib-red [&_button]:hover:!bg-bib-white [&_button]:!text-bib-white [&_button]:hover:!text-bib-black">
-              <AdminCoupons token={session?.access_token} />
-            </div>
+            <AdminCoupons token={session?.access_token} />
           </div>
         )}
 
         {view === 'FAQs' && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-bib-dark p-6 rounded border border-bib-white/10 space-y-4
-              [&_div]:!bg-transparent
-              [&_form]:!bg-transparent [&_form]:!p-0 [&_form]:!border-none [&_form]:!shadow-none [&_form]:!outline-none
-              [&_form_div]:!border-none
-              [&_h2]:!text-bib-white [&_h2]:!text-base [&_h2]:!uppercase [&_h2]:!tracking-widest [&_h2]:!font-medium
-              [&_h3]:!text-bib-white [&_h3]:!text-sm [&_h3]:!uppercase [&_h3]:!tracking-widest [&_h3]:!font-medium [&_h3]:!mb-4
-              [&_label]:!text-bib-gray [&_label]:!text-xs [&_label]:!uppercase [&_label]:!tracking-wide
-              [&_input]:!bg-bib-black [&_input]:!text-bib-white [&_input]:!border [&_input]:!border-bib-white/20 [&_input]:!rounded [&_input]:!p-3 [&_input]:!text-sm
-              [&_select]:!bg-bib-black =&gt; !text-bib-white =&gt; !border =&gt; !border-bib-white/20 =&gt; !rounded =&gt; !p-3 =&gt; !text-sm
-              [&_button[type='submit']]:!bg-bib-red =&gt; hover:!bg-bib-white =&gt; !text-bib-white =&gt; hover:!text-bib-black =&gt; !transition-colors =&gt; !uppercase =&gt; !tracking-widest =&gt; !font-medium =&gt; !py-3 =&gt; !px-8 =&gt; !rounded =&gt; !border-none
-              [&_button]:!bg-bib-red =&gt; hover:!bg-bib-white =&gt; !text-bib-white =&gt; hover:!text-bib-black">
-              <AdminFaqs token={session?.access_token} />
-            </div>
+            <AdminFaqs token={session?.access_token} />
           </div>
         )}
 

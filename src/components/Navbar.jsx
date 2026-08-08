@@ -130,7 +130,7 @@ export default function Navbar() {
             <Link to="/about" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Nosotros</Link>
             <Link to="/opiniones" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Opiniones</Link>
             <Link to="/grabados" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Grabados</Link>
-            <a href="/#faqs" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">FAQs</a>
+            <a href="/#faqs" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Preguntas Frecuentes</a>
             <Link to="/favoritos" onClick={cerrarMenu} className="hover:text-bib-red hover:translate-x-1 transition-all duration-300 w-fit">Favoritos</Link>
           </div>
 

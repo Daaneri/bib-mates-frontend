@@ -126,39 +126,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Métricas de Confianza */}
-      <FadeIn>
-        <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            
-            <div className="flex items-center justify-center gap-3 p-2">
-              <Hammer size={24} className="text-[#C4A278] shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">100% Artesanales</p>
-                <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
-              <Sparkles size={24} className="text-[#C4A278] shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
-                <p className="text-xs text-bib-gray">Tu nombre,frase o logo grabado en el mate</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 p-2">
-              <ShieldCheck size={24} className="text-[#C4A278] shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Compra Segura</p>
-                <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
-              </div>
-            </div>
-
-          </div>
-        </section>
-      </FadeIn>
-
       {/* Productos Destacados */}
       {destacados.length > 0 && (
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
@@ -244,6 +211,39 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Métricas de Confianza (Movidas aquí abajo) */}
+      <FadeIn>
+        <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            
+            <div className="flex items-center justify-center gap-3 p-2">
+              <Hammer size={24} className="text-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">100% Artesanales</p>
+                <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
+              <Sparkles size={24} className="text-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
+                <p className="text-xs text-bib-gray">Tu nombre,frase o logo grabado en el mate</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 p-2">
+              <ShieldCheck size={24} className="text-[#C4A278] shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Compra Segura</p>
+                <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      </FadeIn>
 
       {/* Tarjetas de Categorías Dinámicas con Flechas de Navegación */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">

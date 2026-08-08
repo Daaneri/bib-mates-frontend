@@ -107,26 +107,8 @@ export default function Home() {
 
           <FadeIn delay={200}>
             <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light drop-shadow">
-              Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
+              Mates imperiales, torpedos, camioneros, algarrobos, termos, canastas, yerbas uruguayas y más.
             </p>
-          </FadeIn>
-
-          <FadeIn delay={300}>
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <a
-                href="#seleccion"
-                className="inline-flex items-center justify-center gap-2 bg-[#C4A278] text-bib-black px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-bib-white transition-all duration-300 hover:shadow-[0_0_25px_rgba(196,162,120,0.4)] hover:-translate-y-0.5"
-              >
-                Ver Catálogo
-                <ChevronRight size={14} />
-              </a>
-              <Link
-                to="/grabados"
-                className="inline-flex items-center justify-center gap-2 bg-transparent border border-bib-white/20 text-bib-white px-8 py-3.5 rounded font-medium text-xs tracking-[0.2em] uppercase hover:border-[#C4A278] hover:text-[#C4A278] transition-all duration-300 backdrop-blur-sm"
-              >
-                Ver Grabados
-              </Link>
-            </div>
           </FadeIn>
         </div>
       </section>

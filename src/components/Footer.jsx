@@ -108,13 +108,9 @@ export default function Footer() {
           <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
             <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Envío:</span>
             
-            {/* Correo Argentino (Logo Real) */}
-            <div className="bg-white px-2 py-1 rounded h-7 flex items-center justify-center">
-              <img 
-                src="https://www.correoargentino.com.ar/sites/all/themes/correo/logo.png" 
-                alt="Correo Argentino" 
-                className="h-4 object-contain" 
-              />
+            {/* Correo Argentino con fondo azul institucional y texto blanco limpio */}
+            <div className="bg-[#003366] px-2.5 py-1 rounded h-7 flex items-center justify-center border border-bib-white/20">
+              <span className="text-white font-bold text-[10px] tracking-wider uppercase">Correo Argentino</span>
             </div>
           </div>
 

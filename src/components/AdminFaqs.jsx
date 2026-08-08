@@ -109,7 +109,7 @@ export default function AdminFaqs({ token }) {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto", padding: "20px" }}>
+    <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto", padding: "20px", textTransform: "none" }}>
       <h2 style={{ color: "#333", borderBottom: "2px solid #C4A278", paddingBottom: "8px", marginBottom: "20px" }}>
         Gestión de Preguntas Frecuentes
       </h2>

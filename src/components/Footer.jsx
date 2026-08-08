@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CreditCard, Wallet, Banknote, ShieldCheck } from 'lucide-react';
+import { CreditCard, Wallet, ShieldCheck, Truck } from 'lucide-react';
 import { siteConfig } from '../config/site';
 
 export default function Footer() {
@@ -58,24 +58,42 @@ export default function Footer() {
 
       </div>
 
-      {/* BLOQUE DE MEDIOS DE PAGO */}
+      {/* BLOQUE DE MEDIOS DE PAGO Y ENVÍO */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 mt-8 border-t border-bib-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-        <div className="flex flex-wrap items-center justify-center gap-2.5 text-bib-white/80">
-          <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Medios de pago:</span>
-          
-          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
-            <CreditCard size={14} className="text-[#C4A278]" />
-            <span>Tarjetas de Crédito / Débito</span>
+        
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          {/* Medios de pago */}
+          <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
+            <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Pagos:</span>
+            
+            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
+              <Wallet size={13} className="text-[#009EE3]" />
+              <span>Mercado Pago</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
+              <CreditCard size={13} className="text-[#EB001B]" />
+              <span>Mastercard</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
+              <CreditCard size={13} className="text-[#1A1F71]" />
+              <span>Visa</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
+              <CreditCard size={13} className="text-[#006FCF]" />
+              <span>Amex</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
-            <Wallet size={14} className="text-[#009EE3]" />
-            <span>Mercado Pago</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2.5 py-1 rounded text-[11px]">
-            <Banknote size={14} className="text-green-500" />
-            <span>Transferencia / Efectivo</span>
+          {/* Método de envío */}
+          <div className="flex flex-wrap items-center justify-center gap-2 text-bib-white/80">
+            <span className="text-[11px] uppercase tracking-wider text-bib-gray mr-1">Envío:</span>
+            <div className="flex items-center gap-1.5 bg-bib-black border border-bib-white/10 px-2 py-1 rounded text-[11px]">
+              <Truck size={13} className="text-[#C4A278]" />
+              <span>Correo Argentino</span>
+            </div>
           </div>
         </div>
 
@@ -85,6 +103,7 @@ export default function Footer() {
             Hecho por <a href="https://www.instagram.com/desarrollando.andoo/" target="_blank" rel="noopener noreferrer" className="hover:text-bib-white underline transition-colors">Desarrollando.andoo</a>
           </p>
         </div>
+
       </div>
     </footer>
   );

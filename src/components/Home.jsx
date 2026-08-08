@@ -20,6 +20,7 @@ export default function Home() {
   const [loadingFaqs, setLoadingFaqs] = useState(true);
   const [destacados, setDestacados] = useState([]);
   const carouselRef = useRef(null);
+  const destacadosRef = useRef(null);
 
   useEffect(() => {
     async function fetchCategoryImages() {
@@ -68,10 +69,10 @@ export default function Home() {
     fetchFaqs();
   }, []);
 
-  const scroll = (direction) => {
-    if (carouselRef.current) {
-      const scrollAmount = direction === 'left' ? -200 : 200;
-      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  const scroll = (direction, ref = carouselRef) => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -260 : 260;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -188,49 +189,76 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-            {destacados.map((p, i) => {
-              const precioFinal = p.descuento_porcentaje > 0
-                ? p.price * (1 - p.descuento_porcentaje / 100)
-                : p.price;
+          <div className="relative group">
+            <button
+              onClick={() => scroll('left', destacadosRef)}
+              aria-label="Anterior"
+              className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
+            >
+              <ChevronLeft size={18} />
+            </button>
 
-              return (
-                <FadeIn key={p.id} delay={i * 60}>
-                  <Link
-                    to={`/producto/${p.id}`}
-                    className="group/dest block rounded overflow-hidden border border-bib-white/10 hover:border-[#C4A278] transition-all duration-300 bg-bib-dark"
-                  >
-                    <div className="relative aspect-square overflow-hidden bg-bib-black">
-                      <img
-                        src={p.image_url || FALLBACK_IMAGE}
-                        alt={p.name}
-                        className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-500"
-                      />
-                      {p.descuento_porcentaje > 0 && (
-                        <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
-                          {p.descuento_porcentaje}% OFF
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-2.5 sm:p-3">
-                      <p className="text-xs sm:text-sm font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors">
-                        {p.name}
-                      </p>
-                      <div className="flex items-baseline gap-1.5 mt-1">
+            <div
+              ref={destacadosRef}
+              className="flex overflow-x-auto gap-4 sm:gap-5 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+            >
+              {destacados.map((p, i) => {
+                const precioFinal = p.descuento_porcentaje > 0
+                  ? p.price * (1 - p.descuento_porcentaje / 100)
+                  : p.price;
+
+                return (
+                  <FadeIn key={p.id} delay={i * 60} className="shrink-0 w-56 sm:w-64 snap-start">
+                    <div className="group/dest rounded overflow-hidden border border-bib-white/10 hover:border-[#C4A278] transition-all duration-300 bg-bib-dark h-full flex flex-col">
+                      <Link to={`/producto/${p.id}`} className="relative aspect-[4/3] overflow-hidden bg-bib-black block">
+                        <img
+                          src={p.image_url || FALLBACK_IMAGE}
+                          alt={p.name}
+                          className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-500"
+                        />
                         {p.descuento_porcentaje > 0 && (
-                          <span className="text-[10px] text-bib-gray line-through">
-                            ${Number(p.price).toLocaleString('es-AR')}
+                          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
+                            {p.descuento_porcentaje}% OFF
                           </span>
                         )}
-                        <span className="text-xs sm:text-sm font-bold text-bib-white">
-                          ${Number(precioFinal).toLocaleString('es-AR')}
-                        </span>
+                      </Link>
+                      <div className="p-3.5 sm:p-4 flex flex-col flex-1">
+                        <Link to={`/producto/${p.id}`}>
+                          <p className="text-sm sm:text-base font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors">
+                            {p.name}
+                          </p>
+                        </Link>
+                        <div className="flex items-baseline gap-2 mt-1.5 mb-3">
+                          {p.descuento_porcentaje > 0 && (
+                            <span className="text-xs text-bib-gray line-through">
+                              ${Number(p.price).toLocaleString('es-AR')}
+                            </span>
+                          )}
+                          <span className="text-base sm:text-lg font-bold text-bib-white">
+                            ${Number(precioFinal).toLocaleString('es-AR')}
+                          </span>
+                        </div>
+                        <Link
+                          to={`/producto/${p.id}`}
+                          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[#C4A278] text-bib-black py-2.5 rounded font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-bib-white transition-all duration-300"
+                        >
+                          Comprar
+                          <ChevronRight size={12} />
+                        </Link>
                       </div>
                     </div>
-                  </Link>
-                </FadeIn>
-              );
-            })}
+                  </FadeIn>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => scroll('right', destacadosRef)}
+              aria-label="Siguiente"
+              className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </section>
       )}

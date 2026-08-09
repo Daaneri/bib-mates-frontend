@@ -14,7 +14,6 @@ export default function AdminCoupons({ token }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Obtener todos los cupones
   const fetchCoupons = async () => {
     try {
       setLoading(true);
@@ -40,7 +39,6 @@ export default function AdminCoupons({ token }) {
     }
   }, [token]);
 
-  // Crear un nuevo cupón
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -70,7 +68,6 @@ export default function AdminCoupons({ token }) {
     }
   };
 
-  // Activar o desactivar cupón
   const toggleStatus = async (id, currentStatus) => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/coupons/${id}/toggle`, {
@@ -90,7 +87,6 @@ export default function AdminCoupons({ token }) {
     }
   };
 
-  // Eliminar cupón
   const deleteCoupon = async (id, code) => {
     if (!window.confirm(`¿Seguro que querés eliminar el cupón "${code}"?`)) return;
 
@@ -109,21 +105,25 @@ export default function AdminCoupons({ token }) {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto", padding: "20px" }}>
-      <h2 style={{ color: "#333", borderBottom: "2px solid #C4A278", paddingBottom: "8px", marginBottom: "20px" }}>
+    <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto", padding: "20px", textTransform: "none" }}>
+      <h2 className="text-base uppercase tracking-widest font-medium text-bib-white border-b border-[#C4A278] pb-2 mb-5">
         Gestión de Cupones de Descuento
       </h2>
 
       {/* Formulario de creación */}
-      <form onSubmit={handleSubmit} style={{ background: "#f9f9f9", padding: "24px", borderRadius: "8px", border: "1px solid #e0e0e0", marginBottom: "32px" }}>
-        <h3 style={{ marginTop: 0, marginBottom: "16px", color: "#444" }}>Crear nuevo cupón</h3>
-        
-        {errorMsg && <p style={{ color: "#d9534f", backgroundColor: "#fdf7f7", padding: "10px", borderRadius: "4px", border: "1px solid #d9534f" }}>{errorMsg}</p>}
-        {successMsg && <p style={{ color: "#5cb85c", backgroundColor: "#f7fdf7", padding: "10px", borderRadius: "4px", border: "1px solid #5cb85c" }}>{successMsg}</p>}
+      <form onSubmit={handleSubmit} className="bg-bib-black p-5 md:p-6 rounded border border-bib-white/10 space-y-4 mb-8">
+        <h3 className="text-sm uppercase tracking-widest font-medium text-bib-white mb-1">Crear nuevo cupón</h3>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+        {errorMsg && (
+          <p className="text-red-400 bg-red-900/20 border border-red-700/40 rounded px-3 py-2 text-sm">{errorMsg}</p>
+        )}
+        {successMsg && (
+          <p className="text-green-400 bg-green-900/20 border border-green-700/40 rounded px-3 py-2 text-sm">{successMsg}</p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+            <label className="block mb-1.5 text-xs uppercase tracking-wide text-bib-gray">
               Código del cupón *
             </label>
             <input
@@ -132,12 +132,12 @@ export default function AdminCoupons({ token }) {
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
               required
-              style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc", boxSizing: "border-box" }}
+              className="w-full bg-bib-dark text-bib-white border border-bib-white/20 rounded p-3 text-sm outline-none focus:border-[#C4A278] placeholder:text-bib-gray/50"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+            <label className="block mb-1.5 text-xs uppercase tracking-wide text-bib-gray">
               Descuento (%) *
             </label>
             <input
@@ -148,12 +148,12 @@ export default function AdminCoupons({ token }) {
               value={form.discount_percentage}
               onChange={(e) => setForm({ ...form, discount_percentage: e.target.value })}
               required
-              style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc", boxSizing: "border-box" }}
+              className="w-full bg-bib-dark text-bib-white border border-bib-white/20 rounded p-3 text-sm outline-none focus:border-[#C4A278] placeholder:text-bib-gray/50"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+            <label className="block mb-1.5 text-xs uppercase tracking-wide text-bib-gray">
               Límite de uso (Opcional)
             </label>
             <input
@@ -162,110 +162,85 @@ export default function AdminCoupons({ token }) {
               placeholder="Ej: 50 (vacío = sin límite)"
               value={form.max_uses}
               onChange={(e) => setForm({ ...form, max_uses: e.target.value })}
-              style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc", boxSizing: "border-box" }}
+              className="w-full bg-bib-dark text-bib-white border border-bib-white/20 rounded p-3 text-sm outline-none focus:border-[#C4A278] placeholder:text-bib-gray/50"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+            <label className="block mb-1.5 text-xs uppercase tracking-wide text-bib-gray">
               Fecha vencimiento (Opcional)
             </label>
             <input
               type="date"
               value={form.expires_at}
               onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-              style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc", boxSizing: "border-box" }}
+              className="w-full bg-bib-dark text-bib-white border border-bib-white/20 rounded p-3 text-sm outline-none focus:border-[#C4A278]"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          style={{
-            marginTop: "20px",
-            background: "#C4A278",
-            color: "#fff",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "4px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "background 0.2s ease"
-          }}
+          className="bg-[#C4A278] hover:bg-bib-white text-bib-black px-6 py-3 rounded font-bold text-xs uppercase tracking-widest transition-colors"
         >
           Guardar Cupón
         </button>
       </form>
 
       {/* Listado de Cupones */}
-      <h3 style={{ color: "#444", marginBottom: "16px" }}>Cupones Registrados</h3>
+      <h3 className="text-sm uppercase tracking-widest font-medium text-bib-white mb-4">Cupones Registrados</h3>
       {loading ? (
-        <p>Cargando lista de cupones...</p>
+        <p className="text-bib-gray text-sm">Cargando lista de cupones...</p>
       ) : coupons.length === 0 ? (
-        <p style={{ color: "#666" }}>No hay cupones creados por el momento.</p>
+        <p className="text-bib-gray text-sm">No hay cupones creados por el momento.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse bg-bib-black rounded overflow-hidden text-sm">
             <thead>
-              <tr style={{ background: "#f2f2f2", textAlign: "left", borderBottom: "2px solid #ddd" }}>
-                <th style={{ padding: "12px" }}>Código</th>
-                <th style={{ padding: "12px" }}>Descuento</th>
-                <th style={{ padding: "12px" }}>Usos</th>
-                <th style={{ padding: "12px" }}>Vencimiento</th>
-                <th style={{ padding: "12px" }}>Estado</th>
-                <th style={{ padding: "12px", textAlign: "center" }}>Acciones</th>
+              <tr className="bg-bib-dark text-left border-b border-bib-white/10">
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide">Código</th>
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide">Descuento</th>
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide">Usos</th>
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide">Vencimiento</th>
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide">Estado</th>
+                <th className="p-3 text-bib-gray text-xs uppercase tracking-wide text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {coupons.map((c) => (
-                <tr key={c.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "12px", fontWeight: "bold", letterSpacing: "0.5px" }}>{c.code}</td>
-                  <td style={{ padding: "12px" }}>{c.discount_percentage}%</td>
-                  <td style={{ padding: "12px" }}>{c.current_uses || 0} / {c.max_uses || "∞"}</td>
-                  <td style={{ padding: "12px" }}>
+                <tr key={c.id} className="border-b border-bib-white/5">
+                  <td className="p-3 font-bold tracking-wide text-bib-white">{c.code}</td>
+                  <td className="p-3 text-bib-white">{c.discount_percentage}%</td>
+                  <td className="p-3 text-bib-white">{c.current_uses || 0} / {c.max_uses || "∞"}</td>
+                  <td className="p-3 text-bib-white">
                     {c.expires_at ? new Date(c.expires_at).toLocaleDateString("es-AR") : "Sin límite"}
                   </td>
-                  <td style={{ padding: "12px" }}>
+                  <td className="p-3">
                     <span
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        backgroundColor: c.is_active ? "#e6f4ea" : "#fce8e6",
-                        color: c.is_active ? "#137333" : "#c5221f"
-                      }}
+                      className={`px-2 py-1 rounded-full text-[11px] font-bold ${
+                        c.is_active
+                          ? "bg-green-900/30 text-green-400"
+                          : "bg-red-900/30 text-red-400"
+                      }`}
                     >
                       {c.is_active ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td style={{ padding: "12px", textAlign: "center" }}>
-                    <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
+                  <td className="p-3 text-center">
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => toggleStatus(c.id, c.is_active)}
-                        style={{
-                          background: c.is_active ? "#f0f0f0" : "#C4A278",
-                          color: c.is_active ? "#333" : "#fff",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "13px"
-                        }}
+                        className={`px-3 py-1.5 rounded text-xs transition-colors ${
+                          c.is_active
+                            ? "bg-bib-dark text-bib-white hover:bg-bib-white hover:text-bib-black"
+                            : "bg-[#C4A278] text-bib-black hover:bg-bib-white"
+                        }`}
                       >
                         {c.is_active ? "Desactivar" : "Activar"}
                       </button>
                       <button
                         onClick={() => deleteCoupon(c.id, c.code)}
-                        style={{
-                          background: "#d9534f",
-                          color: "#fff",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "13px"
-                        }}
+                        className="px-3 py-1.5 rounded text-xs bg-red-900/40 text-red-300 hover:bg-red-700 hover:text-white transition-colors"
                       >
                         Eliminar
                       </button>

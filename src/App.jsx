@@ -91,7 +91,7 @@ function PublicRoutes() {
       <FloatingCart />
       <CartDrawer />
       <CookieBanner />
-     
+
       {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
       {cleanWhatsappNumber && (
         <a 
@@ -99,7 +99,7 @@ function PublicRoutes() {
           target="_blank" 
           rel="noopener noreferrer nofollow"
           aria-label="Contactar por WhatsApp"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
+          className="fixed bottom-36 right-4 md:bottom-24 md:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
         >
           <MessageCircle size={20} className="sm:hidden" />
           <MessageCircle size={24} className="hidden sm:block" />
@@ -143,7 +143,6 @@ function App() {
   return (
     <GlobalErrorBoundary>
       <CartProvider>
-      
         <Router>
           <ScrollToTop />
           <AnalyticsTracker />
@@ -179,7 +178,6 @@ function App() {
             <Route path="*" element={<PublicRoutes />} />
           </Routes>
         </Router>
-      
       </CartProvider>
     </GlobalErrorBoundary>
   );

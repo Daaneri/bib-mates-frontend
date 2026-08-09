@@ -23,7 +23,7 @@ export default function FloatingCart() {
     <button
       onClick={openDrawer}
       aria-label="Abrir carrito"
-      className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#C4A278] text-bib-black p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
+      className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 bg-[#C4A278] text-bib-black p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
         bump ? 'scale-110' : ''
       }`}
     >

@@ -7,12 +7,18 @@ import { supabase } from "../supabaseClient";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const COUPON_STORAGE_KEY = "applied_coupon_code";
 
+const PUNTOS_RETIRO = [
+  { value: "merlo", label: "Merlo", detalle: "Coordinamos el punto exacto por WhatsApp" },
+  { value: "caba-flores", label: "CABA - Flores", detalle: "Coordinamos el punto exacto por WhatsApp" },
+];
+
 export default function CheckoutEntrega() {
   const { cart, clearCart } = useCart();
   const navigate = useNavigate();
 
   const [paymentMethod, setPaymentMethod] = useState("mercadopago");
   const [shippingType, setShippingType] = useState("envio");
+  const [pickupLocation, setPickupLocation] = useState("merlo");
   const [shippingCost, setShippingCost] = useState(0);
   const [isShippingCalculated, setIsShippingCalculated] = useState(false);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
@@ -216,12 +222,27 @@ export default function CheckoutEntrega() {
 
     setIsSubmitting(true);
 
+    const puntoElegido = PUNTOS_RETIRO.find((p) => p.value === pickupLocation);
+    const customerData =
+      shippingType === "retiro"
+        ? {
+            ...formData,
+            address: `Retiro en punto - ${puntoElegido?.label || pickupLocation}`,
+            city: puntoElegido?.label || "",
+            state: "",
+            postalCode: "",
+          }
+        : formData;
+
     const payload = {
       items: itemsFormat,
       total: totalFinal,
       shippingCost: shippingType === "envio" ? shippingCost : 0,
-      shippingDescription: shippingType === "envio" ? "Envío a domicilio" : "Retiro en sucursal",
-      customer: formData,
+      shippingDescription:
+        shippingType === "envio"
+          ? "Envío a domicilio"
+          : `Retiro en sucursal - ${puntoElegido?.label || pickupLocation}`,
+      customer: customerData,
       couponCode: appliedCoupon ? appliedCoupon.code : null,
       paymentMethod: paymentMethod,
     };
@@ -345,6 +366,37 @@ export default function CheckoutEntrega() {
               </label>
             </div>
           </div>
+
+          {shippingType === "retiro" && (
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">
+                Elegí el punto de retiro
+              </label>
+              {PUNTOS_RETIRO.map((punto) => (
+                <label
+                  key={punto.value}
+                  className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition-colors ${
+                    pickupLocation === punto.value
+                      ? "border-bib-red bg-bib-red/10"
+                      : "border-bib-white/10 hover:border-bib-white/30"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pickupLocation"
+                    value={punto.value}
+                    checked={pickupLocation === punto.value}
+                    onChange={() => setPickupLocation(punto.value)}
+                    className="accent-bib-red mt-0.5"
+                  />
+                  <div>
+                    <p className="text-sm text-bib-white font-medium">{punto.label}</p>
+                    <p className="text-xs text-bib-gray">{punto.detalle}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
 
           {shippingType === "envio" && (
             <div className="space-y-2 pt-2">

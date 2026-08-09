@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
@@ -10,17 +10,31 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://bib-mates-backe
 
 const MARQUEE_TEXT = "🔥 20% OFF PAGANDO CON TRANSFERENCIA • ENVÍO GRATIS EN COMPRAS DESDE $120.000 • HASTA 3 CUOTAS SIN INTERÉS • ";
 
-// Imagen de respaldo si una categoría no tiene productos cargados
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90807b?auto=format&fit=crop&q=80&w=500';
 
 export default function Home() {
+  const location = useLocation();
   const [categoryImages, setCategoryImages] = useState({});
+  const [subcategories, setSubcategories] = useState([]);
+  const [openCategory, setOpenCategory] = useState(null);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [faqs, setFaqs] = useState([]);
   const [loadingFaqs, setLoadingFaqs] = useState(true);
   const [destacados, setDestacados] = useState([]);
   const carouselRef = useRef(null);
   const destacadosRef = useRef(null);
+
+  // Efecto para hacer scroll automático a #seleccion cuando cambia la categoría o la URL
+  useEffect(() => {
+    if (location.hash === '#seleccion' || location.search) {
+      setTimeout(() => {
+        const section = document.getElementById('seleccion');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+    }
+  }, [location]);
 
   useEffect(() => {
     async function fetchCategoryImages() {
@@ -38,6 +52,13 @@ export default function Home() {
           }
         });
         setCategoryImages(imageMap);
+      }
+    }
+
+    async function fetchSubcategories() {
+      const { data } = await supabase.from('subcategorias').select('*');
+      if (data) {
+        setSubcategories(data);
       }
     }
 
@@ -65,6 +86,7 @@ export default function Home() {
     }
 
     fetchCategoryImages();
+    fetchSubcategories();
     fetchDestacados();
     fetchFaqs();
   }, []);
@@ -80,6 +102,13 @@ export default function Home() {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
+  // Subcategorías de la categoría actualmente seleccionada
+  const activeSubcategories = openCategory 
+    ? subcategories.filter(
+        (sub) => (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === openCategory.toLowerCase().trim()
+      )
+    : [];
+
   return (
     <>
       {/* Ticker / Anuncio Superior */}
@@ -92,9 +121,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section
-        className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black"
-      >
+      <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
         <img
           src="/banner-mate-cliente.jpg.jpeg"
           alt="Mate artesanal con sol"
@@ -156,6 +183,9 @@ export default function Home() {
                   ? p.price * (1 - p.descuento_porcentaje / 100)
                   : p.price;
 
+                const valorCuota = (precioFinal / 3).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                const precioTransferencia = (precioFinal * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
                 return (
                   <FadeIn key={p.id} delay={i * 60} className="shrink-0 w-56 sm:w-64 snap-start">
                     <div className="group/dest rounded overflow-hidden border border-bib-white/10 hover:border-[#C4A278] transition-all duration-300 bg-bib-dark h-full flex flex-col">
@@ -177,7 +207,8 @@ export default function Home() {
                             {p.name}
                           </p>
                         </Link>
-                        <div className="flex items-baseline gap-2 mt-1.5 mb-3">
+                        
+                        <div className="flex items-baseline gap-2 mt-1.5">
                           {p.descuento_porcentaje > 0 && (
                             <span className="text-xs text-bib-gray line-through">
                               ${Number(p.price).toLocaleString('es-AR')}
@@ -187,6 +218,17 @@ export default function Home() {
                             ${Number(precioFinal).toLocaleString('es-AR')}
                           </span>
                         </div>
+
+                        <div className="mt-1 mb-3 space-y-1">
+                          <p className="text-[11px] text-bib-gray">
+                            3 cuotas sin interés de ${valorCuota}
+                          </p>
+                          <div className="inline-flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px]">
+                            <span className="bg-emerald-600 text-white font-bold px-1 rounded text-[9px]">20% OFF</span>
+                            <span className="text-emerald-400 font-medium">${precioTransferencia} abonando con transferencia</span>
+                          </div>
+                        </div>
+
                         <Link
                           to={`/producto/${p.id}`}
                           className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[#C4A278] text-bib-black py-2.5 rounded font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-bib-white transition-all duration-300"
@@ -212,7 +254,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Métricas de Confianza (Movidas aquí abajo) */}
+      {/* Métricas de Confianza */}
       <FadeIn>
         <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
@@ -245,7 +287,7 @@ export default function Home() {
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías Dinámicas con Flechas de Navegación */}
+      {/* Tarjetas de Categorías con Carrusel y Franja de Botones Independientes Abajo */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
           <div className="text-center mb-8 space-y-1">
@@ -256,27 +298,39 @@ export default function Home() {
           </div>
         </FadeIn>
 
-        <div className="relative group">
+        <div className="relative">
           <button
             onClick={() => scroll('left')}
             aria-label="Anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
           >
             <ChevronLeft size={18} />
           </button>
 
           <div
             ref={carouselRef}
-            className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+            className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 px-2 scrollbar-hide snap-x snap-mandatory scroll-smooth items-center"
           >
-            {CATEGORIES.map((catName, i) => {
+            {CATEGORIES.map((catName) => {
               const imageUrl = categoryImages[catName.toLowerCase()] || FALLBACK_IMAGE;
+              const subsDeEstaCat = subcategories.filter(
+                (sub) => (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === catName.toLowerCase().trim()
+              );
+              const isSelected = openCategory === catName;
 
               return (
-                <FadeIn key={catName} delay={i * 40} className="shrink-0 w-36 sm:w-44 lg:w-48 snap-start">
-                  <a
-                    href={`/?category=${encodeURIComponent(catName)}#seleccion`}
-                    className="group/item relative h-36 sm:h-40 rounded overflow-hidden border border-bib-white/10 flex items-end p-3 transition-all duration-300 hover:border-[#C4A278]"
+                <div key={catName} className="shrink-0 w-40 sm:w-48 snap-start">
+                  <div
+                    onClick={() => {
+                      if (subsDeEstaCat.length > 0) {
+                        setOpenCategory(isSelected ? null : catName);
+                      } else {
+                        window.location.href = `/?category=${encodeURIComponent(catName)}#seleccion`;
+                      }
+                    }}
+                    className={`group/item relative h-36 sm:h-40 rounded overflow-hidden border transition-all duration-300 flex items-end p-3 cursor-pointer ${
+                      isSelected ? 'border-[#C4A278] ring-2 ring-[#C4A278]/50' : 'border-bib-white/10 hover:border-[#C4A278]'
+                    }`}
                   >
                     <img
                       src={imageUrl}
@@ -284,13 +338,21 @@ export default function Home() {
                       className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500 opacity-60 group-hover/item:opacity-80"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
-                    <div className="relative z-10 w-full">
+                    <div className="relative z-10 w-full flex items-center justify-between">
                       <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover/item:text-[#C4A278] transition-colors truncate">
                         {catName}
                       </span>
+                      {subsDeEstaCat.length > 0 && (
+                        <ChevronDown
+                          size={14}
+                          className={`text-[#C4A278] shrink-0 transition-transform duration-300 ${
+                            isSelected ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
                     </div>
-                  </a>
-                </FadeIn>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -298,11 +360,42 @@ export default function Home() {
           <button
             onClick={() => scroll('right')}
             aria-label="Siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
           >
             <ChevronRight size={18} />
           </button>
         </div>
+
+        {/* Franja de Botones Independientes para las Subcategorías de la Categoría Activa */}
+        {openCategory && activeSubcategories.length > 0 && (
+          <FadeIn delay={50}>
+            <div className="mt-6 bg-bib-dark/60 border border-[#C4A278]/40 p-5 rounded-xl shadow-xl backdrop-blur-md">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs tracking-widest text-[#C4A278] uppercase font-bold">
+                  Subcategorías de <span className="text-bib-white">{openCategory}</span>
+                </p>
+                <button 
+                  onClick={() => setOpenCategory(null)}
+                  className="text-xs text-bib-gray hover:text-bib-white transition-colors"
+                >
+                  Cerrar ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {activeSubcategories.map((sub) => (
+                  <Link
+                    key={sub.id}
+                    to={`/?category=${encodeURIComponent(openCategory)}&subcategory=${encodeURIComponent(sub.nombre)}#seleccion`}
+                    className="text-center text-xs font-bold uppercase tracking-wider text-bib-white bg-bib-black/80 border border-bib-white/20 hover:border-[#C4A278] hover:text-[#C4A278] hover:bg-bib-black py-3 px-4 rounded-lg transition-all duration-200 shadow-sm truncate block"
+                  >
+                    {sub.nombre}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </FadeIn>
+        )}
       </section>
 
       {/* Grid de Productos */}
@@ -310,7 +403,7 @@ export default function Home() {
         <ProductGrid hideCategoryBar={true} />
       </section>
 
-      {/* Sección de Preguntas Frecuentes (FAQ) - ahora dinámica desde Supabase/admin */}
+      {/* Sección de Preguntas Frecuentes (FAQ) */}
       {!loadingFaqs && faqs.length > 0 && (
         <section id="faqs" className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10 scroll-mt-24">
           <FadeIn>

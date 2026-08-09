@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Star, Check, X, Download, Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { Star, Check, X, Download, Plus, Trash2, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
 import { siteConfig } from '../config/site';
-import { CATEGORIES as CATEGORIAS_INICIALES, SUBCATEGORIES } from '../config/categories';
+import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
 import AdminCoupons from '../components/AdminCoupons';
 import AdminFaqs from '../components/AdminFaqs';
 import AdminCarritos from './AdminCarritos';
@@ -30,6 +30,11 @@ export default function AdminDashboard() {
   const [nuevaCategoriaForm, setNuevaCategoriaForm] = useState('');
   const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS_INICIALES[0] || '');
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
+  
+  // Subcategorías Dinámicas
+  const [subcategorias, setSubcategorias] = useState([]);
+  const [categoriaExpandida, setCategoriaExpandida] = useState(null);
+  const [nuevaSubcategoriaForm, setNuevaSubcategoriaForm] = useState('');
   
   const [busqueda, setBusqueda] = useState('');
   const [verArchivados, setVerArchivados] = useState(false);
@@ -113,6 +118,10 @@ export default function AdminDashboard() {
     const { data: g } = await supabase.from('grabados').select('*').order('created_at', { ascending: false });
     const { data: s } = await supabase.from('site_settings').select('*').eq('id', 1).single();
     
+    // Carga de subcategorías
+    const { data: subData } = await supabase.from('subcategorias').select('*');
+    if (subData) setSubcategorias(subData);
+    
     // Carga de categorías personalizadas desde la base de datos si existen
     const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
     
@@ -143,7 +152,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Manejo Seguro de Categorías
   async function handleAddCategory(e) {
     e.preventDefault();
     const catLimpia = nuevaCategoriaForm.trim();
@@ -183,7 +191,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${catNombre}"?`)) return;
+    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${catNombre}" y todas sus subcategorías?`)) return;
 
     setLoading(true);
     const { error } = await supabase.from('categorias').delete().eq('nombre', catNombre);
@@ -198,6 +206,46 @@ export default function AdminDashboard() {
 
     if (nuevaCategoria === catNombre) {
       setNuevaCategoria(categorias.find(c => c !== catNombre) || '');
+    }
+    setLoading(false);
+  }
+
+  async function handleAddSubcategory(e, categoriaPadre) {
+    e.preventDefault();
+    const subCatLimpia = nuevaSubcategoriaForm.trim();
+
+    if (!subCatLimpia) {
+      mostrarMensaje("El nombre de la subcategoría no puede estar vacío");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.from('subcategorias').insert([{ 
+      categoria_nombre: categoriaPadre, 
+      nombre: subCatLimpia 
+    }]);
+
+    if (error) {
+      mostrarMensaje("Error al agregar subcategoría: " + error.message);
+    } else {
+      mostrarMensaje("Subcategoría agregada con éxito");
+      setNuevaSubcategoriaForm('');
+      fetchData();
+    }
+    setLoading(false);
+  }
+
+  async function handleDeleteSubcategory(id, nombre) {
+    if (!window.confirm(`¿Seguro que deseas eliminar la subcategoría "${nombre}"?`)) return;
+
+    setLoading(true);
+    const { error } = await supabase.from('subcategorias').delete().eq('id', id);
+
+    if (error) {
+      mostrarMensaje("Error al eliminar subcategoría");
+    } else {
+      mostrarMensaje("Subcategoría eliminada con éxito");
+      fetchData();
     }
     setLoading(false);
   }
@@ -282,7 +330,6 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
-  // Subida Múltiple de Grabados
   async function handleAddGrabados(e) {
     e.preventDefault();
     if (!grabadoFiles || grabadoFiles.length === 0) return;
@@ -418,7 +465,7 @@ export default function AdminDashboard() {
     const { error } = await supabase.from('productos').delete().eq('id', id);
     if (error) mostrarMensaje("Error: " + error.message);
     else {
-      mostrarMensaje("Producto eliminado");
+      mostrarMensaje("Producto eliminada");
       fetchData();
     }
   }
@@ -545,8 +592,13 @@ export default function AdminDashboard() {
     return 'bg-green-900/40 text-green-300 border-green-700/40';
   };
 
-  const subcategoriasNueva = SUBCATEGORIES[nuevaCategoria] || [];
-  const subcategoriasEdit = SUBCATEGORIES[editData.category] || [];
+  const subcategoriasNueva = subcategorias
+    .filter(sub => (sub.categoria_nombre || sub.categoria) === nuevaCategoria)
+    .map(sub => sub.nombre);
+
+  const subcategoriasEdit = subcategorias
+    .filter(sub => (sub.categoria_nombre || sub.categoria) === editData.category)
+    .map(sub => sub.nombre);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-bib-black text-bib-white">
@@ -600,13 +652,24 @@ export default function AdminDashboard() {
                 {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
               
-              {subcategoriasNueva.length > 0 && (
+              {/* SELECTOR DE SUBCATEGORÍA FIJO / DINÁMICO AL CREAR */}
+              {nuevaCategoria === 'MATES' ? (
+                <select name="subcategory" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
+                  <option value="">Sin subcategoría</option>
+                  <option value="IMPERIALES">IMPERIALES</option>
+                  <option value="CAMIONEROS">CAMIONEROS</option>
+                  <option value="TORPEDOS">TORPEDOS</option>
+                  <option value="ALGARROBOS">ALGARROBOS</option>
+                  <option value="PAMPA">PAMPA</option>
+                </select>
+              ) : subcategoriasNueva.length > 0 && (
                 <select name="subcategory" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
                   <option value="">Sin subcategoría</option>
                   {subcategoriasNueva.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                 </select>
               )}
-              {nuevaCategoria === 'Yerbas' && (
+
+              {nuevaCategoria === 'Yerbas' && subcategoriasNueva.length === 0 && (
                 <input name="subcategory" placeholder="Marca de la yerba" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base" />
               )}
               
@@ -708,14 +771,24 @@ export default function AdminDashboard() {
                         {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
 
-                      {subcategoriasEdit.length > 0 ? (
+                      {/* SELECTOR DE SUBCATEGORÍA FIJO / DINÁMICO EN EDICIÓN */}
+                      {editData.category === 'MATES' ? (
+                        <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4 text-bib-white" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})}>
+                          <option value="">Sin subcategoría</option>
+                          <option value="IMPERIALES">IMPERIALES</option>
+                          <option value="CAMIONEROS">CAMIONEROS</option>
+                          <option value="TORPEDOS">TORPEDOS</option>
+                          <option value="ALGARROBOS">ALGARROBOS</option>
+                          <option value="PAMPA">PAMPA</option>
+                        </select>
+                      ) : subcategoriasEdit.length > 0 ? (
                         <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})}>
                           <option value="">Sin subcategoría</option>
                           {subcategoriasEdit.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                         </select>
-                      ) : editData.category === 'Yerbas' ? (
+                      ) : editData.category === 'Yerbas' && (
                         <input className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" placeholder="Marca de la yerba" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})} />
-                      ) : null}
+                      )}
 
                       <label className="flex items-center gap-2 text-xs text-bib-gray">
                         <input type="checkbox" checked={editData.personalizable} onChange={(e) => setEditData({...editData, personalizable: e.target.checked})} className="w-4 h-4 accent-bib-red" />
@@ -829,8 +902,46 @@ export default function AdminDashboard() {
 
         {view === 'Categorías' && (
           <div className="max-w-2xl mx-auto space-y-6">
+            <div className="bg-bib-dark p-4 rounded border border-bib-white/10 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-bib-white">¿Migrar subcategorías del código a la BD?</p>
+                <p className="text-xs text-bib-gray">Pasa automáticamente las subcategorías estáticas a Supabase.</p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  const subcategoriasEstaticas = {
+                    "MATES": ["IMPERIALES", "ALGARROBOS", "CAMIONEROS", "TORPEDOS"],
+                    "BOMBILLAS": ["PICOS DE LORO", "CLASICAS", "DESARMABLES"],
+                    "BOMBILLONES": ["GRANDES", "STANDARD"],
+                    "TERMOS": ["STANLEY", "ACERO INOXIDABLE"],
+                    "CANASTAS": ["CUERO", "ECOCUERO", "TELA"],
+                    "YERBAS": ["BALDO", "CANARIAS", "REI VERDE", "BARAO"],
+                  };
+
+                  let count = 0;
+                  for (const [cat, subs] of Object.entries(subcategoriasEstaticas)) {
+                    for (const sub of subs) {
+                      await supabase.from('subcategorias').insert([
+                        { categoria_nombre: cat, nombre: sub }
+                      ]);
+                      count++;
+                    }
+                  }
+                  mostrarMensaje(`¡Se migraron ${count} subcategorías con éxito!`);
+                  fetchData();
+                  setLoading(false);
+                }}
+                disabled={loading}
+                className="bg-[#C4A278] hover:bg-bib-white text-bib-black px-4 py-2 rounded text-xs font-medium uppercase tracking-wide transition-colors shrink-0"
+              >
+                Migrar subcategorías
+              </button>
+            </div>
+
             <form onSubmit={handleAddCategory} className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
-              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Crear Nueva Categoría</h3>
+              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Crear Nueva Categoría Principal</h3>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -851,7 +962,9 @@ export default function AdminDashboard() {
             </form>
 
             <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
-              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Categorías Existentes</h3>
+              <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Categorías y Subcategorías</h3>
+              <p className="text-xs text-bib-gray mb-4">Haz clic en una categoría para gestionar sus subcategorías.</p>
+              
               <div className="divide-y divide-bib-white/10">
                 {categorias.map(cat => {
                   const cantidadProductos = productos.filter(p =>
@@ -859,19 +972,74 @@ export default function AdminDashboard() {
                     p.category.trim().toLowerCase() === cat.trim().toLowerCase() &&
                     !p.archivado
                   ).length;
+                  
+                  const isExpanded = categoriaExpandida === cat;
+                  const subsDeEstaCat = subcategorias.filter(sub => (sub.categoria_nombre || sub.categoria) === cat);
+
                   return (
-                    <div key={cat} className="py-3 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm text-bib-white">{cat}</p>
-                        <p className="text-xs text-bib-gray">{cantidadProductos} producto(s) asignados</p>
+                    <div key={cat} className="py-3 flex flex-col transition-all">
+                      <div className="flex items-center justify-between">
+                        <div 
+                          className="cursor-pointer flex-1 group"
+                          onClick={() => setCategoriaExpandida(isExpanded ? null : cat)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm text-bib-white group-hover:text-[#C4A278] transition-colors">{cat}</p>
+                            {isExpanded ? <ChevronUp size={16} className="text-[#C4A278]" /> : <ChevronDown size={16} className="text-bib-gray" />}
+                          </div>
+                          <p className="text-xs text-bib-gray">{cantidadProductos} producto(s) asignados • {subsDeEstaCat.length} subcategorías</p>
+                        </div>
+                        
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="text-bib-gray hover:text-bib-red p-2 rounded border border-bib-white/10 hover:border-bib-red transition shrink-0 ml-4"
+                          title="Eliminar categoría"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteCategory(cat)}
-                        className="text-bib-gray hover:text-bib-red p-2 rounded border border-bib-white/10 hover:border-bib-red transition"
-                        title="Eliminar categoría"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-4 pl-4 border-l-2 border-[#C4A278]/40 space-y-3 bg-bib-black/30 p-3 rounded-r-lg">
+                          <h4 className="text-xs uppercase tracking-widest text-bib-gray font-bold">Subcategorías de {cat}</h4>
+                          
+                          {subsDeEstaCat.length > 0 ? (
+                            <ul className="space-y-2">
+                              {subsDeEstaCat.map(sub => (
+                                <li key={sub.id} className="flex items-center justify-between bg-bib-black px-3 py-2 rounded border border-bib-white/5">
+                                  <span className="text-sm text-bib-white">{sub.nombre}</span>
+                                  <button 
+                                    onClick={() => handleDeleteSubcategory(sub.id, sub.nombre)}
+                                    className="text-bib-gray hover:text-bib-red transition"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-xs text-bib-gray/50 italic">No hay subcategorías aún.</p>
+                          )}
+
+                          <form onSubmit={(e) => handleAddSubcategory(e, cat)} className="flex gap-2 mt-3">
+                            <input
+                              type="text"
+                              placeholder="Nueva subcategoría..."
+                              className="flex-1 bg-bib-black p-2 rounded border border-bib-white/20 px-3 text-sm"
+                              value={nuevaSubcategoriaForm}
+                              onChange={(e) => setNuevaSubcategoriaForm(e.target.value)}
+                              required
+                            />
+                            <button
+                              type="submit"
+                              disabled={loading}
+                              className="bg-[#C4A278] hover:bg-bib-white text-bib-black px-3 py-2 rounded font-medium text-xs uppercase tracking-wide transition-colors shrink-0"
+                            >
+                              Agregar
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
-import { ChevronDown, Heart, ShoppingBag, X, Menu, HelpCircle, Image, Sparkles } from 'lucide-react';
+import { ChevronDown, Heart, ShoppingBag, X, Menu, HelpCircle, Image, MessageSquare, Users } from 'lucide-react';
 import { useWishlist } from '../hooks/useWishlist';
 
 export default function Navbar() {
@@ -141,7 +141,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Sección de Enlaces Adicionales (Grabados, FAQ, etc.) */}
+            {/* Sección de Enlaces Adicionales */}
             <div className="pt-2 border-t border-bib-white/10">
               <p className="text-[11px] uppercase tracking-widest text-[#C4A278] font-bold mb-3">Más secciones</p>
               <div className="space-y-2">
@@ -152,6 +152,22 @@ export default function Navbar() {
                 >
                   <Image size={18} className="text-[#C4A278]" />
                   Galería de Grabados
+                </Link>
+                <Link
+                  to="/opiniones"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
+                >
+                  <MessageSquare size={18} className="text-[#C4A278]" />
+                  Opiniones
+                </Link>
+                <Link
+                  to="/nosotros"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
+                >
+                  <Users size={18} className="text-[#C4A278]" />
+                  Nosotros
                 </Link>
                 <Link
                   to="/faq"

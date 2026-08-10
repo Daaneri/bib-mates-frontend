@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
-import { CATEGORIES as CATEGORIAS_INICIALES } from '../../config/categories';
+import { supabase } from '../supabaseClient';
+import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
 import { ChevronDown, Heart, ShoppingBag, X, Menu, HelpCircle, Image, MessageSquare, Users } from 'lucide-react';
-import { useWishlist } from '../../hooks/useWishlist';
+import { useWishlist } from '../hooks/useWishlist';
+import Faq from './AdminFaqs';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);

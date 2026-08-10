@@ -162,7 +162,7 @@ export default function Navbar() {
                   Opiniones
                 </Link>
                 <Link
-                  to="/nosotros"
+                  to="/about"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
                 >

@@ -1,24 +1,34 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { CATEGORIES } from '../config/categories';
+import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
 import { ChevronDown, Heart, ShoppingBag, X, Menu } from 'lucide-react';
 import { useWishlist } from '../hooks/useWishlist';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState(CATEGORIAS_INICIALES);
   const [subcategories, setSubcategories] = useState([]);
   const [openCategory, setOpenCategory] = useState(null);
   const { wishlist } = useWishlist();
 
   useEffect(() => {
-    async function fetchSubcategories() {
-      const { data } = await supabase.from('subcategorias').select('*');
-      if (data) {
-        setSubcategories(data);
+    async function fetchData() {
+      // Cargar subcategorías
+      const { data: subData } = await supabase.from('subcategorias').select('*');
+      if (subData) {
+        setSubcategories(subData);
+      }
+
+      // Cargar categorías de Supabase y combinarlas con las iniciales
+      const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
+      if (catData && catData.length > 0) {
+        const listaDB = catData.map(c => c.nombre);
+        const listaFinal = Array.from(new Set([...CATEGORIAS_INICIALES, ...listaDB]));
+        setCategories(listaFinal);
       }
     }
-    fetchSubcategories();
+    fetchData();
   }, []);
 
   const toggleCategoryAccordion = (cat) => {
@@ -68,7 +78,7 @@ export default function Navbar() {
           </div>
 
           <div className="p-6 space-y-4 overflow-y-auto flex-1">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const subsDeEstaCat = subcategories.filter(
                 (sub) => 
                   (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === cat.toLowerCase().trim()

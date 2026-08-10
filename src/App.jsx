@@ -1,180 +1,188 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
-import { ChevronDown, Heart, ShoppingBag, X, Menu, Image, MessageSquare, Users } from 'lucide-react';
-import { useWishlist } from '../hooks/useWishlist';
+import React, { Suspense, lazy, Component, useLayoutEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
+import { CartProvider } from './context/CartContext';
+import { Toaster } from 'sonner';
+import CheckoutEntrega from './components/CheckoutEntrega';
+import { siteConfig } from './config/site';
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [categories, setCategories] = useState(CATEGORIAS_INICIALES);
-  const [subcategories, setSubcategories] = useState([]);
-  const [openCategory, setOpenCategory] = useState(null);
-  const { wishlist } = useWishlist();
+// Componentes Públicos
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import ProductDetail from './components/ProductDetail';
+import CartPage from './components/CartPage';
+import About from './components/About';
+import Opiniones from './components/Opiniones';
+import Faq from './components/Faq';
+import Footer from './components/Footer';
+import FloatingCart from './components/FloatingCart';
+import ProtectedRoute from './components/ProtectedRoute';
+import CartDrawer from './components/CartDrawer';
+import AnalyticsTracker from './components/AnalyticsTracker';
+import CookieBanner from './components/CookieBanner';
+import { PrivacyPolicy, TermsOfService } from './pages/LegalPages';
+import PagoExito from './components/PagoExito';
+import PagoError from './components/PagoError';
+import PagoPendiente from './components/PagoPendiente';
+import PagoTransferencia from './components/PagoTransferencia';
+import Favoritos from './components/Favoritos';
+import NotFound from './components/NotFound';
+import Grabados from './components/Grabados';
 
-  useEffect(() => {
-    async function fetchData() {
-      // Cargar subcategorías
-      const { data: subData } = await supabase.from('subcategorias').select('*');
-      if (subData) {
-        setSubcategories(subData);
-      }
+// Componentes Administrativos
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminCarritos = lazy(() => import('./pages/AdminCarritos'));
+const Login = lazy(() => import('./pages/Login'));
 
-      // Cargar categorías de Supabase y normalizar para evitar duplicados
-      const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
-      if (catData && catData.length > 0) {
-        const nombresDB = catData.map(c => c.nombre.trim());
-        const combinadas = [...CATEGORIAS_INICIALES, ...nombresDB];
-        const unicas = Array.from(
-          new Map(combinadas.map(c => [c.toLowerCase(), c])).values()
-        );
-        setCategories(unicas);
-      }
+// Componente para forzar el scroll arriba en cada cambio de ruta
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
+class GlobalErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error capturado en ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-bib-black text-bib-white flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-xl font-bold mb-2">Ocurrió un problema temporal</h2>
+          <p className="text-bib-gray text-sm mb-4">Por favor recargá la página para continuar.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-bib-red text-bib-white px-4 py-2 rounded font-semibold hover:opacity-90 transition-opacity"
+          >
+            Recargar
+          </button>
+        </div>
+      );
     }
-    fetchData();
-  }, []);
+    return this.props.children;
+  }
+}
 
-  const toggleCategoryAccordion = (cat) => {
-    setOpenCategory(openCategory === cat ? null : cat);
-  };
+function PublicRoutes() {
+  const location = useLocation();
+
+  const cleanWhatsappNumber = siteConfig?.whatsapp 
+    ? String(siteConfig.whatsapp).replace(/[^0-9]/g, '') 
+    : '';
 
   return (
-    <>
-      <header className="sticky top-0 z-40 bg-bib-black/90 backdrop-blur-md border-b border-bib-white/10 px-4 sm:px-8 py-3 sm:py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsOpen(true)}
-              className="text-bib-white hover:text-[#C4A278] transition-colors p-1"
-              aria-label="Abrir menú"
-            >
-              <Menu size={22} />
-            </button>
-            <Link to="/" className="text-sm sm:text-lg font-bold tracking-widest uppercase text-bib-white">
-              BIB MATES
-            </Link>
-          </div>
+    <div className="min-h-screen flex flex-col font-sans bg-bib-black text-bib-white selection:bg-bib-red selection:text-bib-black">
+      <Toaster position="bottom-right" richColors />
+      <Navbar />
+      <FloatingCart />
+      <CartDrawer />
+      <CookieBanner />
 
-          <div className="flex items-center gap-4">
-            <Link to="/favoritos" className="relative text-bib-white hover:text-[#C4A278] transition-colors p-1">
-              <Heart size={20} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C4A278] text-bib-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
-            </Link>
-            <Link to="/cart" className="text-bib-white hover:text-[#C4A278] transition-colors p-1">
-              <ShoppingBag size={20} />
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Enlace flotante a WhatsApp posicionado verticalmente sobre el carrito */}
+      {cleanWhatsappNumber && (
+        <a 
+          href={`https://wa.me/${encodeURIComponent(cleanWhatsappNumber)}`} 
+          target="_blank" 
+          rel="noopener noreferrer nofollow"
+          aria-label="Contactar por WhatsApp"
+          className="fixed bottom-36 right-4 md:bottom-24 md:right-6 z-40 bg-[#25D366] text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 flex items-center justify-center"
+        >
+          <MessageCircle size={20} className="sm:hidden" />
+          <MessageCircle size={24} className="hidden sm:block" />
+        </a>
+      )}
 
-      <div className={`fixed inset-0 z-50 transition-colors duration-300 ${isOpen ? 'bg-black/80 backdrop-blur-sm pointer-events-auto' : 'bg-transparent pointer-events-none'}`}>
-        <div className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-bib-dark border-r border-bib-white/10 z-50 transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-4 flex justify-between items-center border-b border-bib-white/10">
-            <span className="text-xs uppercase tracking-widest text-bib-white/60 font-medium">Menú Principal</span>
-            <button onClick={() => setIsOpen(false)} className="text-bib-white p-2 hover:text-[#C4A278] transition-colors">
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-6 overflow-y-auto flex-1">
-            {/* Sección de Categorías de Productos */}
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-[#C4A278] font-bold mb-3">Categorías</p>
-              <div className="space-y-4">
-                {categories.map((cat) => {
-                  const subsDeEstaCat = subcategories.filter(
-                    (sub) => 
-                      (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === cat.toLowerCase().trim()
-                  );
-
-                  const tieneSubs = subsDeEstaCat.length > 0;
-                  const estaAbierto = openCategory === cat;
-
-                  return (
-                    <div key={cat} className="border-b border-bib-white/10 pb-3">
-                      <div 
-                        onClick={() => {
-                          if (tieneSubs) {
-                            toggleCategoryAccordion(cat);
-                          }
-                        }}
-                        className="flex items-center justify-between cursor-pointer py-1"
-                      >
-                        <Link 
-                          to={`/?category=${encodeURIComponent(cat)}#seleccion`} 
-                          onClick={() => setIsOpen(false)}
-                          className="text-base font-semibold text-bib-white hover:text-[#C4A278] transition-colors"
-                        >
-                          {cat}
-                        </Link>
-                        {tieneSubs && (
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); toggleCategoryAccordion(cat); }}
-                            className="text-bib-white/70 p-1"
-                          >
-                            <ChevronDown size={16} className={`transition-transform duration-200 ${estaAbierto ? 'rotate-180' : ''}`} />
-                          </button>
-                        )}
-                      </div>
-
-                      {tieneSubs && estaAbierto && (
-                        <div className="pl-4 mt-2 space-y-2 border-l border-[#C4A278]/30 animate-fadeIn">
-                          {subsDeEstaCat.map((sub) => (
-                            <Link
-                              key={sub.id}
-                              to={`/?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(sub.nombre)}#seleccion`}
-                              onClick={() => setIsOpen(false)}
-                              className="block text-xs uppercase tracking-wider text-bib-white/70 hover:text-[#C4A278] transition-colors py-1"
-                            >
-                              {sub.nombre}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Sección de Enlaces Adicionales */}
-            <div className="pt-2 border-t border-bib-white/10">
-              <p className="text-[11px] uppercase tracking-widest text-[#C4A278] font-bold mb-3">Más secciones</p>
-              <div className="space-y-2">
-                <Link
-                  to="/grabados"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
-                >
-                  <Image size={18} className="text-[#C4A278]" />
-                  Galería de Grabados
-                </Link>
-                <Link
-                  to="/opiniones"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
-                >
-                  <MessageSquare size={18} className="text-[#C4A278]" />
-                Opiniones
-                </Link>
-                <Link
-                  to="/about"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 text-sm font-medium text-bib-white/80 hover:text-[#C4A278] transition-colors py-2"
-                >
-                  <Users size={18} className="text-[#C4A278]" />
-                  Nosotros
-                </Link>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </>
+      <main key={encodeURIComponent(location.pathname)} className="flex-grow animate-page-fade-in">
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><CartPage /></div>} />
+          <Route path="/producto/:id" element={<div className="p-8 max-w-6xl mx-auto min-h-[60vh] mt-10"><ProductDetail /></div>} />
+          <Route path="/about" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><About /></div>} />
+          <Route path="/opiniones" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><Opiniones /></div>} />
+          <Route path="/faq" element={<div className="p-8 max-w-4xl mx-auto min-h-[60vh] mt-10"><Faq /></div>} />
+          <Route path="/checkout/entrega" element={<CheckoutEntrega />} />
+          <Route path="/checkout/exito" element={<PagoExito />} />
+          <Route path="/checkout/error" element={<PagoError />} />
+          <Route path="/checkout/pendiente" element={<PagoPendiente />} />
+          <Route path="/checkout/transferencia" element={<PagoTransferencia />} />
+          <Route path="/checkout/transferencia-confirmada" element={<PagoTransferencia />} />
+          <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/grabados" element={<Grabados />} />
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
+          <Route path="/terminos" element={<TermsOfService />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
+
+function AdminLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-bib-black flex items-center justify-center">
+      <p className="text-bib-gray text-sm uppercase tracking-widest animate-pulse">Cargando módulo seguro...</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <GlobalErrorBoundary>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <AnalyticsTracker />
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <Login />
+                </Suspense>
+              } 
+            />
+            <Route 
+              path="/admin/carritos" 
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminCarritos />
+                  </Suspense>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/*" 
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminDashboard />
+                  </Suspense>
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="*" element={<PublicRoutes />} />
+          </Routes>
+        </Router>
+      </CartProvider>
+    </GlobalErrorBoundary>
+  );
+}
+
+export default App;

@@ -12,10 +12,7 @@ export default function Faq() {
       try {
         const { data, error } = await supabase.from('faqs').select('*');
         if (error) throw error;
-        if (data) {
-          console.log("Datos de FAQs desde Supabase:", data); // Mirá esto en la consola del navegador (F12)
-          setFaqs(data);
-        }
+        if (data) setFaqs(data);
       } catch (error) {
         console.error('Error al cargar las preguntas:', error);
       } finally {
@@ -48,9 +45,9 @@ export default function Faq() {
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
-            // Detectar automáticamente el nombre de las propiedades por si cambian de mayúsculas/minúsculas
-            const preguntaTexto = faq.pregunta || faq.Pregunta || faq.title || faq.titulo || JSON.stringify(faq);
-            const respuestaTexto = faq.respuesta || faq.Respuesta || faq.body || faq.descripcion || '';
+            // Usamos las propiedades correctas de tu base de datos: question y answer
+            const preguntaTexto = faq.question || faq.pregunta || 'Pregunta';
+            const respuestaTexto = faq.answer || faq.respuesta || '';
 
             return (
               <div 

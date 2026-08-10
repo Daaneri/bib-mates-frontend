@@ -13,7 +13,7 @@ import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
 import About from './components/About';
 import Opiniones from './components/Opiniones';
-import Faq from './components/Faq';
+import Faq from './components/AdminFaqs'; // Si creas un Faq.jsx exclusivo para usuarios, cambia esta ruta a './components/Faq'
 import Footer from './components/Footer';
 import FloatingCart from './components/FloatingCart';
 import ProtectedRoute from './components/ProtectedRoute';

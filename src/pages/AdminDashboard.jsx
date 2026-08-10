@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
 
-  // Configuración general del sitio
+  // Configuración general del sitio (incluye Footer)
   const [settings, setSettings] = useState({
     quienes_somos: '',
     transferencia_alias: '',
@@ -68,6 +68,9 @@ export default function AdminDashboard() {
     transferencia_titular: '',
     mostrar_stock_bajo: true,
     umbral_stock_bajo: 5,
+    telefono: '',
+    email: '',
+    instagram: '',
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -148,6 +151,9 @@ export default function AdminDashboard() {
         transferencia_titular: s.transferencia_titular || '',
         mostrar_stock_bajo: s.mostrar_stock_bajo ?? true,
         umbral_stock_bajo: s.umbral_stock_bajo ?? 5,
+        telefono: s.telefono || '',
+        email: s.email || '',
+        instagram: s.instagram || '',
       });
     }
   }
@@ -262,6 +268,9 @@ export default function AdminDashboard() {
         transferencia_titular: settings.transferencia_titular,
         mostrar_stock_bajo: settings.mostrar_stock_bajo,
         umbral_stock_bajo: Math.max(1, parseInt(settings.umbral_stock_bajo) || 5),
+        telefono: settings.telefono,
+        email: settings.email,
+        instagram: settings.instagram,
         updated_at: new Date().toISOString(),
       })
       .eq('id', 1);
@@ -652,7 +661,6 @@ export default function AdminDashboard() {
                 {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
               
-              {/* SELECTOR DE SUBCATEGORÍA FIJO / DINÁMICO AL CREAR */}
               {nuevaCategoria === 'MATES' ? (
                 <select name="subcategory" className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-6 text-sm md:text-base">
                   <option value="">Sin subcategoría</option>
@@ -700,42 +708,40 @@ export default function AdminDashboard() {
                 </div>
 
                 {extraFiles.length > 0 && (
-                  <>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1">
-                      {extraFiles.map((item, i) => (
-                        <div key={i} className="relative">
-                          <button
-                            type="button"
-                            onClick={() => toggleExtraFile(i)}
-                            className={`aspect-square w-full rounded overflow-hidden border-2 transition-all duration-200 ${
-                              item.selected
-                                ? 'border-green-500'
-                                : 'border-bib-white/10 opacity-40 grayscale hover:opacity-70'
-                            }`}
-                          >
-                            <img src={item.preview} alt={`Extra ${i + 1}`} className="w-full h-full object-cover" />
-                          </button>
-                          {item.selected ? (
-                            <span className="absolute -top-1.5 -right-1.5 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
-                              <X size={10} strokeWidth={3} />
-                            </span>
-                          ) : (
-                            <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
-                              <Check size={10} strokeWidth={3} />
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => quitarExtraFile(i)}
-                            className="absolute -bottom-1.5 -right-1.5 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center shadow"
-                            title="Quitar esta foto"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1">
+                    {extraFiles.map((item, i) => (
+                      <div key={i} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => toggleExtraFile(i)}
+                          className={`aspect-square w-full rounded overflow-hidden border-2 transition-all duration-200 ${
+                            item.selected
+                              ? 'border-green-500'
+                              : 'border-bib-white/10 opacity-40 grayscale hover:opacity-70'
+                          }`}
+                        >
+                          <img src={item.preview} alt={`Extra ${i + 1}`} className="w-full h-full object-cover" />
+                        </button>
+                        {item.selected ? (
+                          <span className="absolute -top-1.5 -right-1.5 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
+                            <X size={10} strokeWidth={3} />
+                          </span>
+                        ) : (
+                          <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center shadow">
+                            <Check size={10} strokeWidth={3} />
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => quitarExtraFile(i)}
+                          className="absolute -bottom-1.5 -right-1.5 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center shadow"
+                          title="Quitar esta foto"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -771,7 +777,6 @@ export default function AdminDashboard() {
                         {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
 
-                      {/* SELECTOR DE SUBCATEGORÍA FIJO / DINÁMICO EN EDICIÓN */}
                       {editData.category === 'MATES' ? (
                         <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4 text-bib-white" value={editData.subcategory} onChange={(e) => setEditData({...editData, subcategory: e.target.value})}>
                           <option value="">Sin subcategoría</option>
@@ -1280,6 +1285,38 @@ export default function AdminDashboard() {
         {view === 'Configuración' && (
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSaveSettings} className="space-y-6 md:space-y-8">
+              <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
+                <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de Contacto (Footer)</h3>
+                <p className="text-xs text-bib-gray">Estos datos aparecerán reflejados en el pie de página de la tienda.</p>
+                <div>
+                  <label className="block text-xs text-bib-gray mb-1">Teléfono</label>
+                  <input
+                    placeholder="Ej: 11 3258 5236"
+                    className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                    value={settings.telefono}
+                    onChange={(e) => setSettings({ ...settings, telefono: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-bib-gray mb-1">Correo electrónico</label>
+                  <input
+                    placeholder="Ej: ivanezequieljure1997@hotmail.com"
+                    className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                    value={settings.email}
+                    onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-bib-gray mb-1">Instagram</label>
+                  <input
+                    placeholder="Ej: @bibmates_"
+                    className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
+                    value={settings.instagram}
+                    onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
+                  />
+                </div>
+              </div>
+
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Quiénes somos</h3>
                 <p className="text-xs text-bib-gray">Este texto aparece en la página "Nosotros" de la tienda.</p>

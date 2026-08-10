@@ -12,7 +12,10 @@ export default function Faq() {
       try {
         const { data, error } = await supabase.from('faqs').select('*');
         if (error) throw error;
-        if (data) setFaqs(data);
+        if (data) {
+          console.log("Datos de FAQs desde Supabase:", data); // Mirá esto en la consola del navegador (F12)
+          setFaqs(data);
+        }
       } catch (error) {
         console.error('Error al cargar las preguntas:', error);
       } finally {
@@ -45,6 +48,10 @@ export default function Faq() {
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
+            // Detectar automáticamente el nombre de las propiedades por si cambian de mayúsculas/minúsculas
+            const preguntaTexto = faq.pregunta || faq.Pregunta || faq.title || faq.titulo || JSON.stringify(faq);
+            const respuestaTexto = faq.respuesta || faq.Respuesta || faq.body || faq.descripcion || '';
+
             return (
               <div 
                 key={faq.id || index}
@@ -54,7 +61,7 @@ export default function Faq() {
                   onClick={() => toggleAccordion(index)}
                   className="w-full flex items-center justify-between p-4 text-left font-medium text-white hover:text-[#C4A278] transition-colors"
                 >
-                  <span className="text-base text-white">{faq.pregunta}</span>
+                  <span className="text-base text-white">{preguntaTexto}</span>
                   <ChevronDown 
                     size={20} 
                     className={`text-[#C4A278] transition-transform duration-300 flex-shrink-0 ml-4 ${isOpen ? 'rotate-180' : ''}`} 
@@ -62,7 +69,7 @@ export default function Faq() {
                 </button>
                 {isOpen && (
                   <div className="px-4 pb-4 pt-1 text-sm text-gray-300 border-t border-white/10 leading-relaxed">
-                    {faq.respuesta}
+                    {respuestaTexto}
                   </div>
                 )}
               </div>

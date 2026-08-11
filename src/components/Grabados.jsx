@@ -4,7 +4,7 @@ import { X, ZoomIn, MessageCircle } from 'lucide-react';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
-const WHATSAPP_NUMBER = "5491132585236";
+const WHATSAPP_NUMBER = "5491172556427"; // Número de WhatsApp para consultas
 
 export default function Grabados() {
   const [imagenes, setImagenes] = useState([]);

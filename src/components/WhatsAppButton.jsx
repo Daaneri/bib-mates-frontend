@@ -2,8 +2,8 @@ import { MessageCircle } from 'lucide-react';
 import { siteConfig } from '../config/site';
 
 export default function WhatsAppButton() {
-  // Número de WhatsApp formateado sin espacios ni guiones (ejemplo: 5491132585236)
-  const phone = siteConfig?.whatsappNumber || '5491132585236'; 
+  // Número de WhatsApp formateado sin espacios ni guiones (ejemplo: 5491172556427)
+  const phone = siteConfig?.whatsappNumber || '5491172556427'; // Número de WhatsApp para consultas
   const message = encodeURIComponent('¡Hola! Quisiera realizar una consulta.');
 
   return (

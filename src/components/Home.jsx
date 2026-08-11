@@ -138,11 +138,12 @@ export default function Home() {
         <div className="relative z-10 flex flex-col items-center justify-center">
           <FadeIn delay={100}>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-6 leading-[1.1] max-w-4xl drop-shadow-md">
-              Tomar mate<br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
-                siempre es una buena idea.
-              </span>
-            </h1>
+  Tomar mate{" "} {/* Agregué un espacio aquí */}
+  <br className="hidden sm:block" />
+  <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
+    siempre es una buena idea.
+  </span>
+</h1>
           </FadeIn>
 
           <FadeIn delay={200}>

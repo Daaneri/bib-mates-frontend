@@ -125,7 +125,7 @@ export default function CheckoutEntrega() {
     setIsCalculatingShipping(true);
 
     setTimeout(() => {
-      setShippingCost(10000);
+      setShippingCost(8000);
       setIsShippingCalculated(true);
       setIsCalculatingShipping(false);
     }, 400);
@@ -452,7 +452,7 @@ export default function CheckoutEntrega() {
               </div>
               {isShippingCalculated && (
                 <p className="text-xs text-green-400 font-medium pt-1">
-                  ✓ Envío cotizado: $10.000 ARS
+                  ✓ Envío cotizado: $8.000 ARS
                 </p>
               )}
             </div>

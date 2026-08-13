@@ -1123,11 +1123,18 @@ export default function AdminDashboard() {
                   </div>
 
                   {Array.isArray(o.productos) && o.productos.length > 0 && (
-                    <div className="bg-bib-black rounded p-3 space-y-1">
+                    <div className="bg-bib-black rounded p-3 space-y-2">
                       {o.productos.map((item, i) => (
-                        <div key={i} className="flex justify-between text-xs md:text-sm text-bib-white">
-                          <span>{item.quantity}x {item.name}</span>
-                          <span>${(item.price * item.quantity).toLocaleString('es-AR')}</span>
+                        <div key={i} className="flex items-center gap-3 text-xs md:text-sm text-bib-white">
+                          <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded overflow-hidden bg-bib-dark border border-bib-white/10">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-bib-white/20 text-[8px] uppercase tracking-wide text-center px-0.5">Sin foto</div>
+                            )}
+                          </div>
+                          <span className="flex-1 min-w-0 truncate">{item.quantity}x {item.name}</span>
+                          <span className="shrink-0">${(item.price * item.quantity).toLocaleString('es-AR')}</span>
                         </div>
                       ))}
                     </div>

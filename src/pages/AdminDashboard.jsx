@@ -851,6 +851,15 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <>
+                      <div className="aspect-video w-full rounded overflow-hidden bg-bib-black border border-bib-white/10">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-1 h-full text-bib-white/20">
+                            <span className="uppercase tracking-widest text-[9px]">Sin foto</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex flex-col gap-3 flex-1">
                         <div className="min-w-0">
                           <p className="font-medium text-base md:text-lg text-bib-white">{p.name}</p>

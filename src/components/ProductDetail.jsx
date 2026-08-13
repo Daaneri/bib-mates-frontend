@@ -58,18 +58,37 @@ export default function ProductDetail() {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [quiereGrabado, setQuiereGrabado] = useState(false);
   const [quiereCaja, setQuiereCaja] = useState(false);
+  const [variantes, setVariantes] = useState([]);
+  const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
   const [relacionados, setRelacionados] = useState([]);
   const [copiado, setCopiado] = useState(false);
   const { addToCart, openDrawer } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
+    async function fetchVariantes(productId) {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('producto_id', productId)
+        .order('orden', { ascending: true });
+      if (!error && data && data.length > 0) {
+        setVariantes(data);
+        const primeraConStock = data.find((v) => v.stock > 0) || data[0];
+        setVarianteSeleccionada(primeraConStock);
+        if (primeraConStock.image_url) setSelectedImage(primeraConStock.image_url);
+      } else {
+        setVariantes([]);
+        setVarianteSeleccionada(null);
+      }
+    }
     async function fetchProduct() {
       const { data, error } = await supabase.from('productos').select('*').eq('id', id).single();
       if (!error) {
         setProduct(data);
         setSelectedImage(data.image_url);
         fetchRelacionados(data);
+        fetchVariantes(data.id);
       }
     }
     async function fetchRelacionados(currentProduct) {
@@ -103,7 +122,18 @@ export default function ProductDetail() {
   const cuotaSinInteres = Math.round(precioLista / 3);
 
   function handleAgregarCarrito() {
-    addToCart({ ...product, price: precioLista });
+    if (variantes.length > 0 && !varianteSeleccionada) return;
+    if (varianteSeleccionada && varianteSeleccionada.stock <= 0) return;
+
+    const itemBase = { ...product, price: precioLista };
+    if (varianteSeleccionada) {
+      itemBase.color = varianteSeleccionada.color;
+      itemBase.variant_id = varianteSeleccionada.id;
+      itemBase.id = `${product.id}-${varianteSeleccionada.color}`; // id distinto por color, para que el carrito no mezcle colores distintos en una sola línea
+      if (varianteSeleccionada.image_url) itemBase.image_url = varianteSeleccionada.image_url;
+    }
+    addToCart(itemBase);
+
     if (quiereGrabado) {
       addToCart({ id: `${product.id}-grabado`, name: `Grabado - ${product.name}`, price: PRECIO_GRABADO });
     }
@@ -280,6 +310,49 @@ export default function ProductDetail() {
               </div>
             </div>
 
+            {variantes.length > 0 && (
+              <div>
+                <p className="text-xs sm:text-sm text-bib-white mb-2">
+                  Elegí el color
+                  {varianteSeleccionada && (
+                    <span className="text-bib-gray"> — {varianteSeleccionada.color}</span>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {variantes.map((v) => {
+                    const sinStock = v.stock <= 0;
+                    const seleccionado = varianteSeleccionada?.id === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        disabled={sinStock}
+                        onClick={() => {
+                          setVarianteSeleccionada(v);
+                          if (v.image_url) setSelectedImage(v.image_url);
+                        }}
+                        className={`flex items-center gap-2 rounded border px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${
+                          sinStock
+                            ? 'border-bib-white/10 text-bib-white/30 cursor-not-allowed line-through'
+                            : seleccionado
+                            ? 'border-bib-red bg-bib-red/10 text-bib-white'
+                            : 'border-bib-white/20 text-bib-gray hover:border-bib-white/40'
+                        }`}
+                      >
+                        {v.image_url && (
+                          <span className="w-5 h-5 rounded-full overflow-hidden border border-bib-white/20 shrink-0">
+                            <img src={v.image_url} alt={v.color} className="w-full h-full object-cover" />
+                          </span>
+                        )}
+                        {v.color}
+                        {sinStock && ' (sin stock)'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="border-y border-bib-white/10 py-6 sm:py-8">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-bib-gray mb-3 sm:mb-4 font-medium">Sobre este producto</h4>
               <p className="text-sm sm:text-base md:text-lg leading-relaxed text-bib-white/80">
@@ -346,7 +419,8 @@ export default function ProductDetail() {
             <div className="flex flex-col gap-3 sm:gap-4">
               <button
                 onClick={handleAgregarCarrito}
-                className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(196,162,120,0.3)]"
+                disabled={variantes.length > 0 && (!varianteSeleccionada || varianteSeleccionada.stock <= 0)}
+                className="group flex items-center justify-center gap-2 sm:gap-3 bg-bib-red text-bib-black text-sm sm:text-base md:text-lg py-4 sm:py-5 rounded font-bold hover:bg-bib-white transition-all active:scale-[0.98] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(196,162,120,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
               >
                 <ShoppingCart size={18} className="group-hover:-translate-y-1 transition-transform shrink-0" />
                 Agregar al carrito
@@ -414,7 +488,8 @@ export default function ProductDetail() {
         </div>
         <button
           onClick={handleAgregarCarrito}
-          className="flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0"
+          disabled={variantes.length > 0 && (!varianteSeleccionada || varianteSeleccionada.stock <= 0)}
+          className="flex items-center gap-2 bg-bib-red text-bib-black px-5 py-3 rounded font-bold text-sm uppercase tracking-wide active:scale-95 transition-transform shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ShoppingCart size={16} />
           Agregar

@@ -60,6 +60,14 @@ export default function AdminDashboard() {
   const [loadingStorage, setLoadingStorage] = useState(false);
   const [pickerMode, setPickerMode] = useState(null);
 
+  // Variantes de color del producto en edición
+  const [variantes, setVariantes] = useState([]);
+  const [loadingVariantes, setLoadingVariantes] = useState(false);
+  const [nuevaVarianteColor, setNuevaVarianteColor] = useState('');
+  const [nuevaVarianteStock, setNuevaVarianteStock] = useState('');
+  const [nuevaVarianteFile, setNuevaVarianteFile] = useState(null);
+  const [guardandoVariante, setGuardandoVariante] = useState(false);
+
   // Configuración general del sitio (incluye Footer)
   const [settings, setSettings] = useState({
     quienes_somos: '',
@@ -420,6 +428,87 @@ export default function AdminDashboard() {
     setEditData({ ...editData, image_urls: editData.image_urls.filter(u => u !== url) });
   }
 
+  async function fetchVariantes(productoId) {
+    setLoadingVariantes(true);
+    const { data, error } = await supabase
+      .from('product_variants')
+      .select('*')
+      .eq('producto_id', productoId)
+      .order('orden', { ascending: true });
+    if (!error) setVariantes(data || []);
+    setLoadingVariantes(false);
+  }
+
+  async function handleAddVariante(productoId) {
+    const colorLimpio = nuevaVarianteColor.trim();
+    const stockNum = parseInt(nuevaVarianteStock);
+
+    if (!colorLimpio) {
+      mostrarMensaje("Ponele un nombre al color");
+      return;
+    }
+    if (isNaN(stockNum) || stockNum < 0) {
+      mostrarMensaje("Cargá un stock válido para ese color");
+      return;
+    }
+
+    setGuardandoVariante(true);
+    try {
+      let imageUrl = '';
+      if (nuevaVarianteFile) {
+        const comprimido = await compressToWebp(nuevaVarianteFile);
+        const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${comprimido.name}`, comprimido);
+        if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
+      }
+
+      const { error } = await supabase.from('product_variants').insert([{
+        producto_id: productoId,
+        color: colorLimpio,
+        stock: stockNum,
+        image_url: imageUrl || null,
+        orden: variantes.length,
+      }]);
+
+      if (error) {
+        mostrarMensaje("Error al agregar el color: " + error.message);
+      } else {
+        mostrarMensaje("Color agregado");
+        setNuevaVarianteColor('');
+        setNuevaVarianteStock('');
+        setNuevaVarianteFile(null);
+        await fetchVariantes(productoId);
+        await fetchData(); // refresca el stock total del producto, ya recalculado por el trigger
+      }
+    } catch (err) {
+      mostrarMensaje("Ocurrió un error al agregar el color");
+      console.error(err);
+    } finally {
+      setGuardandoVariante(false);
+    }
+  }
+
+  async function handleDeleteVariante(varianteId, productoId) {
+    if (!window.confirm("¿Eliminar este color?")) return;
+    const { error } = await supabase.from('product_variants').delete().eq('id', varianteId);
+    if (error) {
+      mostrarMensaje("Error al eliminar: " + error.message);
+    } else {
+      mostrarMensaje("Color eliminado");
+      await fetchVariantes(productoId);
+      await fetchData();
+    }
+  }
+
+  async function handleUpdateVarianteStock(varianteId, productoId, nuevoStock) {
+    const stockNum = parseInt(nuevoStock);
+    if (isNaN(stockNum) || stockNum < 0) return;
+    const { error } = await supabase.from('product_variants').update({ stock: stockNum }).eq('id', varianteId);
+    if (!error) {
+      setVariantes((prev) => prev.map((v) => (v.id === varianteId ? { ...v, stock: stockNum } : v)));
+      fetchData(); // refresca el stock total del producto en segundo plano
+    }
+  }
+
   async function handleUpdate(product) {
     try {
       setSavingEdit(true);
@@ -427,22 +516,29 @@ export default function AdminDashboard() {
       const parsedPriceCash = parseFloat(editData.price_cash);
       const parsedDiscount = parseFloat(editData.descuento_porcentaje);
       const parsedStock = parseInt(editData.stock);
+      const tieneVariantes = variantes.length > 0;
+
+      const datosAActualizar = {
+        name: editData.name ? editData.name.trim() : '',
+        price: isNaN(parsedPrice) ? 0 : Math.max(0, parsedPrice),
+        price_cash: isNaN(parsedPriceCash) ? 0 : Math.max(0, parsedPriceCash),
+        description: editData.description || '',
+        category: editData.category,
+        subcategory: editData.subcategory || null,
+        image_url: editData.image_url || '',
+        image_urls: Array.isArray(editData.image_urls) ? editData.image_urls : [],
+        personalizable: Boolean(editData.personalizable),
+        destacado: Boolean(editData.destacado),
+        descuento_porcentaje: isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount)),
+      };
+
+      // Si tiene variantes, el stock lo calcula solo el trigger sumando cada color — no lo tocamos acá
+      if (!tieneVariantes) {
+        datosAActualizar.stock = isNaN(parsedStock) ? 0 : Math.max(0, parsedStock);
+      }
 
       const { error } = await supabase.from('productos')
-        .update({
-          name: editData.name ? editData.name.trim() : '',
-          price: isNaN(parsedPrice) ? 0 : Math.max(0, parsedPrice),
-          price_cash: isNaN(parsedPriceCash) ? 0 : Math.max(0, parsedPriceCash),
-          stock: isNaN(parsedStock) ? 0 : Math.max(0, parsedStock),
-          description: editData.description || '',
-          category: editData.category,
-          subcategory: editData.subcategory || null,
-          image_url: editData.image_url || '',
-          image_urls: Array.isArray(editData.image_urls) ? editData.image_urls : [],
-          personalizable: Boolean(editData.personalizable),
-          destacado: Boolean(editData.destacado),
-          descuento_porcentaje: isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount)),
-        })
+        .update(datosAActualizar)
         .eq('id', product.id);
 
       if (error) {
@@ -840,13 +936,89 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
+                      <div className="space-y-3 bg-bib-black p-3 rounded border border-bib-white/10">
+                        <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Colores disponibles</p>
+
+                        {loadingVariantes ? (
+                          <p className="text-[11px] text-bib-gray">Cargando colores...</p>
+                        ) : variantes.length > 0 && (
+                          <div className="space-y-2">
+                            {variantes.map((v) => (
+                              <div key={v.id} className="flex items-center gap-2 bg-bib-dark p-2 rounded border border-bib-white/10">
+                                {v.image_url ? (
+                                  <img src={v.image_url} alt={v.color} className="w-9 h-9 rounded object-cover border border-bib-white/10 shrink-0" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded bg-bib-black border border-bib-white/10 shrink-0" />
+                                )}
+                                <span className="text-xs text-bib-white flex-1 min-w-0 truncate">{v.color}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  defaultValue={v.stock}
+                                  onBlur={(e) => handleUpdateVarianteStock(v.id, p.id, e.target.value)}
+                                  className="w-16 bg-bib-black p-1.5 rounded border border-bib-white/20 text-xs text-center"
+                                  title="Stock de este color"
+                                />
+                                <button type="button" onClick={() => handleDeleteVariante(v.id, p.id)} className="text-bib-red hover:text-bib-white text-xs shrink-0">×</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-bib-white/10">
+                          <input
+                            placeholder="Color (ej: Negro)"
+                            value={nuevaVarianteColor}
+                            onChange={(e) => setNuevaVarianteColor(e.target.value)}
+                            className="flex-1 min-w-[100px] bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-3"
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Stock"
+                            value={nuevaVarianteStock}
+                            onChange={(e) => setNuevaVarianteStock(e.target.value)}
+                            className="w-20 bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-2"
+                          />
+                          <input
+                            type="file"
+                            id={`varianteFile-${p.id}`}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => setNuevaVarianteFile(e.target.files[0])}
+                          />
+                          <label htmlFor={`varianteFile-${p.id}`} className="cursor-pointer text-[10px] bg-bib-dark px-2 py-2 rounded border border-bib-white/20 hover:border-bib-red transition truncate max-w-[90px]">
+                            {nuevaVarianteFile ? nuevaVarianteFile.name : 'Foto'}
+                          </label>
+                          <button
+                            type="button"
+                            disabled={guardandoVariante}
+                            onClick={() => handleAddVariante(p.id)}
+                            className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black px-3 py-2 rounded text-[10px] font-medium uppercase tracking-wide disabled:opacity-40"
+                          >
+                            {guardandoVariante ? '...' : '+ Agregar'}
+                          </button>
+                        </div>
+                        {variantes.length > 0 && (
+                          <p className="text-[10px] text-bib-gray/70">El stock total del producto se calcula solo, sumando el de cada color.</p>
+                        )}
+                      </div>
+
                       <div className="space-y-2 pt-1">
                         <div className="flex gap-2">
                           <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Precio Lista" value={editData.price} type="number" min="0" step="any" onChange={(e) => setEditData({...editData, price: e.target.value})} />
                           <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Precio Efectivo" value={editData.price_cash} type="number" min="0" step="any" onChange={(e) => setEditData({...editData, price_cash: e.target.value})} />
                         </div>
                         <div className="flex gap-2">
-                          <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="Stock" value={editData.stock} type="number" min="0" onChange={(e) => setEditData({...editData, stock: e.target.value})} />
+                          <input
+                            className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3 disabled:opacity-40 disabled:cursor-not-allowed"
+                            placeholder="Stock"
+                            value={variantes.length > 0 ? variantes.reduce((sum, v) => sum + (v.stock || 0), 0) : editData.stock}
+                            type="number"
+                            min="0"
+                            disabled={variantes.length > 0}
+                            onChange={(e) => setEditData({...editData, stock: e.target.value})}
+                          />
                           <input className="bg-bib-black p-2 rounded border border-bib-white/20 w-1/2 text-sm px-3" placeholder="% dto" value={editData.descuento_porcentaje} type="number" min="0" max="100" onChange={(e) => setEditData({...editData, descuento_porcentaje: e.target.value})} />
                         </div>
                         <div className="flex gap-2 pt-2">
@@ -910,7 +1082,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, destacado: p.destacado === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, destacado: p.destacado === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); setNuevaVarianteColor(''); setNuevaVarianteStock(''); setNuevaVarianteFile(null); fetchVariantes(p.id); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>

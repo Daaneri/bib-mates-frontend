@@ -68,6 +68,13 @@ export default function AdminDashboard() {
   const [nuevaVarianteFile, setNuevaVarianteFile] = useState(null);
   const [guardandoVariante, setGuardandoVariante] = useState(false);
 
+  // Colores del producto NUEVO: se guardan en memoria hasta que el producto se crea,
+  // porque product_variants necesita un producto_id que todavía no existe.
+  const [nuevoProductoColores, setNuevoProductoColores] = useState([]);
+  const [nuevoColorNombre, setNuevoColorNombre] = useState('');
+  const [nuevoColorStock, setNuevoColorStock] = useState('');
+  const [nuevoColorFile, setNuevoColorFile] = useState(null);
+
   // Configuración general del sitio (incluye Footer)
   const [settings, setSettings] = useState({
     quienes_somos: '',
@@ -320,7 +327,7 @@ export default function AdminDashboard() {
       if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
     }
 
-    const { error } = await supabase.from('productos').insert([{ 
+    const { data: nuevoProducto, error } = await supabase.from('productos').insert([{ 
       name, 
       price, 
       price_cash,
@@ -333,13 +340,41 @@ export default function AdminDashboard() {
       personalizable, 
       destacado,
       descuento_porcentaje: descuentoPorcentaje 
-    }]);
+    }]).select().single();
 
     if (error) mostrarMensaje("Error: " + error.message);
     else {
+      // Si cargaron colores, los subimos ahora que ya tenemos el ID del producto
+      if (nuevoProductoColores.length > 0 && nuevoProducto) {
+        for (let i = 0; i < nuevoProductoColores.length; i++) {
+          const c = nuevoProductoColores[i];
+          let colorImageUrl = '';
+          if (c.file) {
+            const comprimido = await compressToWebp(c.file);
+            const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${comprimido.name}`, comprimido);
+            if (data) colorImageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
+          }
+          const { error: varianteError } = await supabase.from('product_variants').insert([{
+            producto_id: nuevoProducto.id,
+            color: c.color,
+            stock: c.stock,
+            image_url: colorImageUrl || null,
+            orden: i,
+          }]);
+          if (varianteError) {
+            mostrarMensaje("Producto creado, pero hubo un error con el color " + c.color + ": " + varianteError.message);
+          }
+        }
+      }
+
       mostrarMensaje("Producto agregado con éxito");
       setFile(null);
       limpiarExtraFiles();
+      nuevoProductoColores.forEach((c) => c.preview && URL.revokeObjectURL(c.preview));
+      setNuevoProductoColores([]);
+      setNuevoColorNombre('');
+      setNuevoColorStock('');
+      setNuevoColorFile(null);
       e.target.reset();
       setNuevaCategoria(categorias[0] || '');
       fetchData();
@@ -426,6 +461,41 @@ export default function AdminDashboard() {
 
   function quitarImagenExtra(url) {
     setEditData({ ...editData, image_urls: editData.image_urls.filter(u => u !== url) });
+  }
+
+  function handleAddColorNuevoProducto() {
+    const colorLimpio = nuevoColorNombre.trim();
+    const stockNum = parseInt(nuevoColorStock);
+
+    if (!colorLimpio) {
+      mostrarMensaje("Ponele un nombre al color");
+      return;
+    }
+    if (isNaN(stockNum) || stockNum < 0) {
+      mostrarMensaje("Cargá un stock válido para ese color");
+      return;
+    }
+
+    setNuevoProductoColores((prev) => [
+      ...prev,
+      {
+        color: colorLimpio,
+        stock: stockNum,
+        file: nuevoColorFile,
+        preview: nuevoColorFile ? URL.createObjectURL(nuevoColorFile) : null,
+      },
+    ]);
+    setNuevoColorNombre('');
+    setNuevoColorStock('');
+    setNuevoColorFile(null);
+  }
+
+  function quitarColorNuevoProducto(index) {
+    setNuevoProductoColores((prev) => {
+      const item = prev[index];
+      if (item?.preview) URL.revokeObjectURL(item.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   async function fetchVariantes(productoId) {
@@ -846,6 +916,65 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+
+              <div className="space-y-3 bg-bib-black p-3 rounded border border-bib-white/10">
+                <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Colores disponibles (opcional)</p>
+
+                {nuevoProductoColores.length > 0 && (
+                  <div className="space-y-2">
+                    {nuevoProductoColores.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-bib-dark p-2 rounded border border-bib-white/10">
+                        {c.preview ? (
+                          <img src={c.preview} alt={c.color} className="w-9 h-9 rounded object-cover border border-bib-white/10 shrink-0" />
+                        ) : (
+                          <div className="w-9 h-9 rounded bg-bib-black border border-bib-white/10 shrink-0" />
+                        )}
+                        <span className="text-xs text-bib-white flex-1 min-w-0 truncate">{c.color}</span>
+                        <span className="text-xs text-bib-gray w-16 text-center">{c.stock} u.</span>
+                        <button type="button" onClick={() => quitarColorNuevoProducto(i)} className="text-bib-red hover:text-bib-white text-xs shrink-0">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-bib-white/10">
+                  <input
+                    placeholder="Color (ej: Negro)"
+                    value={nuevoColorNombre}
+                    onChange={(e) => setNuevoColorNombre(e.target.value)}
+                    className="flex-1 min-w-[100px] bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-3"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Stock"
+                    value={nuevoColorStock}
+                    onChange={(e) => setNuevoColorStock(e.target.value)}
+                    className="w-20 bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-2"
+                  />
+                  <input
+                    type="file"
+                    id="nuevoColorFile"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => setNuevoColorFile(e.target.files[0])}
+                  />
+                  <label htmlFor="nuevoColorFile" className="cursor-pointer text-[10px] bg-bib-dark px-2 py-2 rounded border border-bib-white/20 hover:border-bib-red transition truncate max-w-[90px]">
+                    {nuevoColorFile ? nuevoColorFile.name : 'Foto'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddColorNuevoProducto}
+                    className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black px-3 py-2 rounded text-[10px] font-medium uppercase tracking-wide"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+
+                {nuevoProductoColores.length > 0 && (
+                  <p className="text-[10px] text-bib-gray/70">Si cargás colores, el stock total del producto se va a calcular solo sumando cada color (el campo "Stock" de arriba lo podés dejar en 0).</p>
                 )}
               </div>
 

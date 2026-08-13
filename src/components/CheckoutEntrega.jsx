@@ -128,7 +128,7 @@ export default function CheckoutEntrega() {
       setShippingCost(8000);
       setIsShippingCalculated(true);
       setIsCalculatingShipping(false);
-    }, 400);
+    }, 200);
   };
 
   const totalDescuento = appliedCoupon ? appliedCoupon.discount : 0;

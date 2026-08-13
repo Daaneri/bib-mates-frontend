@@ -585,6 +585,14 @@ export default function AdminDashboard() {
     return coincideCat && coincideBusqueda && coincideArchivado;
   });
 
+  // El pedido puede no traer la foto guardada (pedidos viejos, o si el carrito no la incluyó).
+  // Como respaldo, la buscamos en la lista actual de productos por id o, si no hay id, por nombre.
+  function obtenerFotoDelItem(item) {
+    if (item.image_url) return item.image_url;
+    const match = productos.find(p => (item.id && p.id === item.id) || p.name === item.name);
+    return match?.image_url || null;
+  }
+
   const resenasPendientes = resenas.filter(r => !r.aprobado);
   const resenasAprobadas = resenas.filter(r => r.aprobado);
 
@@ -1127,8 +1135,8 @@ export default function AdminDashboard() {
                       {o.productos.map((item, i) => (
                         <div key={i} className="flex items-center gap-3 text-xs md:text-sm text-bib-white">
                           <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded overflow-hidden bg-bib-dark border border-bib-white/10">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                            {obtenerFotoDelItem(item) ? (
+                              <img src={obtenerFotoDelItem(item)} alt={item.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-bib-white/20 text-[8px] uppercase tracking-wide text-center px-0.5">Sin foto</div>
                             )}

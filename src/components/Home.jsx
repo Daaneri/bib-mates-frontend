@@ -24,7 +24,6 @@ export default function Home() {
   const carouselRef = useRef(null);
   const destacadosRef = useRef(null);
 
-  // Scroll automático a #seleccion al detectar hash o parámetros de búsqueda
   useEffect(() => {
     if (location.hash === '#seleccion' || location.search) {
       const timer = setTimeout(() => {
@@ -103,7 +102,6 @@ export default function Home() {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
-  // Subcategorías de la categoría actualmente seleccionada
   const activeSubcategories = openCategory 
     ? subcategories.filter(
         (sub) => (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === openCategory.toLowerCase().trim()
@@ -129,7 +127,6 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
 
-        {/* Overlay */}
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
@@ -239,14 +236,14 @@ export default function Home() {
                             3 cuotas sin interés de <span className="font-semibold text-gray-800">${valorCuota}</span>
                           </p>
 
-                          {/* BADGE LIMPIO Y LEGIBLE */}
-                          <div className="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-500/30 p-1.5 rounded-xl">
-                            <span className="bg-emerald-600 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded tracking-wider uppercase shrink-0">
-                              20% OFF
-                            </span>
-                            <span className="text-[11px] font-bold text-emerald-950 truncate">
-                              ${precioTransferencia} <span className="text-gray-600 font-normal text-[10px]">c/ transferencia</span>
-                            </span>
+                          {/* ESTILO BEIGE CON BORDE IZQUIERDO MARRÓN */}
+                          <div className="bg-[#EFECE6] border-l-4 border-[#8B5A2B] p-2.5 rounded-r-md text-left">
+                            <p className="text-xs sm:text-sm font-bold text-[#1C1C1C] leading-tight">
+                              ${precioTransferencia} con
+                            </p>
+                            <p className="text-[11px] sm:text-xs font-semibold text-[#1C1C1C] leading-tight">
+                              Transferencia o depósito
+                            </p>
                           </div>
                         </div>
 

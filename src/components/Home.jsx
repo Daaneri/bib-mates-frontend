@@ -112,9 +112,9 @@ export default function Home() {
   return (
     <>
       {/* Ticker / Anuncio Superior */}
-      <div className="overflow-hidden bg-[#C4A278] py-2 whitespace-nowrap">
+      <div className="overflow-hidden bg-black border-b border-white/10 py-2 whitespace-nowrap">
         <div className="animate-marquee inline-block">
-          <span className="text-[11px] font-bold text-bib-black uppercase tracking-widest">
+          <span className="text-[11px] font-bold text-white uppercase tracking-widest">
             {MARQUEE_TEXT.repeat(2)}
           </span>
         </div>

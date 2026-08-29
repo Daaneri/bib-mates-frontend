@@ -68,11 +68,11 @@ export default function Navbar() {
               <Menu size={22} />
             </button>
             <Link
-              to="/"
-              className="text-sm sm:text-lg font-bold tracking-[0.2em] uppercase animate-shimmer-text hover:opacity-80 transition-opacity duration-300"
-            >
-              BIB MATES
-            </Link>
+  to="/"
+  className="text-sm sm:text-lg font-bold tracking-[0.2em] uppercase animate-shimmer-text hover:opacity-80 transition-opacity duration-300"
+>
+  BIB MATES
+</Link>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">

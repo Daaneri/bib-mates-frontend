@@ -24,15 +24,16 @@ export default function Home() {
   const carouselRef = useRef(null);
   const destacadosRef = useRef(null);
 
-  // Efecto para hacer scroll automático a #seleccion cuando cambia la categoría o la URL
+  // Scroll automático a #seleccion al detectar hash o parámetros de búsqueda
   useEffect(() => {
     if (location.hash === '#seleccion' || location.search) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const section = document.getElementById('seleccion');
         if (section) {
           section.scrollIntoView({ behavior: 'smooth' });
         }
       }, 150);
+      return () => clearTimeout(timer);
     }
   }, [location]);
 
@@ -128,12 +129,12 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
 
-        {/* Overlay liviano: deja ver la foto, el contraste del texto lo da la sombra fuerte del propio título */}
+        {/* Overlay */}
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
         <div 
-          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#C4A278]/25 rounded-full blur-[120px] opacity-80"
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-white/10 rounded-full blur-[120px] opacity-80"
           aria-hidden="true"
         />
 
@@ -147,7 +148,7 @@ export default function Home() {
                 Tomar mate,
               </span>
               <span
-                className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C4A278] to-white"
+                className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-white"
                 style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 8px 24px rgba(0,0,0,0.65))' }}
               >
                 siempre es una buena idea.
@@ -160,7 +161,7 @@ export default function Home() {
               className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light"
               style={{ textShadow: '0 2px 6px rgba(0,0,0,0.85)' }}
             >
-              En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, cánastas materas, yerbas uruguayas y más
+              En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, canastas materas, yerbas uruguayas y más
             </p>
           </FadeIn>
         </div>
@@ -171,8 +172,8 @@ export default function Home() {
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
           <FadeIn>
             <div className="text-center mb-8 space-y-1">
-              <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Selección especial</p>
-              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+              <p className="text-[10px] tracking-[0.3em] text-gray-500 uppercase font-bold">Selección especial</p>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900">
                 Productos Destacados
               </h2>
             </div>
@@ -182,7 +183,7 @@ export default function Home() {
             <button
               onClick={() => scroll('left', destacadosRef)}
               aria-label="Anterior"
-              className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
+              className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-black/80 text-white hover:bg-black p-2 rounded-full border border-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
             >
               <ChevronLeft size={18} />
             </button>
@@ -201,50 +202,57 @@ export default function Home() {
 
                 return (
                   <FadeIn key={p.id} delay={i * 60} className="shrink-0 w-56 sm:w-64 snap-start">
-                    <div className="group/dest rounded-2xl overflow-hidden border border-bib-white/10 hover:border-[#C4A278]/60 hover:shadow-[0_20px_50px_rgb(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-500 ease-out bg-bib-dark h-full flex flex-col">
-                      <Link to={`/producto/${p.id}`} className="relative aspect-[4/3] overflow-hidden bg-bib-black block">
+                    <div className="group/dest rounded-2xl overflow-hidden border border-gray-200 bg-white hover:border-gray-400 hover:shadow-xl transition-all duration-300 ease-out h-full flex flex-col">
+                      <Link to={`/producto/${p.id}`} className="relative aspect-[4/3] overflow-hidden bg-gray-100 block">
                         <img
                           src={p.image_url || FALLBACK_IMAGE}
                           alt={p.name}
-                          className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-700 ease-out"
+                          className="w-full h-full object-cover group-hover/dest:scale-105 transition-transform duration-500 ease-out"
                         />
                         {p.descuento_porcentaje > 0 && (
-                          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+                          <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-md">
                             {p.descuento_porcentaje}% OFF
                           </span>
                         )}
                       </Link>
-                      <div className="p-3.5 sm:p-4 flex flex-col flex-1">
+                      
+                      <div className="p-4 flex flex-col flex-1">
                         <Link to={`/producto/${p.id}`}>
-                          <p className="text-sm sm:text-base font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors duration-300">
+                          <p className="text-sm sm:text-base font-semibold text-gray-900 truncate hover:text-black transition-colors">
                             {p.name}
                           </p>
                         </Link>
                         
-                        <div className="flex items-baseline gap-2 mt-1.5">
+                        <div className="flex items-baseline gap-2 mt-1">
                           {p.descuento_porcentaje > 0 && (
-                            <span className="text-xs text-bib-gray line-through">
+                            <span className="text-xs text-gray-400 line-through">
                               ${Number(p.price).toLocaleString('es-AR')}
                             </span>
                           )}
-                          <span className="text-base sm:text-lg font-bold text-bib-white">
+                          <span className="text-lg font-extrabold text-gray-900">
                             ${Number(precioFinal).toLocaleString('es-AR')}
                           </span>
                         </div>
 
-                        <div className="mt-1 mb-3 space-y-1">
-                          <p className="text-[11px] text-bib-gray">
-                            3 cuotas sin interés de ${valorCuota}
+                        <div className="mt-2 mb-4 space-y-2">
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            3 cuotas sin interés de <span className="font-semibold text-gray-800">${valorCuota}</span>
                           </p>
-                          <div className="inline-flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px]">
-                            <span className="bg-emerald-600 text-white font-bold px-1 rounded text-[9px]">20% OFF</span>
-                            <span className="text-emerald-400 font-medium">${precioTransferencia} abonando con transferencia</span>
+
+                          {/* BADGE LIMPIO Y LEGIBLE */}
+                          <div className="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-500/30 p-1.5 rounded-xl">
+                            <span className="bg-emerald-600 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded tracking-wider uppercase shrink-0">
+                              20% OFF
+                            </span>
+                            <span className="text-[11px] font-bold text-emerald-950 truncate">
+                              ${precioTransferencia} <span className="text-gray-600 font-normal text-[10px]">c/ transferencia</span>
+                            </span>
                           </div>
                         </div>
 
                         <Link
                           to={`/producto/${p.id}`}
-                          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[#C4A278] text-bib-black py-2.5 rounded-xl font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-bib-white transition-all duration-300 active:scale-[0.98]"
+                          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-black text-white border border-black py-2.5 rounded-xl font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-zinc-800 transition-all duration-300 active:scale-[0.98] shadow-sm"
                         >
                           Comprar
                           <ChevronRight size={12} />
@@ -259,7 +267,7 @@ export default function Home() {
             <button
               onClick={() => scroll('right', destacadosRef)}
               aria-label="Siguiente"
-              className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
+              className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-black/80 text-white hover:bg-black p-2 rounded-full border border-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
             >
               <ChevronRight size={18} />
             </button>
@@ -273,7 +281,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             
             <div className="flex items-center justify-center gap-3 p-2">
-              <Hammer size={24} className="text-[#C4A278] shrink-0" />
+              <Hammer size={24} className="text-white shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-bold text-bib-white uppercase tracking-wider">100% Artesanales</p>
                 <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
@@ -281,15 +289,15 @@ export default function Home() {
             </div>
 
             <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
-              <Sparkles size={24} className="text-[#C4A278] shrink-0" />
+              <Sparkles size={24} className="text-white shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
-                <p className="text-xs text-bib-gray">Tu nombre,frase o logo grabado en el mate</p>
+                <p className="text-xs text-bib-gray">Tu nombre, frase o logo grabado en el mate</p>
               </div>
             </div>
 
             <div className="flex items-center justify-center gap-3 p-2">
-              <ShieldCheck size={24} className="text-[#C4A278] shrink-0" />
+              <ShieldCheck size={24} className="text-white shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Compra Segura</p>
                 <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
@@ -300,12 +308,12 @@ export default function Home() {
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías con Carrusel y Franja de Botones Independientes Abajo */}
+      {/* Tarjetas de Categorías con Carrusel */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
           <div className="text-center mb-8 space-y-1">
-            <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Colección completa</p>
-            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+            <p className="text-[10px] tracking-[0.3em] text-gray-500 uppercase font-bold">Colección completa</p>
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900">
               Explorá por categoría
             </h2>
           </div>
@@ -315,7 +323,7 @@ export default function Home() {
           <button
             onClick={() => scroll('left')}
             aria-label="Anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/80 text-white hover:bg-black p-2 rounded-full border border-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
           >
             <ChevronLeft size={18} />
           </button>
@@ -343,24 +351,24 @@ export default function Home() {
                     }}
                     className={`group/item relative h-36 sm:h-40 rounded-2xl overflow-hidden border transition-all duration-300 flex items-end p-3 cursor-pointer ${
                       isSelected
-                        ? 'border-[#C4A278] ring-2 ring-[#C4A278]/50 shadow-[0_20px_40px_rgb(0,0,0,0.35)]'
-                        : 'border-bib-white/10 hover:border-[#C4A278]/60 hover:shadow-[0_20px_40px_rgb(0,0,0,0.3)] hover:-translate-y-0.5'
+                        ? 'border-black ring-2 ring-black/50 shadow-xl'
+                        : 'border-gray-200 hover:border-gray-400 hover:shadow-lg hover:-translate-y-0.5'
                     }`}
                   >
                     <img
                       src={imageUrl}
                       alt={catName}
-                      className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out opacity-60 group-hover/item:opacity-80"
+                      className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out opacity-80"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="relative z-10 w-full flex items-center justify-between">
-                      <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover/item:text-[#C4A278] transition-colors duration-300 truncate">
+                      <span className="block text-xs font-bold text-white tracking-widest uppercase truncate">
                         {catName}
                       </span>
                       {subsDeEstaCat.length > 0 && (
                         <ChevronDown
                           size={14}
-                          className={`text-[#C4A278] shrink-0 transition-transform duration-300 ${
+                          className={`text-white shrink-0 transition-transform duration-300 ${
                             isSelected ? 'rotate-180' : ''
                           }`}
                         />
@@ -375,23 +383,23 @@ export default function Home() {
           <button
             onClick={() => scroll('right')}
             aria-label="Siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/80 text-white hover:bg-black p-2 rounded-full border border-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
           >
             <ChevronRight size={18} />
           </button>
         </div>
 
-        {/* Franja de Botones Independientes para las Subcategorías de la Categoría Activa */}
+        {/* Subcategorías de la Categoría Activa */}
         {openCategory && activeSubcategories.length > 0 && (
           <FadeIn delay={50}>
-            <div className="mt-6 bg-bib-dark/60 border border-[#C4A278]/40 p-5 rounded-2xl shadow-[0_20px_50px_rgb(0,0,0,0.3)] backdrop-blur-md">
+            <div className="mt-6 bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs tracking-widest text-[#C4A278] uppercase font-bold">
-                  Subcategorías de <span className="text-bib-white">{openCategory}</span>
+                <p className="text-xs tracking-widest text-gray-400 uppercase font-bold">
+                  Subcategorías de <span className="text-white">{openCategory}</span>
                 </p>
                 <button 
                   onClick={() => setOpenCategory(null)}
-                  className="text-xs text-bib-gray hover:text-bib-white transition-colors duration-300"
+                  className="text-xs text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   Cerrar ✕
                 </button>
@@ -402,7 +410,7 @@ export default function Home() {
                   <Link
                     key={sub.id}
                     to={`/?category=${encodeURIComponent(openCategory)}&subcategory=${encodeURIComponent(sub.nombre)}#seleccion`}
-                    className="text-center text-xs font-bold uppercase tracking-wider text-bib-white bg-bib-black/80 border border-bib-white/20 hover:border-[#C4A278] hover:text-[#C4A278] hover:bg-bib-black py-3 px-4 rounded-xl transition-all duration-300 shadow-sm truncate block"
+                    className="text-center text-xs font-bold uppercase tracking-wider text-white bg-black border border-zinc-700 hover:border-white hover:bg-zinc-800 py-3 px-4 rounded-xl transition-all duration-300 shadow-sm truncate block"
                   >
                     {sub.nombre}
                   </Link>
@@ -420,11 +428,11 @@ export default function Home() {
 
       {/* Sección de Preguntas Frecuentes (FAQ) */}
       {!loadingFaqs && faqs.length > 0 && (
-        <section id="faqs" className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-bib-white/10 scroll-mt-24">
+        <section id="faqs" className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-gray-200 scroll-mt-24">
           <FadeIn>
             <div className="text-center mb-10 space-y-2">
-              <p className="text-[10px] tracking-[0.3em] text-[#C4A278] uppercase font-bold">Resolvé tus dudas</p>
-              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-bib-white">
+              <p className="text-[10px] tracking-[0.3em] text-gray-500 uppercase font-bold">Resolvé tus dudas</p>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900">
                 Preguntas Frecuentes
               </h2>
             </div>
@@ -435,24 +443,24 @@ export default function Home() {
               const isOpen = openFaqIndex === faq.id;
               return (
                 <FadeIn key={faq.id} delay={index * 50}>
-                  <div className="border border-bib-white/10 rounded-2xl overflow-hidden bg-bib-black/40 transition-all duration-300 hover:border-[#C4A278]/40 hover:shadow-[0_10px_30px_rgb(0,0,0,0.2)]">
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white transition-all duration-300 hover:border-gray-400 hover:shadow-md">
                     <button
                       onClick={() => toggleFaq(faq.id)}
                       className="w-full flex items-center justify-between p-4 sm:p-5 text-left focus:outline-none"
                     >
-                      <span className="text-sm sm:text-base font-semibold text-bib-white">
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">
                         {faq.question}
                       </span>
                       <ChevronDown
                         size={18}
-                        className={`text-[#C4A278] shrink-0 transition-transform duration-300 ${
+                        className={`text-gray-700 shrink-0 transition-transform duration-300 ${
                           isOpen ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
 
                     {isOpen && (
-                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-bib-gray leading-relaxed border-t border-bib-white/5 pt-3 whitespace-pre-wrap animate-fade-in">
+                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-3 whitespace-pre-wrap animate-fade-in">
                         {faq.answer}
                       </div>
                     )}

@@ -128,7 +128,9 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
         />
 
-        <div className="absolute inset-0 bg-black/60" />
+        {/* Overlay liviano: deja ver la foto, el contraste del texto lo da la sombra fuerte del propio título */}
+        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
         <div 
           className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#C4A278]/25 rounded-full blur-[120px] opacity-80"
@@ -137,18 +139,28 @@ export default function Home() {
 
         <div className="relative z-10 flex flex-col items-center justify-center">
           <FadeIn delay={100}>
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-6 leading-[1.1] max-w-4xl drop-shadow-md">
-  Tomar mate{" "} {/* Agregué un espacio aquí */}
-  <br className="hidden sm:block" />
-  <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
-    siempre es una buena idea.
-  </span>
-</h1>
+            <h1 className="font-heading font-extrabold tracking-tight mb-6 max-w-4xl">
+              <span
+                className="block text-4xl sm:text-6xl md:text-7xl leading-[1.15]"
+                style={{ color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.65)' }}
+              >
+                Tomar mate,
+              </span>
+              <span
+                className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C4A278] to-white"
+                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 8px 24px rgba(0,0,0,0.65))' }}
+              >
+                siempre es una buena idea.
+              </span>
+            </h1>
           </FadeIn>
 
           <FadeIn delay={200}>
-            <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light drop-shadow">
-             En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos , cánastas materas, yerbas uruguayas  y más
+            <p
+              className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light"
+              style={{ textShadow: '0 2px 6px rgba(0,0,0,0.85)' }}
+            >
+              En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, cánastas materas, yerbas uruguayas y más
             </p>
           </FadeIn>
         </div>
@@ -170,7 +182,7 @@ export default function Home() {
             <button
               onClick={() => scroll('left', destacadosRef)}
               aria-label="Anterior"
-              className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
+              className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
             >
               <ChevronLeft size={18} />
             </button>
@@ -189,22 +201,22 @@ export default function Home() {
 
                 return (
                   <FadeIn key={p.id} delay={i * 60} className="shrink-0 w-56 sm:w-64 snap-start">
-                    <div className="group/dest rounded overflow-hidden border border-bib-white/10 hover:border-[#C4A278] transition-all duration-300 bg-bib-dark h-full flex flex-col">
+                    <div className="group/dest rounded-2xl overflow-hidden border border-bib-white/10 hover:border-[#C4A278]/60 hover:shadow-[0_20px_50px_rgb(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-500 ease-out bg-bib-dark h-full flex flex-col">
                       <Link to={`/producto/${p.id}`} className="relative aspect-[4/3] overflow-hidden bg-bib-black block">
                         <img
                           src={p.image_url || FALLBACK_IMAGE}
                           alt={p.name}
-                          className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover/dest:scale-110 transition-transform duration-700 ease-out"
                         />
                         {p.descuento_porcentaje > 0 && (
-                          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
+                          <span className="absolute top-2 left-2 bg-[#C4A278] text-bib-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
                             {p.descuento_porcentaje}% OFF
                           </span>
                         )}
                       </Link>
                       <div className="p-3.5 sm:p-4 flex flex-col flex-1">
                         <Link to={`/producto/${p.id}`}>
-                          <p className="text-sm sm:text-base font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors">
+                          <p className="text-sm sm:text-base font-medium text-bib-white truncate group-hover/dest:text-[#C4A278] transition-colors duration-300">
                             {p.name}
                           </p>
                         </Link>
@@ -232,7 +244,7 @@ export default function Home() {
 
                         <Link
                           to={`/producto/${p.id}`}
-                          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[#C4A278] text-bib-black py-2.5 rounded font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-bib-white transition-all duration-300"
+                          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[#C4A278] text-bib-black py-2.5 rounded-xl font-bold text-[11px] tracking-[0.15em] uppercase hover:bg-bib-white transition-all duration-300 active:scale-[0.98]"
                         >
                           Comprar
                           <ChevronRight size={12} />
@@ -247,7 +259,7 @@ export default function Home() {
             <button
               onClick={() => scroll('right', destacadosRef)}
               aria-label="Siguiente"
-              className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
+              className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
             >
               <ChevronRight size={18} />
             </button>
@@ -303,7 +315,7 @@ export default function Home() {
           <button
             onClick={() => scroll('left')}
             aria-label="Anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-200"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm -translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
           >
             <ChevronLeft size={18} />
           </button>
@@ -329,18 +341,20 @@ export default function Home() {
                         window.location.href = `/?category=${encodeURIComponent(catName)}#seleccion`;
                       }
                     }}
-                    className={`group/item relative h-36 sm:h-40 rounded overflow-hidden border transition-all duration-300 flex items-end p-3 cursor-pointer ${
-                      isSelected ? 'border-[#C4A278] ring-2 ring-[#C4A278]/50' : 'border-bib-white/10 hover:border-[#C4A278]'
+                    className={`group/item relative h-36 sm:h-40 rounded-2xl overflow-hidden border transition-all duration-300 flex items-end p-3 cursor-pointer ${
+                      isSelected
+                        ? 'border-[#C4A278] ring-2 ring-[#C4A278]/50 shadow-[0_20px_40px_rgb(0,0,0,0.35)]'
+                        : 'border-bib-white/10 hover:border-[#C4A278]/60 hover:shadow-[0_20px_40px_rgb(0,0,0,0.3)] hover:-translate-y-0.5'
                     }`}
                   >
                     <img
                       src={imageUrl}
                       alt={catName}
-                      className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500 opacity-60 group-hover/item:opacity-80"
+                      className="absolute inset-0 w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out opacity-60 group-hover/item:opacity-80"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-bib-black via-bib-black/40 to-transparent" />
                     <div className="relative z-10 w-full flex items-center justify-between">
-                      <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover/item:text-[#C4A278] transition-colors truncate">
+                      <span className="block text-xs font-bold text-bib-white tracking-widest uppercase group-hover/item:text-[#C4A278] transition-colors duration-300 truncate">
                         {catName}
                       </span>
                       {subsDeEstaCat.length > 0 && (
@@ -361,7 +375,7 @@ export default function Home() {
           <button
             onClick={() => scroll('right')}
             aria-label="Siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-200"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-bib-black/80 text-bib-white hover:text-[#C4A278] p-2 rounded-full border border-bib-white/20 shadow-lg backdrop-blur-sm translate-x-2 sm:translate-x-0 transition-all duration-300 active:scale-90"
           >
             <ChevronRight size={18} />
           </button>
@@ -370,14 +384,14 @@ export default function Home() {
         {/* Franja de Botones Independientes para las Subcategorías de la Categoría Activa */}
         {openCategory && activeSubcategories.length > 0 && (
           <FadeIn delay={50}>
-            <div className="mt-6 bg-bib-dark/60 border border-[#C4A278]/40 p-5 rounded-xl shadow-xl backdrop-blur-md">
+            <div className="mt-6 bg-bib-dark/60 border border-[#C4A278]/40 p-5 rounded-2xl shadow-[0_20px_50px_rgb(0,0,0,0.3)] backdrop-blur-md">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs tracking-widest text-[#C4A278] uppercase font-bold">
                   Subcategorías de <span className="text-bib-white">{openCategory}</span>
                 </p>
                 <button 
                   onClick={() => setOpenCategory(null)}
-                  className="text-xs text-bib-gray hover:text-bib-white transition-colors"
+                  className="text-xs text-bib-gray hover:text-bib-white transition-colors duration-300"
                 >
                   Cerrar ✕
                 </button>
@@ -388,7 +402,7 @@ export default function Home() {
                   <Link
                     key={sub.id}
                     to={`/?category=${encodeURIComponent(openCategory)}&subcategory=${encodeURIComponent(sub.nombre)}#seleccion`}
-                    className="text-center text-xs font-bold uppercase tracking-wider text-bib-white bg-bib-black/80 border border-bib-white/20 hover:border-[#C4A278] hover:text-[#C4A278] hover:bg-bib-black py-3 px-4 rounded-lg transition-all duration-200 shadow-sm truncate block"
+                    className="text-center text-xs font-bold uppercase tracking-wider text-bib-white bg-bib-black/80 border border-bib-white/20 hover:border-[#C4A278] hover:text-[#C4A278] hover:bg-bib-black py-3 px-4 rounded-xl transition-all duration-300 shadow-sm truncate block"
                   >
                     {sub.nombre}
                   </Link>
@@ -421,7 +435,7 @@ export default function Home() {
               const isOpen = openFaqIndex === faq.id;
               return (
                 <FadeIn key={faq.id} delay={index * 50}>
-                  <div className="border border-bib-white/10 rounded-lg overflow-hidden bg-bib-black/40 transition-colors hover:border-[#C4A278]/40">
+                  <div className="border border-bib-white/10 rounded-2xl overflow-hidden bg-bib-black/40 transition-all duration-300 hover:border-[#C4A278]/40 hover:shadow-[0_10px_30px_rgb(0,0,0,0.2)]">
                     <button
                       onClick={() => toggleFaq(faq.id)}
                       className="w-full flex items-center justify-between p-4 sm:p-5 text-left focus:outline-none"
@@ -438,7 +452,7 @@ export default function Home() {
                     </button>
 
                     {isOpen && (
-                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-bib-gray leading-relaxed border-t border-bib-white/5 pt-3 whitespace-pre-wrap">
+                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-bib-gray leading-relaxed border-t border-bib-white/5 pt-3 whitespace-pre-wrap animate-fade-in">
                         {faq.answer}
                       </div>
                     )}

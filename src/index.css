@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bib-black: #0A0A0A;
-  --color-bib-dark: #141414;
-  --color-bib-card: #1C1C1C;
+  --color-bib-black: #F9F9F6;
+  --color-bib-dark: #EFEFEA;
+  --color-bib-card: #FFFFFF;
   --color-bib-red: #C4A278;
   --color-bib-red-dark: #A8875E;
-  --color-bib-white: #F5F5F0;
-  --color-bib-gray: #A8A8A0;
+  --color-bib-white: #1A1A1A;
+  --color-bib-gray: #707068;
 
   --font-sans: "Inter", "Helvetica Neue", sans-serif;
   --font-heading: "Baloo 2", cursive;
@@ -15,7 +15,7 @@
 
 @layer base {
   body {
-    @apply bg-bib-black text-bib-white font-sans selection:bg-bib-red selection:text-bib-black;
+    @apply bg-bib-black text-bib-white font-sans selection:bg-bib-red selection:text-white;
     line-height: 1.6;
     min-height: 100vh;
   }
@@ -90,9 +90,27 @@
     animation: fadeIn 0.35s ease-out;
   }
 
+  @keyframes shimmerText {
+    to { background-position: 200% center; }
+  }
+  .animate-shimmer-text {
+    background: linear-gradient(90deg, #111827 0%, #C4A278 50%, #111827 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmerText 3s linear infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .animate-marquee, .animate-fade-in {
+    .animate-marquee, .animate-fade-in, .animate-shimmer-text {
       animation: none;
+    }
+    .animate-shimmer-text {
+      color: #111827;
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
     }
   }
 }

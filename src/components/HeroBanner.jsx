@@ -12,8 +12,9 @@ export default function HeroBanner() {
         className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
       />
 
-      {/* Sombra/Overlay para que el texto resalte */}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* Overlay liviano: deja ver la foto, el contraste del texto lo da la sombra fuerte del propio título */}
+      <div className="absolute inset-0 bg-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
       <div
         className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 animate-pulse [animation-duration:5s]"
@@ -24,16 +25,27 @@ export default function HeroBanner() {
 
       <div className="relative z-10 flex flex-col items-center justify-center">
         <FadeIn delay={100}>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-bib-white tracking-tight mb-6 leading-[1.1] max-w-4xl drop-shadow-md">
-            Tomar mate,<br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white">
-               siempre es una buena idea.
+          <h1 className="font-heading font-extrabold text-bib-white tracking-tight mb-6 max-w-4xl">
+            <span
+              className="block text-4xl sm:text-6xl md:text-7xl leading-[1.15]"
+              style={{ color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.65)' }}
+            >
+              Tomar mate,
+            </span>
+            <span
+              className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-bib-white via-[#C4A278] to-bib-white"
+              style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 8px 24px rgba(0,0,0,0.65))' }}
+            >
+              siempre es una buena idea.
             </span>
           </h1>
         </FadeIn>
 
         <FadeIn delay={200}>
-          <p className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light drop-shadow">
+          <p
+            className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light"
+            style={{ textShadow: '0 2px 6px rgba(0,0,0,0.85)' }}
+          >
             Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
           </p>
         </FadeIn>

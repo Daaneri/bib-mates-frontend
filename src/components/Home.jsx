@@ -119,47 +119,42 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section */}
-      <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
+      {/* Hero Section Reajustada */}
+      <section className="relative pt-6 pb-12 md:pt-10 md:pb-20 px-4 text-center overflow-hidden flex flex-col items-center justify-between min-h-[75vh] bg-bib-black">
         <img
           src="/banner-mate-cliente.jpg.jpeg"
           alt="Mate artesanal con sol"
-          className="absolute inset-0 w-full h-full object-cover object-[center_45%] scale-105 sm:scale-100 transition-transform duration-700"
+          className="absolute inset-0 w-full h-full object-cover object-[center_35%] scale-100 transition-transform duration-700"
         />
 
-        <div className="absolute inset-0 bg-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+        {/* Overlays para mayor legibilidad */}
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" />
 
-        <div 
-          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-white/10 rounded-full blur-[120px] opacity-80"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="relative z-10 flex flex-col items-center justify-between w-full max-w-4xl h-full space-y-8 my-auto">
+          {/* Título en la parte superior con tipografía fuerte tipo Banner */}
           <FadeIn delay={100}>
-            <h1 className="font-heading font-extrabold tracking-tight mb-6 max-w-4xl">
-              <span
-                className="block text-4xl sm:text-6xl md:text-7xl leading-[1.15]"
-                style={{ color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.65)' }}
+            <h1 className="font-black uppercase tracking-tight text-white flex flex-col items-center leading-[0.95]">
+              <span 
+                className="text-3xl sm:text-5xl md:text-6xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
               >
-                Tomar mate,
+                TOMAR MATE,
               </span>
-              <span
-                className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-white"
-                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 8px 24px rgba(0,0,0,0.65))' }}
+              <span 
+                className="text-2xl sm:text-4xl md:text-5xl text-gray-200 mt-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
               >
-                siempre es una buena idea.
+                SIEMPRE ES UNA BUENA IDEA.
               </span>
             </h1>
           </FadeIn>
 
+          {/* Párrafo con caja contenedora oscura para máxima visibilidad */}
           <FadeIn delay={200}>
-            <p
-              className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light"
-              style={{ textShadow: '0 2px 6px rgba(0,0,0,0.85)' }}
-            >
-              En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, canastas materas, yerbas uruguayas y más
-            </p>
+            <div className="bg-black/60 backdrop-blur-md border border-white/15 px-5 py-3.5 rounded-2xl max-w-lg mx-auto shadow-2xl">
+              <p className="text-xs sm:text-sm text-gray-100 font-medium tracking-wide leading-relaxed">
+                En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, canastas materas, yerbas uruguayas y más
+              </p>
+            </div>
           </FadeIn>
         </div>
       </section>
@@ -236,7 +231,7 @@ export default function Home() {
                             3 cuotas sin interés de <span className="font-semibold text-gray-800">${valorCuota}</span>
                           </p>
 
-                          {/* ESTILO BEIGE CON BORDE IZQUIERDO MARRÓN */}
+                          {/* Estilo Beige con borde lateral marrón */}
                           <div className="bg-[#EFECE6] border-l-4 border-[#8B5A2B] p-2.5 rounded-r-md text-left">
                             <p className="text-xs sm:text-sm font-bold text-[#1C1C1C] leading-tight">
                               ${precioTransferencia} con
@@ -272,35 +267,55 @@ export default function Home() {
         </section>
       )}
 
-      {/* Métricas de Confianza */}
+      {/* Métricas de Confianza Destacadas */}
       <FadeIn>
-        <section className="bg-bib-black border-y border-bib-white/10 py-6 px-4">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            
-            <div className="flex items-center justify-center gap-3 p-2">
-              <Hammer size={24} className="text-white shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">100% Artesanales</p>
-                <p className="text-xs text-bib-gray">Seleccionados y armados a mano</p>
+        <section className="my-10 max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-zinc-800">
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 md:pt-0">
+                <div className="p-3.5 bg-zinc-900 border border-zinc-700/60 rounded-2xl text-amber-500 shadow-inner">
+                  <Hammer size={28} />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">
+                    100% Artesanales
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                    Seleccionados y armados a mano
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-center gap-3 p-2 border-y md:border-y-0 md:border-x border-bib-white/10">
-              <Sparkles size={24} className="text-white shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Grabado Láser</p>
-                <p className="text-xs text-bib-gray">Tu nombre, frase o logo grabado en el mate</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 md:pt-0">
+                <div className="p-3.5 bg-zinc-900 border border-zinc-700/60 rounded-2xl text-amber-500 shadow-inner">
+                  <Sparkles size={28} />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">
+                    Grabado Láser
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                    Tu nombre, frase o logo en el mate
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-center gap-3 p-2">
-              <ShieldCheck size={24} className="text-white shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-bib-white uppercase tracking-wider">Compra Segura</p>
-                <p className="text-xs text-bib-gray">Protección en todo tu proceso de pago</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 md:pt-0">
+                <div className="p-3.5 bg-zinc-900 border border-zinc-700/60 rounded-2xl text-amber-500 shadow-inner">
+                  <ShieldCheck size={28} />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">
+                    Compra Segura
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                    Protección en todo tu proceso de pago
+                  </p>
+                </div>
               </div>
-            </div>
 
+            </div>
           </div>
         </section>
       </FadeIn>

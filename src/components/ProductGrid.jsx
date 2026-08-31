@@ -58,7 +58,7 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
       <div>
         <Link to={`/producto/${product.id}`} className="block aspect-square bg-gray-50 rounded-xl overflow-hidden mb-3 relative">
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
           ) : (
             <div className="flex flex-col items-center justify-center gap-1.5 h-full text-gray-400">
               <ImageOff size={22} strokeWidth={1.5} />

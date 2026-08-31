@@ -315,7 +315,8 @@ export default function AdminDashboard() {
     let imageUrl = '';
     if (file) {
       const optimizedFile = await compressToWebp(file);
-      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${optimizedFile.name}`, optimizedFile);
+      const filePath = `${Date.now()}_${optimizedFile.name}`;
+      const { data } = await supabase.storage.from('productos').upload(filePath, optimizedFile, { cacheControl: '86400', upsert: true });
       if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
     }
 
@@ -323,7 +324,8 @@ export default function AdminDashboard() {
     const seleccionadas = extraFiles.filter((item) => item.selected);
     const seleccionadasOptimizadas = await compressManyToWebp(seleccionadas.map((item) => item.file));
     for (const optimizedFile of seleccionadasOptimizadas) {
-      const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${optimizedFile.name}`, optimizedFile);
+      const filePath = `${Date.now()}_${optimizedFile.name}`;
+      const { data } = await supabase.storage.from('productos').upload(filePath, optimizedFile, { cacheControl: '86400', upsert: true });
       if (data) imageUrlsExtra.push(supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl);
     }
 
@@ -351,7 +353,8 @@ export default function AdminDashboard() {
           let colorImageUrl = '';
           if (c.file) {
             const comprimido = await compressToWebp(c.file);
-            const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${comprimido.name}`, comprimido);
+            const filePath = `${Date.now()}_${comprimido.name}`;
+            const { data } = await supabase.storage.from('productos').upload(filePath, comprimido, { cacheControl: '86400', upsert: true });
             if (data) colorImageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
           }
           const { error: varianteError } = await supabase.from('product_variants').insert([{
@@ -393,7 +396,10 @@ export default function AdminDashboard() {
         const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${f.name}`;
         const { data, error: uploadError } = await supabase.storage
           .from('grabados')
-          .upload(filePath, f);
+          .upload(filePath, f, {
+            cacheControl: '86400',
+            upsert: true
+          });
 
         if (uploadError) throw uploadError;
 
@@ -527,7 +533,8 @@ export default function AdminDashboard() {
       let imageUrl = '';
       if (nuevaVarianteFile) {
         const comprimido = await compressToWebp(nuevaVarianteFile);
-        const { data } = await supabase.storage.from('productos').upload(`${Date.now()}_${comprimido.name}`, comprimido);
+        const filePath = `${Date.now()}_${comprimido.name}`;
+        const { data } = await supabase.storage.from('productos').upload(filePath, comprimido, { cacheControl: '86400', upsert: true });
         if (data) imageUrl = supabase.storage.from('productos').getPublicUrl(data.path).data.publicUrl;
       }
 

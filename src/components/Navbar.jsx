@@ -52,13 +52,15 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-3.5 sm:py-4 transition-shadow duration-500 ease-out ${
+        className={`sticky top-0 z-40 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-2.5 sm:py-3 transition-shadow duration-500 ease-out ${
           isScrolled
             ? 'shadow-[0_10px_30px_rgb(0,0,0,0.06)] border-b border-transparent'
             : 'shadow-none border-b border-gray-100'
         }`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
+          
+          {/* Menú Hambuger e Isotipo/Logo en Pantallas Chicas */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpen(true)}
@@ -67,14 +69,24 @@ export default function Navbar() {
             >
               <Menu size={22} />
             </button>
-            <Link
-  to="/"
-  className="text-sm sm:text-lg font-bold tracking-[0.2em] uppercase animate-shimmer-text hover:opacity-80 transition-opacity duration-300"
->
-  BIB MATES
-</Link>
           </div>
 
+          {/* LOGO + TEXTO "BIB MATES" COMBINADOS */}
+          <Link
+            to="/"
+            className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80 transition-opacity duration-300"
+          >
+            <img 
+              src="/favicon.png" 
+              alt="Bib Mates Logo" 
+              className="h-7 sm:h-8 w-auto object-contain rounded-full"
+            />
+            <span className="text-sm sm:text-lg font-bold tracking-[0.2em] uppercase text-gray-900">
+              BIB MATES
+            </span>
+          </Link>
+
+          {/* Botones de Favoritos y Carrito */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/favoritos"
@@ -105,6 +117,7 @@ export default function Navbar() {
         </div>
       </header>
 
+      {/* Menú Desplegable Lateral */}
       <div className={`fixed inset-0 z-50 transition-colors duration-500 ease-out ${isOpen ? 'bg-black/40 backdrop-blur-sm pointer-events-auto' : 'bg-transparent pointer-events-none'}`}>
         <div className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 transition-transform duration-500 ease-out flex flex-col shadow-[0_0_60px_rgb(0,0,0,0.15)] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-4 sm:p-5 flex justify-between items-center border-b border-gray-100">

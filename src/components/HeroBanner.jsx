@@ -4,65 +4,66 @@ import FadeIn from './FadeIn';
 
 export default function HeroBanner() {
   return (
-    <section className="relative py-20 md:py-32 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[75vh] bg-bib-black">
-      {/* Foto de fondo del cliente */}
+    <section className="relative w-full h-[85vh] min-h-[550px] max-h-[800px] bg-bib-black overflow-hidden flex flex-col justify-between py-8 px-6">
+      {/* Foto de fondo */}
       <img
         src="/banner-mate-cliente.jpg.jpeg"
         alt="Mate artesanal"
-        className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:object-[right_center]"
+        className="absolute inset-0 w-full h-full object-cover object-center"
       />
 
-      {/* Overlay liviano */}
-      <div className="absolute inset-0 bg-black/25" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+      {/* Overlay para dar legibilidad en extremos y dejar centro iluminado */}
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/80" />
 
-      {/* Resplandor superior ajustado a tono blanco/gris neutro */}
-      <div
-        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-20 animate-pulse [animation-duration:5s]"
-        style={{
-          background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
-        }}
-      />
-
-      <div className="relative z-10 flex flex-col items-center justify-center">
+      {/* 1. TÍTULO EN LA PARTE SUPERIOR */}
+      <div className="relative z-10 w-full text-center pt-2">
         <FadeIn delay={100}>
-          <h1 className="font-heading font-extrabold text-bib-white tracking-tight mb-6 max-w-4xl">
+          <h1 className="font-heading font-extrabold text-bib-white tracking-tight max-w-3xl mx-auto">
             <span
-              className="block text-4xl sm:text-6xl md:text-7xl leading-[1.15]"
-              style={{ color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.65)' }}
+              className="block text-2xl sm:text-4xl md:text-5xl leading-tight uppercase"
+              style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
               Tomar mate,
             </span>
             <span
-              className="block mt-2 sm:mt-3 text-4xl sm:text-6xl md:text-7xl leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-white"
-              style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 8px 24px rgba(0,0,0,0.65))' }}
+              className="block mt-1 text-2xl sm:text-4xl md:text-5xl leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-white"
+              style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.9))' }}
             >
               siempre es una buena idea.
             </span>
           </h1>
         </FadeIn>
+      </div>
 
+      {/* ZONA CENTRAL LIBRE (MATE) */}
+      <div className="flex-1 pointer-events-none" />
+
+      {/* 2. TARJETA Y BOTONES EN LA PARTE INFERIOR */}
+      <div className="relative z-10 w-full flex flex-col items-center gap-4 text-center pb-2">
         <FadeIn delay={200}>
-          <p
-            className="text-xs sm:text-sm md:text-base text-bib-gray tracking-wide max-w-xl mb-10 leading-relaxed font-light"
-            style={{ textShadow: '0 2px 6px rgba(0,0,0,0.85)' }}
-          >
-            Mates imperiales y camioneros seleccionados a mano, grabados láser personalizados y complementos de calidad premium.
-          </p>
+          <div className="bg-black/75 backdrop-blur-md px-6 py-3.5 rounded-2xl max-w-xl border border-white/10 shadow-2xl mx-auto">
+            <p
+              className="text-xs sm:text-sm text-gray-200 tracking-wide leading-relaxed font-medium"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}
+            >
+              En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, canastas materas, yerbas uruguayas y más
+            </p>
+          </div>
         </FadeIn>
 
         <FadeIn delay={300}>
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="flex flex-row gap-3 justify-center items-center">
             <a
               href="#seleccion"
-              className="inline-flex items-center justify-center gap-2 bg-black text-white border border-white/20 px-8 py-3.5 rounded font-bold text-xs tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-all duration-300 hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 bg-black text-white border border-white/20 px-6 py-2.5 rounded-xl font-bold text-xs tracking-[0.15em] uppercase hover:bg-white hover:text-black transition-all duration-300 shadow-lg"
             >
               Ver Catálogo
               <ChevronRight size={14} />
             </a>
             <Link
               to="/grabados"
-              className="inline-flex items-center justify-center gap-2 bg-transparent border border-bib-white/20 text-bib-white px-8 py-3.5 rounded font-medium text-xs tracking-[0.2em] uppercase hover:border-white hover:text-white transition-all duration-300 backdrop-blur-sm"
+              className="inline-flex items-center justify-center gap-2 bg-black/40 border border-white/20 text-white px-6 py-2.5 rounded-lg font-medium text-xs tracking-[0.15em] uppercase hover:border-white hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg"
             >
               Ver Grabados
             </Link>

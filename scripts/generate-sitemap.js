@@ -10,13 +10,20 @@ const supabase = createClient(
 );
 
 async function generar() {
-  const { data: productos, error } = await supabase
-    .from('productos')
-    .select('id, archivado');
+  let productos = [];
 
-  if (error) {
-    console.error('Error trayendo productos de Supabase:', error.message);
-    process.exit(1);
+  try {
+    const { data, error } = await supabase
+      .from('productos')
+      .select('id, archivado');
+
+    if (error) {
+      console.warn('⚠️ No se pudieron obtener productos de Supabase (se usará sitemap estático):', error.message);
+    } else {
+      productos = data || [];
+    }
+  } catch (err) {
+    console.warn('⚠️ Error de conexión al intentar generar el sitemap:', err.message);
   }
 
   const hoy = new Date().toISOString().split('T')[0];
@@ -29,13 +36,13 @@ async function generar() {
 
   const urlsEstaticas = paginasEstaticas.map(({ path, priority }) => `
   <url>
-    <loc>${SITE_URL}/${path}</loc>
+    <loc>${SITE_URL}/${path ? path : ''}</loc>
     <lastmod>${hoy}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
   </url>`).join('');
 
-  const productosActivos = (productos || []).filter(p => p.archivado !== true);
+  const productosActivos = productos.filter(p => p.archivado !== true);
 
   const urlsProductos = productosActivos.map(p => `
   <url>

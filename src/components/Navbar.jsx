@@ -19,14 +19,18 @@ export default function Navbar() {
 
   useEffect(() => {
     async function fetchData() {
+      // 1. Petición a subcategorías con fallback defensivo
       const { data: subData } = await supabase.from('subcategorias').select('*');
-      if (subData) {
+      if (Array.isArray(subData)) {
         setSubcategories(subData);
+      } else {
+        setSubcategories([]);
       }
 
+      // 2. Petición a categorías con fallback defensivo
       const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
-      if (catData && catData.length > 0) {
-        const nombresDB = catData.map(c => c.nombre.trim());
+      if (Array.isArray(catData) && catData.length > 0) {
+        const nombresDB = catData.map(c => c?.nombre ? c.nombre.trim() : '').filter(Boolean);
         const combinadas = [...CATEGORIAS_INICIALES, ...nombresDB];
         const unicas = Array.from(
           new Map(combinadas.map(c => [c.toLowerCase(), c])).values()
@@ -48,6 +52,9 @@ export default function Navbar() {
   const toggleCategoryAccordion = (cat) => {
     setOpenCategory(openCategory === cat ? null : cat);
   };
+
+  // Garantizar que siempre tengamos un arreglo para iterar
+  const safeSubcategories = Array.isArray(subcategories) ? subcategories : [];
 
   return (
     <>
@@ -132,7 +139,7 @@ export default function Navbar() {
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#C4A278] font-extrabold mb-3">Categorías</p>
               <div className="space-y-3">
                 {categories.map((cat) => {
-                  const subsDeEstaCat = subcategories.filter(
+                  const subsDeEstaCat = safeSubcategories.filter(
                     (sub) =>
                       (sub.categoria_nombre || sub.categoria || '').toLowerCase().trim() === cat.toLowerCase().trim()
                   );

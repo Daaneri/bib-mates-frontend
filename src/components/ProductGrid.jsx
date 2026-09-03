@@ -5,6 +5,8 @@ import { CATEGORIES } from '../config/categories';
 import { useWishlist } from '../hooks/useWishlist';
 import { useCart } from '../context/CartContext';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://bib-mates-backend.onrender.com";
+
 const CATEGORIAS_CON_TODOS = ['Todos', ...CATEGORIES];
 
 function precioFinal(product) {
@@ -165,9 +167,9 @@ export default function ProductGrid({ hideCategoryBar = false }) {
       setLoading(true);
       try {
         const [productsRes, subRes, settingsRes] = await Promise.all([
-          fetch('/api/productos').then(res => res.json()),
-          fetch('/api/subcategorias').then(res => res.json()),
-          fetch('/api/site-settings').then(res => res.json()).catch(() => null)
+          fetch(`${BACKEND_URL}/api/productos`).then(res => res.json()),
+          fetch(`${BACKEND_URL}/api/subcategorias`).then(res => res.json()),
+          fetch(`${BACKEND_URL}/api/site-settings`).then(res => res.json()).catch(() => null)
         ]);
 
         if (!isMounted) return;

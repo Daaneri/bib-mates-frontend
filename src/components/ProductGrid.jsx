@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 import { Search, ImageOff, Heart, SlidersHorizontal, ChevronDown, ShoppingBag } from 'lucide-react';
 import { CATEGORIES } from '../config/categories';
 import { useWishlist } from '../hooks/useWishlist';
@@ -27,12 +26,11 @@ function ProductCardSkeleton() {
   );
 }
 
-function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
+function ProductCard({ product }) {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { addToCart, openDrawer } = useCart();
 
   const sinStock = (product.stock ?? 0) === 0;
-  const stockBajo = mostrarStockBajo && !sinStock && (product.stock ?? 0) < umbralStockBajo;
 
   const precioLista = precioFinal(product);
   const cuotaMonto = Math.round(precioLista / 3);
@@ -68,11 +66,6 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
           {sinStock && (
             <span className="absolute bottom-2 left-2 bg-gray-900/90 backdrop-blur-sm text-white text-[9px] font-medium uppercase tracking-wider px-2 py-1 rounded-md z-10">
               Sin stock
-            </span>
-          )}
-          {stockBajo && (
-            <span className="absolute bottom-2 left-2 bg-amber-400 text-gray-900 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md z-10 shadow-sm">
-              ¡Últimas {product.stock}!
             </span>
           )}
         </Link>
@@ -112,10 +105,10 @@ function ProductCard({ product, mostrarStockBajo, umbralStockBajo }) {
               3 cuotas sin interés de <span className="font-bold">${cuotaMonto.toLocaleString('es-AR')}</span>
             </p>
 
-            <p className="text-[10px] sm:text-xs text-emerald-700 font-medium leading-tight">
-              <span className="bg-emerald-50 text-emerald-800 px-1 py-0.5 rounded text-[9px] font-bold mr-1">20% OFF</span>
-              ${precioTransferencia.toLocaleString('es-AR')} por transferencia
-            </p>
+           <p className="text-[10px] sm:text-xs text-emerald-700 font-medium leading-tight">
+  <span className="bg-emerald-50 text-emerald-800 px-1 py-0.5 rounded text-[9px] font-bold mr-1">20% OFF</span>
+  ${precioTransferencia.toLocaleString('es-AR')} por transferencia
+</p>
           </div>
         </div>
       </div>
@@ -166,40 +159,56 @@ export default function ProductGrid({ hideCategoryBar = false }) {
   }, [searchParams]);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchData() {
       setLoading(true);
-      const [productsRes, subRes, settingsRes] = await Promise.all([
-        supabase.from('productos').select('*'),
-        supabase.from('subcategorias').select('*'),
-        supabase.from('site_settings').select('mostrar_stock_bajo, umbral_stock_bajo').eq('id', 1).single()
-      ]);
+      try {
+        const [productsRes, subRes, settingsRes] = await Promise.all([
+          fetch('/api/productos').then(res => res.json()),
+          fetch('/api/subcategorias').then(res => res.json()),
+          fetch('/api/site-settings').then(res => res.json()).catch(() => null)
+        ]);
 
-      setProducts(productsRes.data || []);
-      setAllSubcategories(subRes.data || []);
+        if (!isMounted) return;
 
-      if (settingsRes.data) {
-        setMostrarStockBajo(settingsRes.data.mostrar_stock_bajo ?? true);
-        setUmbralStockBajo(settingsRes.data.umbral_stock_bajo ?? 5);
+        setProducts(Array.isArray(productsRes) ? productsRes : []);
+        setAllSubcategories(Array.isArray(subRes) ? subRes : []);
+
+        const settingsData = Array.isArray(settingsRes) ? settingsRes[0] : settingsRes;
+        if (settingsData) {
+          setMostrarStockBajo(settingsData.mostrar_stock_bajo ?? true);
+          setUmbralStockBajo(settingsData.umbral_stock_bajo ?? 5);
+        }
+      } catch (err) {
+        console.error("Error al cargar productos desde la API:", err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-
-      setLoading(false);
     }
+
     fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const normalizeText = (str) => 
     (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-  const subcategoriasDisponibles = selectedCategory.toLowerCase() === 'todos' 
-    ? [] 
-    : allSubcategories
-        .filter(item => {
-          const itemCat = normalizeText(item.categoria_nombre || item.categoria);
-          const currentCat = normalizeText(selectedCategory);
-          return itemCat === currentCat;
-        })
-        .map(item => item.nombre)
-        .filter((val, index, self) => self.indexOf(val) === index);
+  const subcategoriasDisponibles = useMemo(() => {
+    if (selectedCategory.toLowerCase() === 'todos') return [];
+
+    return allSubcategories
+      .filter(item => {
+        const itemCat = normalizeText(item.categoria_nombre || item.categoria);
+        const currentCat = normalizeText(selectedCategory);
+        return itemCat === currentCat;
+      })
+      .map(item => item.nombre)
+      .filter((val, index, self) => self.indexOf(val) === index);
+  }, [selectedCategory, allSubcategories]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -211,29 +220,38 @@ export default function ProductGrid({ hideCategoryBar = false }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredProducts = products
-    .filter(p => p.archivado !== true)
-    .filter(p => {
-      const productCat = (p.category || 'Otros').toLowerCase();
-      const matchesCategory = selectedCategory.toLowerCase() === 'todos' || productCat === selectedCategory.toLowerCase();
-      const matchesSubcategory = !selectedSubcategory || (p.subcategory || '').toLowerCase() === selectedSubcategory.toLowerCase();
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const precioEfectivo = precioFinal(p);
-      const matchesMinPrice = !minPrice || precioEfectivo >= Number(minPrice);
-      const matchesMaxPrice = !maxPrice || precioEfectivo <= Number(maxPrice);
+  const filteredProducts = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    const categoryLower = selectedCategory.toLowerCase();
+    const subcategoryLower = selectedSubcategory.toLowerCase();
+    const minP = minPrice ? Number(minPrice) : null;
+    const maxP = maxPrice ? Number(maxPrice) : null;
 
-      return matchesCategory && matchesSubcategory && matchesSearch && matchesMinPrice && matchesMaxPrice;
-    })
-    .sort((a, b) => {
-      const precioA = precioFinal(a);
-      const precioB = precioFinal(b);
-      if (sortBy === 'price-low') return precioA - precioB;
-      if (sortBy === 'price-high') return precioB - precioA;
-      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
-      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
-      if (sortBy === 'newest') return (b.id || 0) - (a.id || 0);
-      return 0;
-    });
+    return products
+      .filter(p => p.archivado !== true)
+      .filter(p => {
+        const productCat = (p.category || 'Otros').toLowerCase();
+        const matchesCategory = categoryLower === 'todos' || productCat === categoryLower;
+        const matchesSubcategory = !selectedSubcategory || (p.subcategory || '').toLowerCase() === subcategoryLower;
+        const matchesSearch = p.name.toLowerCase().includes(searchLower);
+        
+        const precioEfectivo = precioFinal(p);
+        const matchesMinPrice = minP === null || precioEfectivo >= minP;
+        const matchesMaxPrice = maxP === null || precioEfectivo <= maxP;
+
+        return matchesCategory && matchesSubcategory && matchesSearch && matchesMinPrice && matchesMaxPrice;
+      })
+      .sort((a, b) => {
+        const precioA = precioFinal(a);
+        const precioB = precioFinal(b);
+        if (sortBy === 'price-low') return precioA - precioB;
+        if (sortBy === 'price-high') return precioB - precioA;
+        if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+        if (sortBy === 'newest') return (b.id || 0) - (a.id || 0);
+        return 0;
+      });
+  }, [products, selectedCategory, selectedSubcategory, searchTerm, minPrice, maxPrice, sortBy]);
 
   return (
     <div id="seleccion" className="px-2 sm:px-6 space-y-6 sm:space-y-8 pb-28 sm:pb-12">
@@ -403,7 +421,7 @@ export default function ProductGrid({ hideCategoryBar = false }) {
       ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-7xl mx-auto">
           {filteredProducts.map(p => (
-            <ProductCard key={p.id} product={p} mostrarStockBajo={mostrarStockBajo} umbralStockBajo={umbralStockBajo} />
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       ) : (

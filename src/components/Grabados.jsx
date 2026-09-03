@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { X, ZoomIn, MessageCircle } from 'lucide-react';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
 const WHATSAPP_NUMBER = "5491172556427"; // Número de WhatsApp para consultas
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export default function Grabados() {
   const [imagenes, setImagenes] = useState([]);
@@ -13,12 +13,16 @@ export default function Grabados() {
 
   useEffect(() => {
     async function fetchGrabados() {
-      const { data, error } = await supabase
-        .from('grabados')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error) setImagenes(data || []);
-      setLoading(false);
+      try {
+        const res = await fetch(`${API_URL}/api/grabados`);
+        const data = await res.json();
+        setImagenes(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error al cargar grabados:", err);
+        setImagenes([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchGrabados();
   }, []);

@@ -1,6 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../hooks/useWishlist';
 import { MessageCircle, ShoppingCart, ArrowLeft, Heart, Share2, ChevronRight, CreditCard, Banknote } from 'lucide-react';
@@ -67,42 +66,52 @@ export default function ProductDetail() {
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
-    async function fetchVariantes(productId) {
-      const { data, error } = await supabase
-        .from('product_variants')
-        .select('*')
-        .eq('producto_id', productId)
-        .order('orden', { ascending: true });
-      if (!error && data && data.length > 0) {
-        setVariantes(data);
-        const primeraConStock = data.find((v) => v.stock > 0) || data[0];
-        setVarianteSeleccionada(primeraConStock);
-        if (primeraConStock.image_url) setSelectedImage(primeraConStock.image_url);
-      } else {
-        setVariantes([]);
-        setVarianteSeleccionada(null);
+    async function fetchProductData() {
+      try {
+        // 1. Obtener producto principal
+        const resProd = await fetch(`/api/productos/${id}`);
+        if (!resProd.ok) return;
+        const prodData = await resProd.json();
+        
+        setProduct(prodData);
+        setSelectedImage(prodData.image_url);
+
+        // 2. Obtener variantes
+        try {
+          const resVar = await fetch(`/api/productos/${id}/variantes`);
+          if (resVar.ok) {
+            const dataVar = await resVar.json();
+            if (dataVar && dataVar.length > 0) {
+              setVariantes(dataVar);
+              const primeraConStock = dataVar.find((v) => v.stock > 0) || dataVar[0];
+              setVarianteSeleccionada(primeraConStock);
+              if (primeraConStock.image_url) setSelectedImage(primeraConStock.image_url);
+            }
+          }
+        } catch (e) {
+          console.error("Error cargando variantes", e);
+        }
+
+        // 3. Obtener relacionados (puedes ajustar el endpoint según cómo devuelvas los productos en tu backend)
+        try {
+          const resRel = await fetch(`/api/productos`);
+          if (resRel.ok) {
+            const allProducts = await resRel.json();
+            const filtered = allProducts
+              .filter(p => p.category === prodData.category && p.id !== prodData.id && !p.archivado)
+              .slice(0, 4);
+            setRelacionados(filtered);
+          }
+        } catch (e) {
+          console.error("Error cargando relacionados", e);
+        }
+
+      } catch (err) {
+        console.error("Error al cargar el detalle del producto:", err);
       }
     }
-    async function fetchProduct() {
-      const { data, error } = await supabase.from('productos').select('*').eq('id', id).single();
-      if (!error) {
-        setProduct(data);
-        setSelectedImage(data.image_url);
-        fetchRelacionados(data);
-        fetchVariantes(data.id);
-      }
-    }
-    async function fetchRelacionados(currentProduct) {
-      const { data, error } = await supabase
-        .from('productos')
-        .select('*')
-        .eq('category', currentProduct.category)
-        .neq('id', currentProduct.id)
-        .neq('archivado', true)
-        .limit(4);
-      if (!error) setRelacionados(data || []);
-    }
-    fetchProduct();
+
+    fetchProductData();
   }, [id]);
 
   useEffect(() => {

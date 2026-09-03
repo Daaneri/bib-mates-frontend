@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { siteConfig } from '../config/site';
@@ -12,33 +11,42 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function checkExistingSession() {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate('/admin');
-      } else {
-        setCheckingSession(false);
-      }
+    // Si ya existe un token guardado, redirigimos directo al admin
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/admin');
+    } else {
+      setCheckingSession(false);
     }
-    checkExistingSession();
   }, [navigate]);
 
   async function handleLogin(e) {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (error) {
-      toast.error('No se pudo iniciar sesión. Revisá el correo y la contraseña.');
-    } else {
-      toast.success('Sesión iniciada correctamente');
-      navigate('/admin');
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'No se pudo iniciar sesión. Revisá el correo y la contraseña.');
+      } else {
+        // Guardamos el token que devuelve tu backend propio
+        localStorage.setItem('token', data.token);
+        toast.success('Sesión iniciada correctamente');
+        navigate('/admin');
+      }
+    } catch (err) {
+      console.error('Error de red al intentar iniciar sesión:', err);
+      toast.error('Ocurrió un error de conexión con el servidor.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   if (checkingSession) {

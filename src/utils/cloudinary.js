@@ -17,5 +17,10 @@ export async function uploadToCloudinary(file) {
   }
 
   const data = await res.json();
-  return data.secure_url;
+
+  // Insertamos la transformación f_webp en la URL para que Cloudinary
+  // entregue siempre WebP, sin importar en qué formato se haya subido
+  // el archivo original (jpg, png, heic, etc.). q_auto ajusta la calidad
+  // automáticamente según el contenido de la imagen.
+  return data.secure_url.replace('/upload/', '/upload/f_webp,q_auto/');
 }

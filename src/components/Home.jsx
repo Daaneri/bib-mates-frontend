@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
-import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../config/categories';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://bib-mates-backend.onrender.com";
@@ -14,6 +13,7 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1597075095304-469b6a90
 
 export default function Home() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [categoryImages, setCategoryImages] = useState({});
   const [subcategories, setSubcategories] = useState([]);
   const [openCategory, setOpenCategory] = useState(null);
@@ -36,59 +36,58 @@ export default function Home() {
     }
   }, [location]);
 
+  // Carga unificada de datos usando las rutas del backend (Neon)
   useEffect(() => {
-    async function fetchCategoryImages() {
-      const { data, error } = await supabase
-        .from('productos')
-        .select('category, image_url')
-        .not('image_url', 'is', null)
-        .neq('image_url', '');
+    let isMounted = true;
 
-      if (!error && data) {
-        const imageMap = {};
-        data.forEach(item => {
-          if (item.category && item.image_url && !imageMap[item.category.toLowerCase()]) {
-            imageMap[item.category.toLowerCase()] = item.image_url;
-          }
-        });
-        setCategoryImages(imageMap);
-      }
-    }
-
-    async function fetchSubcategories() {
-      const { data } = await supabase.from('subcategorias').select('*');
-      if (data) {
-        setSubcategories(data);
-      }
-    }
-
-    async function fetchDestacados() {
-      const { data, error } = await supabase
-        .from('productos')
-        .select('*')
-        .eq('destacado', true)
-        .or('archivado.eq.false,archivado.is.null');
-
-      if (!error && data) setDestacados(data);
-    }
-
-    async function fetchFaqs() {
+    async function loadHomeData() {
       try {
         setLoadingFaqs(true);
-        const res = await fetch(`${BACKEND_URL}/api/faqs`);
-        const data = await res.json();
-        if (res.ok) setFaqs(data);
+
+        const [resProductos, resSubs, resFaqs] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/productos`).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${BACKEND_URL}/api/subcategorias`).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${BACKEND_URL}/api/faqs`).then(r => r.ok ? r.json() : []).catch(() => [])
+        ]);
+
+        if (!isMounted) return;
+
+        // Procesar productos para imágenes de categoría y destacados
+        if (Array.isArray(resProductos)) {
+          const imageMap = {};
+          resProductos.forEach(item => {
+            if (item.category && item.image_url && !imageMap[item.category.toLowerCase()]) {
+              imageMap[item.category.toLowerCase()] = item.image_url;
+            }
+          });
+          setCategoryImages(imageMap);
+
+          const filteredDestacados = resProductos.filter(p => p.destacado === true && p.archivado !== true);
+          setDestacados(filteredDestacados);
+        }
+
+        // Subcategorías
+        if (Array.isArray(resSubs)) {
+          setSubcategories(resSubs);
+        }
+
+        // FAQs
+        if (Array.isArray(resFaqs)) {
+          setFaqs(resFaqs);
+        }
+
       } catch (err) {
-        console.error('Error cargando FAQs:', err);
+        console.error('Error cargando datos del Home:', err);
       } finally {
-        setLoadingFaqs(false);
+        if (isMounted) setLoadingFaqs(false);
       }
     }
 
-    fetchCategoryImages();
-    fetchSubcategories();
-    fetchDestacados();
-    fetchFaqs();
+    loadHomeData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const scroll = (direction, ref = carouselRef) => {
@@ -119,7 +118,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section Reajustada */}
+      {/* Hero Section */}
       <section className="relative pt-6 pb-12 md:pt-10 md:pb-20 px-4 text-center overflow-hidden flex flex-col items-center justify-between min-h-[75vh] bg-bib-black">
         <img
           src="/banner-mate-cliente.jpg.jpeg"
@@ -127,28 +126,21 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover object-[center_35%] scale-100 transition-transform duration-700"
         />
 
-        {/* Overlays para mayor legibilidad */}
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" />
 
         <div className="relative z-10 flex flex-col items-center justify-between w-full max-w-4xl h-full space-y-8 my-auto">
-          {/* Título en la parte superior con tipografía fuerte tipo Banner */}
           <FadeIn delay={100}>
             <h1 className="font-black uppercase tracking-tight text-white flex flex-col items-center leading-[0.95]">
-              <span 
-                className="text-3xl sm:text-5xl md:text-6xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
-              >
+              <span className="text-3xl sm:text-5xl md:text-6xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
                 TOMAR MATE,
               </span>
-              <span 
-                className="text-2xl sm:text-4xl md:text-5xl text-gray-200 mt-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
-              >
+              <span className="text-2xl sm:text-4xl md:text-5xl text-gray-200 mt-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
                 SIEMPRE ES UNA BUENA IDEA.
               </span>
             </h1>
           </FadeIn>
 
-          {/* Párrafo con caja contenedora oscura para máxima visibilidad */}
           <FadeIn delay={200}>
             <div className="bg-black/60 backdrop-blur-md border border-white/15 px-5 py-3.5 rounded-2xl max-w-lg mx-auto shadow-2xl">
               <p className="text-xs sm:text-sm text-gray-100 font-medium tracking-wide leading-relaxed">
@@ -231,13 +223,12 @@ export default function Home() {
                             3 cuotas sin interés de <span className="font-semibold text-gray-800">${valorCuota}</span>
                           </p>
 
-                          {/* Estilo Beige con borde lateral marrón */}
                           <div className="bg-[#EFECE6] border-l-4 border-[#8B5A2B] p-2.5 rounded-r-md text-left">
                             <p className="text-xs sm:text-sm font-bold text-[#1C1C1C] leading-tight">
                               ${precioTransferencia} con
                             </p>
                             <p className="text-[11px] sm:text-xs font-semibold text-[#1C1C1C] leading-tight">
-                              Transferencia o depósito
+                              Transferencia
                             </p>
                           </div>
                         </div>
@@ -267,12 +258,11 @@ export default function Home() {
         </section>
       )}
 
-      {/* Métricas de Confianza Destacadas */}
+      {/* Métricas de Confianza */}
       <FadeIn>
         <section className="my-10 max-w-7xl mx-auto px-4 sm:px-6">
           <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-zinc-800">
-              
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 md:pt-0">
                 <div className="p-3.5 bg-zinc-900 border border-zinc-700/60 rounded-2xl text-amber-500 shadow-inner">
                   <Hammer size={28} />
@@ -314,13 +304,12 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
         </section>
       </FadeIn>
 
-      {/* Tarjetas de Categorías con Carrusel */}
+      {/* Tarjetas de Categorías */}
       <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6">
         <FadeIn>
           <div className="text-center mb-8 space-y-1">
@@ -356,9 +345,15 @@ export default function Home() {
                   <div
                     onClick={() => {
                       if (subsDeEstaCat.length > 0) {
+                        const isOpening = !isSelected;
                         setOpenCategory(isSelected ? null : catName);
+                        if (isOpening) {
+                          setTimeout(() => {
+                            document.getElementById('panel-subcategorias')?.scrollIntoView({ behavior: 'smooth' });
+                          }, 100);
+                        }
                       } else {
-                        window.location.href = `/?category=${encodeURIComponent(catName)}#seleccion`;
+                        navigate(`/?category=${encodeURIComponent(catName)}#seleccion`);
                       }
                     }}
                     className={`group/item relative h-36 sm:h-40 rounded-2xl overflow-hidden border transition-all duration-300 flex items-end p-3 cursor-pointer ${
@@ -401,10 +396,10 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Subcategorías de la Categoría Activa */}
+        {/* Panel de Subcategorías */}
         {openCategory && activeSubcategories.length > 0 && (
           <FadeIn delay={50}>
-            <div className="mt-6 bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-xl">
+            <div id="panel-subcategorias" className="mt-6 bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-xl scroll-mt-20">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs tracking-widest text-gray-400 uppercase font-bold">
                   Subcategorías de <span className="text-white">{openCategory}</span>
@@ -422,6 +417,7 @@ export default function Home() {
                   <Link
                     key={sub.id}
                     to={`/?category=${encodeURIComponent(openCategory)}&subcategory=${encodeURIComponent(sub.nombre)}#seleccion`}
+                    onClick={() => setOpenCategory(null)}
                     className="text-center text-xs font-bold uppercase tracking-wider text-white bg-black border border-zinc-700 hover:border-white hover:bg-zinc-800 py-3 px-4 rounded-xl transition-all duration-300 shadow-sm truncate block"
                   >
                     {sub.nombre}
@@ -438,7 +434,7 @@ export default function Home() {
         <ProductGrid hideCategoryBar={true} />
       </section>
 
-      {/* Sección de Preguntas Frecuentes (FAQ) */}
+      {/* FAQs */}
       {!loadingFaqs && faqs.length > 0 && (
         <section id="faqs" className="max-w-4xl mx-auto py-16 px-4 sm:px-6 border-t border-gray-200 scroll-mt-24">
           <FadeIn>

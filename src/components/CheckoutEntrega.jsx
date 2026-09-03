@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, Banknote, Truck } from "lucide-react";
-import { supabase } from "../supabaseClient";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const COUPON_STORAGE_KEY = "applied_coupon_code";
@@ -42,68 +41,65 @@ export default function CheckoutEntrega() {
     postalCode: "",
   });
 
-  // LÓGICA DE PRECIOS:
-  // Transferencia = price_cash (si existe y es mayor a 0).
-  // Mercado Pago = price (Precio de lista).
-  const itemsFormat = cart.map((item) => {
-    const basePrice = Number(item.price) || 0;
-    const cashPrice = item.price_cash && Number(item.price_cash) > 0 ? Number(item.price_cash) : basePrice;
+  // Memorización de formateo de items para prevenir recalculaciones innecesarias
+  const itemsFormat = useMemo(() => {
+    return cart.map((item) => {
+      const basePrice = Number(item.price) || 0;
+      const cashPrice = item.price_cash && Number(item.price_cash) > 0 ? Number(item.price_cash) : basePrice;
+      const price = paymentMethod === "transferencia" ? cashPrice : basePrice;
 
-    const price = paymentMethod === "transferencia" ? cashPrice : basePrice;
+      return {
+        id: item.id,
+        name: item.name || item.nombre,
+        quantity: item.quantity || item.cantidad || 1,
+        price: price,
+        originalPrice: basePrice,
+        price_cash: cashPrice,
+      };
+    });
+  }, [cart, paymentMethod]);
 
-    return {
-      id: item.id,
-      name: item.name || item.nombre,
-      quantity: item.quantity || item.cantidad || 1,
-      price: price,
-      originalPrice: basePrice,
-      price_cash: cashPrice,
-    };
-  });
+  const totalProductos = useMemo(() => {
+    return itemsFormat.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  }, [itemsFormat]);
 
-  const totalProductos = itemsFormat.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const revalidarCupon = useCallback(async (code) => {
+    try {
+      const res = await fetch(`${API_URL}/api/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (res.ok && data.discount_percentage) {
+        setAppliedCoupon({
+          code: data.code,
+          discount_percentage: data.discount_percentage,
+          discount: Math.round((totalProductos * data.discount_percentage) / 100),
+        });
+      } else {
+        setAppliedCoupon(null);
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+      }
+    } catch (err) {
+      console.error("Error revalidando cupón:", err);
+    }
+  }, [totalProductos]);
 
   useEffect(() => {
     const savedCode = localStorage.getItem(COUPON_STORAGE_KEY);
     if (savedCode) {
       revalidarCupon(savedCode);
     }
-  }, []);
+  }, [revalidarCupon]);
 
+  // Recálculo del descuento en cambio de precio/método de pago
   useEffect(() => {
     if (appliedCoupon?.discount_percentage) {
       const nuevoDescuento = Math.round((totalProductos * appliedCoupon.discount_percentage) / 100);
-      setAppliedCoupon((prev) => ({ ...prev, discount: nuevoDescuento }));
+      setAppliedCoupon((prev) => (prev ? { ...prev, discount: nuevoDescuento } : null));
     }
-  }, [paymentMethod, totalProductos]);
-
-  useEffect(() => {
-    const guardarCarritoPendiente = async () => {
-      const phoneClean = formData.phone.trim();
-      if (formData.name.trim() && phoneClean.length >= 8 && itemsFormat.length > 0) {
-        try {
-          await supabase.from("carritos_abandonados").upsert(
-            [
-              {
-                cliente_nombre: formData.name.trim(),
-                cliente_telefono: phoneClean,
-                items: itemsFormat,
-                monto_total: totalProductos,
-                recuperado: false,
-                created_at: new Date().toISOString()
-              },
-            ],
-            { onConflict: 'cliente_telefono' }
-          );
-        } catch (err) {
-          console.error("Error registrando carrito pendiente:", err);
-        }
-      }
-    };
-
-    const timeout = setTimeout(guardarCarritoPendiente, 800);
-    return () => clearTimeout(timeout);
-  }, [formData.phone, formData.name, totalProductos]);
+  }, [totalProductos]);
 
   const handleShippingTypeChange = (type) => {
     setShippingType(type);
@@ -134,30 +130,6 @@ export default function CheckoutEntrega() {
   const totalDescuento = appliedCoupon ? appliedCoupon.discount : 0;
   const totalFinal = Math.max(0, totalProductos - totalDescuento + (shippingType === "envio" ? shippingCost : 0));
 
-  async function revalidarCupon(code) {
-    try {
-      const res = await fetch(`${API_URL}/api/coupons/validate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const data = await res.json();
-      if (res.ok && data.discount_percentage) {
-        const montoDescuento = Math.round((totalProductos * data.discount_percentage) / 100);
-        setAppliedCoupon({
-          code: data.code,
-          discount_percentage: data.discount_percentage,
-          discount: montoDescuento,
-        });
-      } else {
-        setAppliedCoupon(null);
-        localStorage.removeItem(COUPON_STORAGE_KEY);
-      }
-    } catch (err) {
-      console.error("Error revalidando cupón:", err);
-    }
-  }
-
   async function handleApplyCoupon(e) {
     e.preventDefault();
     if (!couponCode.trim()) return;
@@ -185,7 +157,7 @@ export default function CheckoutEntrega() {
       } else {
         setCouponError(data.error || "Cupón no válido");
       }
-    } catch (err) {
+    } catch {
       setCouponError("Error al conectar con el servidor");
     } finally {
       setIsApplyingCoupon(false);
@@ -248,37 +220,29 @@ export default function CheckoutEntrega() {
     };
 
     try {
-      if (paymentMethod === "mercadopago") {
-        const res = await fetch(`${API_URL}/api/payment/create-preference`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
+      const endpoint =
+        paymentMethod === "mercadopago"
+          ? `${API_URL}/api/payment/create-preference`
+          : `${API_URL}/api/payment/create-transfer-order`;
 
-        if (res.ok && data.init_point) {
-          localStorage.removeItem(COUPON_STORAGE_KEY);
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+        if (paymentMethod === "mercadopago" && data.init_point) {
           window.location.href = data.init_point;
         } else {
-          setErrorMessage(data.error || "Error al conectar con Mercado Pago.");
-          setIsSubmitting(false);
-        }
-      } else {
-        const res = await fetch(`${API_URL}/api/payment/create-transfer-order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          localStorage.removeItem(COUPON_STORAGE_KEY);
           clearCart();
           navigate("/checkout/transferencia-confirmada", { state: data });
-        } else {
-          setErrorMessage(data.error || "Error al procesar el pedido.");
-          setIsSubmitting(false);
         }
+      } else {
+        setErrorMessage(data.error || "Error al procesar la solicitud.");
+        setIsSubmitting(false);
       }
     } catch (err) {
       console.error(err);
@@ -369,9 +333,7 @@ export default function CheckoutEntrega() {
 
           {shippingType === "retiro" && (
             <div className="space-y-2 pt-2">
-              <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">
-                Elegí el punto de retiro
-              </label>
+              <label className="block text-xs uppercase tracking-wider text-bib-gray mb-1">Elegí el punto de retiro</label>
               {PUNTOS_RETIRO.map((punto) => (
                 <label
                   key={punto.value}
@@ -451,9 +413,7 @@ export default function CheckoutEntrega() {
                 </button>
               </div>
               {isShippingCalculated && (
-                <p className="text-xs text-green-400 font-medium pt-1">
-                  ✓ Envío cotizado: $8.000 ARS
-                </p>
+                <p className="text-xs text-green-400 font-medium pt-1">✓ Envío cotizado: $8.000 ARS</p>
               )}
             </div>
           )}
@@ -461,7 +421,11 @@ export default function CheckoutEntrega() {
           <div className="pt-2">
             <label className="block text-xs uppercase tracking-wider text-bib-gray mb-2">Selecciona Medio de Pago</label>
             <div className="space-y-3">
-              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
+              <label
+                className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${
+                  paymentMethod === "mercadopago" ? "border-blue-500 bg-blue-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -472,11 +436,15 @@ export default function CheckoutEntrega() {
                     className="accent-blue-500"
                   />
                   <CreditCard size={18} className="text-blue-400" />
-                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Tarjetas hasta 3 cuotas sin interes)</span>
+                  <span className="font-medium text-bib-white text-sm">Mercado Pago (Tarjetas hasta 3 cuotas sin interés)</span>
                 </div>
               </label>
 
-              <label className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${paymentMethod === "transferencia" ? "border-green-500 bg-green-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"}`}>
+              <label
+                className={`flex flex-col border p-3.5 rounded cursor-pointer transition-all ${
+                  paymentMethod === "transferencia" ? "border-green-500 bg-green-500/10" : "border-bib-white/10 bg-bib-dark hover:border-bib-white/20"
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -517,7 +485,9 @@ export default function CheckoutEntrega() {
         <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
           {itemsFormat.map((item) => (
             <div key={item.id} className="flex justify-between text-sm">
-              <span className="text-bib-white/80">{item.name} x{item.quantity}</span>
+              <span className="text-bib-white/80">
+                {item.name} x{item.quantity}
+              </span>
               <span className="font-medium text-bib-white">${(item.price * item.quantity).toLocaleString("es-AR")}</span>
             </div>
           ))}
@@ -533,11 +503,7 @@ export default function CheckoutEntrega() {
                 </p>
                 <p className="text-xs text-green-300">-${appliedCoupon.discount.toLocaleString("es-AR")}</p>
               </div>
-              <button
-                type="button"
-                onClick={handleRemoveCoupon}
-                className="text-red-400 text-xs font-semibold hover:underline"
-              >
+              <button type="button" onClick={handleRemoveCoupon} className="text-red-400 text-xs font-semibold hover:underline">
                 Quitar
               </button>
             </div>
@@ -577,11 +543,7 @@ export default function CheckoutEntrega() {
           <div className="flex justify-between text-bib-gray">
             <span>Envío</span>
             <span className="text-[#C4A278] font-semibold">
-              {shippingType === "envio"
-                ? isShippingCalculated
-                  ? `$${shippingCost.toLocaleString("es-AR")}`
-                  : "Por calcular"
-                : "Gratis"}
+              {shippingType === "envio" ? (isShippingCalculated ? `$${shippingCost.toLocaleString("es-AR")}` : "Por calcular") : "Gratis"}
             </span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-3 border-t border-bib-white/10 text-bib-white">

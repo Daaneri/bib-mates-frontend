@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient';
 import { generarLinkRecuperacionWhatsApp } from '../utils/whatsapp';
 import { MessageCircle, CheckCircle, RefreshCw, AlertCircle } from 'lucide-react';
 
-export default function AdminCarritos() {
+export default function AdminCarritos({ token, apiUrl }) {
+  const API_URL = apiUrl || import.meta.env.VITE_API_URL || "http://localhost:3001";
   const [carritos, setCarritos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -17,34 +17,43 @@ export default function AdminCarritos() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { data, error } = await supabase
-        .from('carritos_abandonados')
-        .select('*')
-        .eq('recuperado', verAtendidos)
-        .order('created_at', { ascending: false });
+      const res = await fetch(`${API_URL}/api/carritos_abandonados?recuperado=${verAtendidos}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-      if (error) {
-        throw error;
+      if (!res.ok) {
+        throw new Error(`Error HTTP ${res.status}`);
       }
+
+      const data = await res.json();
       setCarritos(data || []);
     } catch (err) {
       console.error("Error al cargar carritos:", err);
-      setErrorMsg(err.message || 'Error al conectar con la base de datos');
+      setErrorMsg(err.message || 'Error al conectar con el servidor');
     } finally {
       setLoading(false);
     }
   }
 
   const marcarComoAtendido = async (id, estadoActual) => {
-    const { error } = await supabase
-      .from('carritos_abandonados')
-      .update({ recuperado: !estadoActual })
-      .eq('id', id);
+    try {
+      const res = await fetch(`${API_URL}/api/carritos_abandonados/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ recuperado: !estadoActual })
+      });
 
-    if (error) {
-      alert("Error al actualizar: " + error.message);
-    } else {
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Error HTTP ${res.status}`);
+      }
+
       cargarCarritos();
+    } catch (err) {
+      alert("Error al actualizar: " + err.message);
     }
   };
 
@@ -78,7 +87,7 @@ export default function AdminCarritos() {
       {errorMsg && (
         <div className="bg-red-900/30 border border-red-500/50 p-4 rounded text-red-200 text-sm flex items-center gap-2">
           <AlertCircle size={18} />
-          <span>Error: {errorMsg}. Comprobá que la tabla 'carritos_abandonados' exista en Supabase y tenga permisos.</span>
+          <span>Error: {errorMsg}. Comprobá que la tabla 'carritos_abandonados' exista en Neon y que el backend esté corriendo.</span>
         </div>
       )}
 

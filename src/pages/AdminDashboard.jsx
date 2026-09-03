@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Star, Check, X, Download, Plus, Trash2, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
@@ -12,8 +11,9 @@ import { compressToWebp, compressManyToWebp } from '../utils/imageCompress';
 import { uploadToCloudinary } from '../utils/cloudinary';
 
 export default function AdminDashboard() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const [view, setView] = useState('Inventario');
-  const [session, setSession] = useState(null);
+  const [token, setToken] = useState(null);
   const [productos, setProductos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [resenas, setResenas] = useState([]);
@@ -22,17 +22,16 @@ export default function AdminDashboard() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [file, setFile] = useState(null);
   const [extraFiles, setExtraFiles] = useState([]);
+  const [editFile, setEditFile] = useState(null);
+  const [editExtraFiles, setEditExtraFiles] = useState([]); // <-- NUEVO: Para las secundarias en edición
   
-  // Array de archivos para subida múltiple en grabados
   const [grabadoFiles, setGrabadoFiles] = useState([]);
   
-  // Categorías Dinámicas
   const [categorias, setCategorias] = useState(CATEGORIAS_INICIALES);
   const [nuevaCategoriaForm, setNuevaCategoriaForm] = useState('');
   const [nuevaCategoria, setNuevaCategoria] = useState(CATEGORIAS_INICIALES[0] || '');
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos');
   
-  // Subcategorías Dinámicas
   const [subcategorias, setSubcategorias] = useState([]);
   const [categoriaExpandida, setCategoriaExpandida] = useState(null);
   const [nuevaSubcategoriaForm, setNuevaSubcategoriaForm] = useState('');
@@ -42,7 +41,6 @@ export default function AdminDashboard() {
   const [mensaje, setMensaje] = useState('');
   const [editId, setEditId] = useState(null);
   
-  // Estado de edición extendido con Doble Precio (price_cash)
   const [editData, setEditData] = useState({
     name: '',
     price: '',
@@ -57,11 +55,6 @@ export default function AdminDashboard() {
     descuento_porcentaje: 0
   });
 
-  const [storageFiles, setStorageFiles] = useState([]);
-  const [loadingStorage, setLoadingStorage] = useState(false);
-  const [pickerMode, setPickerMode] = useState(null);
-
-  // Variantes de color del producto en edición
   const [variantes, setVariantes] = useState([]);
   const [loadingVariantes, setLoadingVariantes] = useState(false);
   const [nuevaVarianteColor, setNuevaVarianteColor] = useState('');
@@ -69,14 +62,11 @@ export default function AdminDashboard() {
   const [nuevaVarianteFile, setNuevaVarianteFile] = useState(null);
   const [guardandoVariante, setGuardandoVariante] = useState(false);
 
-  // Colores del producto NUEVO: se guardan en memoria hasta que el producto se crea,
-  // porque product_variants necesita un producto_id que todavía no existe.
   const [nuevoProductoColores, setNuevoProductoColores] = useState([]);
   const [nuevoColorNombre, setNuevoColorNombre] = useState('');
   const [nuevoColorStock, setNuevoColorStock] = useState('');
   const [nuevoColorFile, setNuevoColorFile] = useState(null);
 
-  // Configuración general del sitio (incluye Footer)
   const [settings, setSettings] = useState({
     quienes_somos: '',
     transferencia_alias: '',
@@ -92,11 +82,14 @@ export default function AdminDashboard() {
 
   const navigate = useNavigate();
 
-  useEffect(() => { 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-    fetchData(); 
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      navigate('/login');
+      return;
+    }
+    setToken(storedToken);
+    fetchData(storedToken);
   }, []);
 
   function handleExtraFilesChange(e) {
@@ -125,52 +118,88 @@ export default function AdminDashboard() {
     setExtraFiles([]);
   }
 
+  // Manejo de imágenes extra al editar
+  function handleEditExtraFilesChange(e) {
+    const nuevos = Array.from(e.target.files).map((f) => ({
+      file: f,
+      preview: URL.createObjectURL(f),
+    }));
+    setEditExtraFiles((prev) => [...prev, ...nuevos]);
+    e.target.value = '';
+  }
+
+  function quitarEditExtraFileLocal(index) {
+    setEditExtraFiles((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  function quitarImagenUrlExistente(indexUrl) {
+    setEditData((prev) => ({
+      ...prev,
+      image_urls: prev.image_urls.filter((_, i) => i !== indexUrl)
+    }));
+  }
+
   const mostrarMensaje = (texto) => {
     setMensaje(texto);
     setTimeout(() => setMensaje(''), 3500);
   };
 
-  async function fetchData() {
-    const { data: p } = await supabase.from('productos').select('*');
-    const { data: o } = await supabase.from('orders').select('*').order('creado_en', { ascending: false });
-    const { data: r } = await supabase.from('resenas').select('*').order('created_at', { ascending: false });
-    const { data: g } = await supabase.from('grabados').select('*').order('created_at', { ascending: false });
-    const { data: s } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-    
-    // Carga de subcategorías
-    const { data: subData } = await supabase.from('subcategorias').select('*');
-    if (subData) setSubcategorias(subData);
-    
-    // Carga de categorías personalizadas desde la base de datos si existen
-    const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
-    
-    if (catData && catData.length > 0) {
-      const listaDB = catData.map(c => c.nombre);
-      setCategorias(listaDB);
-      if (!listaDB.includes(nuevaCategoria)) {
-        setNuevaCategoria(listaDB[0]);
-      }
-    } else {
-      setCategorias(CATEGORIAS_INICIALES);
-    }
+  async function fetchData(authToken) {
+    const currentToken = authToken || token;
+    try {
+      const headers = { 'Authorization': `Bearer ${currentToken}` };
+      
+      const [resProd, resOrders, resResenas, resGrabados, resSettings, resSub, resCat] = await Promise.all([
+        fetch(`${API_URL}/api/productos`, { headers }),
+        fetch(`${API_URL}/api/orders`, { headers }),
+        fetch(`${API_URL}/api/resenas`, { headers }),
+        fetch(`${API_URL}/api/grabados`, { headers }),
+        fetch(`${API_URL}/api/site_settings`, { headers }),
+        fetch(`${API_URL}/api/subcategorias`, { headers }),
+        fetch(`${API_URL}/api/categorias`, { headers })
+      ]);
 
-    setProductos(p || []);
-    setPedidos(o || []);
-    setResenas(r || []);
-    setGrabados(g || []);
-    
-    if (s) {
-      setSettings({
-        quienes_somos: s.quienes_somos || '',
-        transferencia_alias: s.transferencia_alias || '',
-        transferencia_cbu: s.transferencia_cbu || '',
-        transferencia_titular: s.transferencia_titular || '',
-        mostrar_stock_bajo: s.mostrar_stock_bajo ?? true,
-        umbral_stock_bajo: s.umbral_stock_bajo ?? 5,
-        telefono: s.telefono || '',
-        email: s.email || '',
-        instagram: s.instagram || '',
-      });
+      if (resProd.ok) setProductos(await resProd.json());
+      if (resOrders.ok) setPedidos(await resOrders.json());
+      if (resResenas.ok) setResenas(await resResenas.json());
+      if (resGrabados.ok) setGrabados(await resGrabados.json());
+      
+      if (resSettings.ok) {
+        const s = await resSettings.json();
+        if (s) {
+          setSettings({
+            quienes_somos: s.quienes_somos || '',
+            transferencia_alias: s.transferencia_alias || '',
+            transferencia_cbu: s.transferencia_cbu || '',
+            transferencia_titular: s.transferencia_titular || '',
+            mostrar_stock_bajo: s.mostrar_stock_bajo ?? true,
+            umbral_stock_bajo: s.umbral_stock_bajo ?? 5,
+            telefono: s.telefono || '',
+            email: s.email || '',
+            instagram: s.instagram || '',
+          });
+        }
+      }
+
+      if (resSub.ok) setSubcategorias(await resSub.json());
+      
+      if (resCat.ok) {
+        const catData = await resCat.json();
+        if (catData && catData.length > 0) {
+          const listaDB = catData.map(c => c.nombre);
+          setCategorias(listaDB);
+          if (!listaDB.includes(nuevaCategoria)) {
+            setNuevaCategoria(listaDB[0]);
+          }
+        } else {
+          setCategorias(CATEGORIAS_INICIALES);
+        }
+      }
+    } catch (err) {
+      console.error("Error al cargar datos:", err);
     }
   }
 
@@ -189,9 +218,13 @@ export default function AdminDashboard() {
     }
 
     setLoading(true);
-    const { error } = await supabase.from('categorias').insert([{ nombre: catLimpia }]);
+    const res = await fetch(`${API_URL}/api/categorias`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ nombre: catLimpia })
+    });
 
-    if (error) {
+    if (!res.ok) {
       setCategorias(prev => [...prev, catLimpia]);
       mostrarMensaje(`Categoría "${catLimpia}" agregada localmente`);
     } else {
@@ -202,34 +235,57 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
-  async function handleDeleteCategory(catNombre) {
-    const productosConEstaCat = productos.filter(p =>
-      p.category &&
-      p.category.trim().toLowerCase() === catNombre.trim().toLowerCase() &&
-      !p.archivado
-    );
+  async function handleDeleteCategory(categoryParam) {
+    const categoryId = typeof categoryParam === 'object' && categoryParam !== null
+      ? (categoryParam.id || categoryParam._id || categoryParam.uuid)
+      : null;
+      
+    const categoryName = typeof categoryParam === 'object' && categoryParam !== null
+      ? (categoryParam.nombre || categoryParam.name)
+      : categoryParam;
+
+    const identificador = categoryId || categoryName;
+
+    if (!identificador || identificador === 'undefined') {
+      mostrarMensaje("Error: No se pudo identificar la categoría a eliminar.");
+      return;
+    }
+
+    const productosConEstaCat = productos.filter(p => {
+      if (!p.category && !p.categoria_id) return false;
+      const matchId = categoryId && p.categoria_id && String(p.categoria_id) === String(categoryId);
+      const matchName = categoryName && p.category && p.category.trim().toLowerCase() === String(categoryName).trim().toLowerCase();
+      return (matchId || matchName) && !p.archivado;
+    });
+
     if (productosConEstaCat.length > 0) {
       mostrarMensaje(`No se puede eliminar: Hay ${productosConEstaCat.length} producto(s) asignado(s) a esta categoría.`);
       return;
     }
 
-    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${catNombre}" y todas sus subcategorías?`)) return;
+    const nombreMostrar = categoryName || "esta categoría";
+    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${nombreMostrar}" y todas sus subcategorías?`)) return;
 
     setLoading(true);
-    const { error } = await supabase.from('categorias').delete().eq('nombre', catNombre);
+    try {
+      const res = await fetch(`${API_URL}/api/categorias/${encodeURIComponent(identificador)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-    if (error) {
-      setCategorias(prev => prev.filter(c => c !== catNombre));
-      mostrarMensaje(`Categoría "${catNombre}" removida`);
-    } else {
-      mostrarMensaje("Categoría eliminada con éxito");
-      fetchData();
+      if (res.ok) {
+        mostrarMensaje("Categoría eliminada con éxito");
+        fetchData();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        mostrarMensaje(errorData.error || "No se pudo eliminar la categoría");
+      }
+    } catch (err) {
+      console.error("Error al eliminar:", err);
+      mostrarMensaje("Error de conexión al intentar eliminar la categoría");
+    } finally {
+      setLoading(false);
     }
-
-    if (nuevaCategoria === catNombre) {
-      setNuevaCategoria(categorias.find(c => c !== catNombre) || '');
-    }
-    setLoading(false);
   }
 
   async function handleAddSubcategory(e, categoriaPadre) {
@@ -242,13 +298,14 @@ export default function AdminDashboard() {
     }
 
     setLoading(true);
-    const { error } = await supabase.from('subcategorias').insert([{ 
-      categoria_nombre: categoriaPadre, 
-      nombre: subCatLimpia 
-    }]);
+    const res = await fetch(`${API_URL}/api/subcategorias`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ categoria_nombre: categoriaPadre, nombre: subCatLimpia })
+    });
 
-    if (error) {
-      mostrarMensaje("Error al agregar subcategoría: " + error.message);
+    if (!res.ok) {
+      mostrarMensaje("Error al agregar subcategoría");
     } else {
       mostrarMensaje("Subcategoría agregada con éxito");
       setNuevaSubcategoriaForm('');
@@ -261,9 +318,12 @@ export default function AdminDashboard() {
     if (!window.confirm(`¿Seguro que deseas eliminar la subcategoría "${nombre}"?`)) return;
 
     setLoading(true);
-    const { error } = await supabase.from('subcategorias').delete().eq('id', id);
+    const res = await fetch(`${API_URL}/api/subcategorias/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-    if (error) {
+    if (!res.ok) {
       mostrarMensaje("Error al eliminar subcategoría");
     } else {
       mostrarMensaje("Subcategoría eliminada con éxito");
@@ -275,9 +335,10 @@ export default function AdminDashboard() {
   async function handleSaveSettings(e) {
     e.preventDefault();
     setSavingSettings(true);
-    const { error } = await supabase
-      .from('site_settings')
-      .update({
+    const res = await fetch(`${API_URL}/api/site_settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
         quienes_somos: settings.quienes_somos,
         transferencia_alias: settings.transferencia_alias,
         transferencia_cbu: settings.transferencia_cbu,
@@ -287,11 +348,10 @@ export default function AdminDashboard() {
         telefono: settings.telefono,
         email: settings.email,
         instagram: settings.instagram,
-        updated_at: new Date().toISOString(),
       })
-      .eq('id', 1);
+    });
 
-    if (error) mostrarMensaje("Error al guardar: " + error.message);
+    if (!res.ok) mostrarMensaje("Error al guardar configuración");
     else mostrarMensaje("Configuración guardada");
     setSavingSettings(false);
   }
@@ -327,45 +387,31 @@ export default function AdminDashboard() {
       imageUrlsExtra.push(url);
     }
 
-    const { data: nuevoProducto, error } = await supabase.from('productos').insert([{ 
-      name, 
-      price, 
-      price_cash,
-      stock, 
-      category, 
-      subcategory, 
-      image_url: imageUrl, 
-      image_urls: imageUrlsExtra, 
-      description, 
-      personalizable, 
-      destacado,
-      descuento_porcentaje: descuentoPorcentaje 
-    }]).select().single();
+    const res = await fetch(`${API_URL}/api/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        name,
+        nombre: name,
+        price,
+        price_cash,
+        stock,
+        category,
+        subcategory,
+        image_url: imageUrl,
+        image_urls: imageUrlsExtra,
+        description,
+        personalizable,
+        destacado,
+        descuento_porcentaje: descuentoPorcentaje,
+        colores: nuevoProductoColores
+      })
+    });
 
-    if (error) mostrarMensaje("Error: " + error.message);
-    else {
-      // Si cargaron colores, los subimos ahora que ya tenemos el ID del producto
-      if (nuevoProductoColores.length > 0 && nuevoProducto) {
-        for (let i = 0; i < nuevoProductoColores.length; i++) {
-          const c = nuevoProductoColores[i];
-          let colorImageUrl = '';
-          if (c.file) {
-            const comprimido = await compressToWebp(c.file);
-            colorImageUrl = await uploadToCloudinary(comprimido);
-          }
-          const { error: varianteError } = await supabase.from('product_variants').insert([{
-            producto_id: nuevoProducto.id,
-            color: c.color,
-            stock: c.stock,
-            image_url: colorImageUrl || null,
-            orden: i,
-          }]);
-          if (varianteError) {
-            mostrarMensaje("Producto creado, pero hubo un error con el color " + c.color + ": " + varianteError.message);
-          }
-        }
-      }
-
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      mostrarMensaje("Error: " + (errData.error || 'No se pudo crear el producto'));
+    } else {
       mostrarMensaje("Producto agregado con éxito");
       setFile(null);
       limpiarExtraFiles();
@@ -388,19 +434,31 @@ export default function AdminDashboard() {
 
     try {
       const optimizedFiles = await compressManyToWebp(grabadoFiles);
-      const uploadPromises = optimizedFiles.map(async (f) => {
+      let subidasOk = 0;
+
+      for (const f of optimizedFiles) {
         const imageUrl = await uploadToCloudinary(f);
-        return supabase.from('grabados').insert([{ image_url: imageUrl }]);
-      });
+        const res = await fetch(`${API_URL}/api/admin/grabados`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ image_url: imageUrl })
+        });
 
-      await Promise.all(uploadPromises);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Error al guardar la foto (HTTP ${res.status})`);
+        }
 
-      mostrarMensaje(`¡Se subieron ${grabadoFiles.length} foto(s) correctamente!`);
+        subidasOk++;
+      }
+
+      mostrarMensaje(`¡Se subieron ${subidasOk} foto(s) correctamente!`);
       setGrabadoFiles([]);
       e.target.reset();
       fetchData();
     } catch (error) {
-      mostrarMensaje("Error al subir grabados: " + error.message);
+      console.error("Error al subir grabados:", error);
+      mostrarMensaje(error.message || "Error al subir grabados");
     } finally {
       setLoading(false);
     }
@@ -408,51 +466,15 @@ export default function AdminDashboard() {
 
   async function handleDeleteGrabado(id) {
     if (!window.confirm("¿Eliminar esta foto de la galería?")) return;
-    const { error } = await supabase.from('grabados').delete().eq('id', id);
-    if (error) mostrarMensaje("Error: " + error.message);
+    const res = await fetch(`${API_URL}/api/grabados/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) mostrarMensaje("Error al eliminar grabado");
     else {
       mostrarMensaje("Foto eliminada");
       fetchData();
     }
-  }
-
-  async function fetchStorageFiles() {
-    setLoadingStorage(true);
-    const { data, error } = await supabase.storage.from('productos').list('', { limit: 200, sortBy: { column: 'name', order: 'desc' } });
-    if (!error && data) {
-      const archivos = data
-        .filter(f => f.name && !f.name.endsWith('/'))
-        .map(f => ({
-          name: f.name,
-          url: supabase.storage.from('productos').getPublicUrl(f.name).data.publicUrl,
-        }));
-      setStorageFiles(archivos);
-    }
-    setLoadingStorage(false);
-  }
-
-  function abrirPicker(modo) {
-    setPickerMode(modo);
-    if (storageFiles.length === 0) fetchStorageFiles();
-  }
-
-  function elegirImagen(url) {
-    if (pickerMode === 'main') {
-      setEditData({ ...editData, image_url: url });
-      setPickerMode(null);
-    } else if (pickerMode === 'extra') {
-      const yaEsta = editData.image_urls.includes(url);
-      setEditData({
-        ...editData,
-        image_urls: yaEsta
-          ? editData.image_urls.filter(u => u !== url)
-          : [...editData.image_urls, url],
-      });
-    }
-  }
-
-  function quitarImagenExtra(url) {
-    setEditData({ ...editData, image_urls: editData.image_urls.filter(u => u !== url) });
   }
 
   function handleAddColorNuevoProducto() {
@@ -492,12 +514,14 @@ export default function AdminDashboard() {
 
   async function fetchVariantes(productoId) {
     setLoadingVariantes(true);
-    const { data, error } = await supabase
-      .from('product_variants')
-      .select('*')
-      .eq('producto_id', productoId)
-      .order('orden', { ascending: true });
-    if (!error) setVariantes(data || []);
+    try {
+      const res = await fetch(`${API_URL}/api/productos/${productoId}/variantes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) setVariantes(await res.json());
+    } catch (err) {
+      console.error(err);
+    }
     setLoadingVariantes(false);
   }
 
@@ -522,27 +546,24 @@ export default function AdminDashboard() {
         imageUrl = await uploadToCloudinary(comprimido);
       }
 
-      const { error } = await supabase.from('product_variants').insert([{
-        producto_id: productoId,
-        color: colorLimpio,
-        stock: stockNum,
-        image_url: imageUrl || null,
-        orden: variantes.length,
-      }]);
+      const res = await fetch(`${API_URL}/api/productos/${productoId}/variantes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ color: colorLimpio, stock: stockNum, image_url: imageUrl || null })
+      });
 
-      if (error) {
-        mostrarMensaje("Error al agregar el color: " + error.message);
+      if (!res.ok) {
+        mostrarMensaje("Error al agregar el color");
       } else {
         mostrarMensaje("Color agregado");
         setNuevaVarianteColor('');
         setNuevaVarianteStock('');
         setNuevaVarianteFile(null);
         await fetchVariantes(productoId);
-        await fetchData(); // refresca el stock total del producto, ya recalculado por el trigger
+        await fetchData();
       }
     } catch (err) {
       mostrarMensaje("Ocurrió un error al agregar el color");
-      console.error(err);
     } finally {
       setGuardandoVariante(false);
     }
@@ -550,9 +571,12 @@ export default function AdminDashboard() {
 
   async function handleDeleteVariante(varianteId, productoId) {
     if (!window.confirm("¿Eliminar este color?")) return;
-    const { error } = await supabase.from('product_variants').delete().eq('id', varianteId);
-    if (error) {
-      mostrarMensaje("Error al eliminar: " + error.message);
+    const res = await fetch(`${API_URL}/api/variantes/${varianteId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      mostrarMensaje("Error al eliminar el color");
     } else {
       mostrarMensaje("Color eliminado");
       await fetchVariantes(productoId);
@@ -563,16 +587,41 @@ export default function AdminDashboard() {
   async function handleUpdateVarianteStock(varianteId, productoId, nuevoStock) {
     const stockNum = parseInt(nuevoStock);
     if (isNaN(stockNum) || stockNum < 0) return;
-    const { error } = await supabase.from('product_variants').update({ stock: stockNum }).eq('id', varianteId);
-    if (!error) {
+    const res = await fetch(`${API_URL}/api/variantes/${varianteId}/stock`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ stock: stockNum })
+    });
+    if (res.ok) {
       setVariantes((prev) => prev.map((v) => (v.id === varianteId ? { ...v, stock: stockNum } : v)));
-      fetchData(); // refresca el stock total del producto en segundo plano
+      fetchData();
     }
   }
 
   async function handleUpdate(product) {
     try {
       setSavingEdit(true);
+      
+      let imageUrl = editData.image_url;
+      if (editFile) {
+        const optimizedFile = await compressToWebp(editFile);
+        imageUrl = await uploadToCloudinary(optimizedFile);
+      }
+
+      // Subir las nuevas imágenes secundarias añadidas en modo edición
+      const nuevasUrlsSubidas = [];
+      if (editExtraFiles.length > 0) {
+        const archivosAComprimir = editExtraFiles.map(item => item.file);
+        const optimizadas = await compressManyToWebp(archivosAComprimir);
+        for (const optFile of optimizadas) {
+          const urlSubida = await uploadToCloudinary(optFile);
+          nuevasUrlsSubidas.push(urlSubida);
+        }
+      }
+
+      // Combinamos las URLs existentes que no fueron borradas + las nuevas subidas
+      const todasLasImageUrls = [...(editData.image_urls || []), ...nuevasUrlsSubidas];
+
       const parsedPrice = parseFloat(editData.price);
       const parsedPriceCash = parseFloat(editData.price_cash);
       const parsedDiscount = parseFloat(editData.descuento_porcentaje);
@@ -581,45 +630,53 @@ export default function AdminDashboard() {
 
       const datosAActualizar = {
         name: editData.name ? editData.name.trim() : '',
+        nombre: editData.name ? editData.name.trim() : '',
         price: isNaN(parsedPrice) ? 0 : Math.max(0, parsedPrice),
         price_cash: isNaN(parsedPriceCash) ? 0 : Math.max(0, parsedPriceCash),
         description: editData.description || '',
         category: editData.category,
         subcategory: editData.subcategory || null,
-        image_url: editData.image_url || '',
-        image_urls: Array.isArray(editData.image_urls) ? editData.image_urls : [],
+        image_url: imageUrl,
+        image_urls: todasLasImageUrls, // <-- Se envían las secundarias actualizadas
         personalizable: Boolean(editData.personalizable),
         destacado: Boolean(editData.destacado),
         descuento_porcentaje: isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount)),
       };
 
-      // Si tiene variantes, el stock lo calcula solo el trigger sumando cada color — no lo tocamos acá
       if (!tieneVariantes) {
         datosAActualizar.stock = isNaN(parsedStock) ? 0 : Math.max(0, parsedStock);
       }
 
-      const { error } = await supabase.from('productos')
-        .update(datosAActualizar)
-        .eq('id', product.id);
+      const res = await fetch(`${API_URL}/api/productos/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(datosAActualizar)
+      });
 
-      if (error) {
-        mostrarMensaje("Error al actualizar: " + error.message);
+      if (!res.ok) {
+        mostrarMensaje("Error al actualizar producto");
       } else {
         mostrarMensaje("Producto actualizado con éxito");
         setEditId(null);
+        setEditFile(null);
+        setEditExtraFiles([]);
         await fetchData();
       }
     } catch (err) {
-      mostrarMensaje("Ocurrió un error inesperado al guardar");
       console.error(err);
+      mostrarMensaje("Ocurrió un error inesperado al guardar");
     } finally {
       setSavingEdit(false);
     }
   }
 
   async function handleArchive(id, estadoActual) {
-    const { error } = await supabase.from('productos').update({ archivado: !estadoActual }).eq('id', id);
-    if (error) mostrarMensaje("Error al archivar: " + error.message);
+    const res = await fetch(`${API_URL}/api/productos/${id}/archive`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ archivado: !estadoActual })
+    });
+    if (!res.ok) mostrarMensaje("Error al archivar producto");
     else {
       mostrarMensaje(estadoActual ? "Producto restaurado" : "Producto archivado");
       fetchData();
@@ -628,17 +685,24 @@ export default function AdminDashboard() {
 
   async function handleDelete(id) {
     if (!window.confirm("¿Eliminar este producto definitivo?")) return;
-    const { error } = await supabase.from('productos').delete().eq('id', id);
-    if (error) mostrarMensaje("Error: " + error.message);
+    const res = await fetch(`${API_URL}/api/productos/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) mostrarMensaje("Error al eliminar producto");
     else {
-      mostrarMensaje("Producto eliminada");
+      mostrarMensaje("Producto eliminado");
       fetchData();
     }
   }
 
   async function handleUpdateOrderStatus(identificador, nuevoEstado) {
-    const { error } = await supabase.from('orders').update({ estado: nuevoEstado }).eq('identificador', identificador);
-    if (error) mostrarMensaje("Error al actualizar pedido: " + error.message);
+    const res = await fetch(`${API_URL}/api/orders/${identificador}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+    if (!res.ok) mostrarMensaje("Error al actualizar pedido");
     else {
       mostrarMensaje("Pedido actualizado");
       fetchData();
@@ -711,8 +775,11 @@ export default function AdminDashboard() {
   }
 
   async function handleAprobarResena(id) {
-    const { error } = await supabase.from('resenas').update({ aprobado: true }).eq('id', id);
-    if (error) mostrarMensaje("Error al aprobar: " + error.message);
+    const res = await fetch(`${API_URL}/api/resenas/${id}/aprobar`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) mostrarMensaje("Error al aprobar reseña");
     else {
       mostrarMensaje("Reseña aprobada");
       fetchData();
@@ -721,18 +788,20 @@ export default function AdminDashboard() {
 
   async function handleRechazarResena(id) {
     if (!window.confirm("¿Eliminar esta reseña?")) return;
-    const { error } = await supabase.from('resenas').delete().eq('id', id);
-    if (error) mostrarMensaje("Error: " + error.message);
+    const res = await fetch(`${API_URL}/api/resenas/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) mostrarMensaje("Error al eliminar reseña");
     else {
       mostrarMensaje("Reseña eliminada");
       fetchData();
     }
   }
 
-  async function handleSignOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) mostrarMensaje("Error al cerrar sesión");
-    else navigate('/login');
+  function handleSignOut() {
+    localStorage.removeItem('token');
+    navigate('/login');
   }
 
   const productosFiltrados = productos.filter(p => {
@@ -742,8 +811,6 @@ export default function AdminDashboard() {
     return coincideCat && coincideBusqueda && coincideArchivado;
   });
 
-  // El pedido puede no traer la foto guardada (pedidos viejos, o si el carrito no la incluyó).
-  // Como respaldo, la buscamos en la lista actual de productos por id o, si no hay id, por nombre.
   function obtenerFotoDelItem(item) {
     if (item.image_url) return item.image_url;
     const match = productos.find(p => (item.id && p.id === item.id) || p.name === item.name);
@@ -863,6 +930,7 @@ export default function AdminDashboard() {
                 </label>
               </div>
 
+              {/* IMÁGENES SECUNDARIAS (NUEVO PRODUCTO) */}
               <div className="space-y-2 bg-bib-black p-3 rounded border border-bib-white/10">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Fotos adicionales (opcional)</p>
@@ -963,10 +1031,6 @@ export default function AdminDashboard() {
                     + Agregar
                   </button>
                 </div>
-
-                {nuevoProductoColores.length > 0 && (
-                  <p className="text-[10px] text-bib-gray/70">Si cargás colores, el stock total del producto se va a calcular solo sumando cada color (el campo "Stock" de arriba lo podés dejar en 0).</p>
-                )}
               </div>
 
               <button disabled={loading} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors">GUARDAR</button>
@@ -995,6 +1059,83 @@ export default function AdminDashboard() {
                   {editId === p.id ? (
                     <div className="space-y-2">
                       <input className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} placeholder="Nombre" />
+                      
+                      {/* Selector de imagen para productos existentes */}
+                      <div className="flex flex-col items-center gap-1">
+                        <input 
+                          type="file" 
+                          id={`editFileInput-${p.id}`} 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setEditFile(e.target.files[0]);
+                            }
+                          }} 
+                        />
+                        <label 
+                          htmlFor={`editFileInput-${p.id}`} 
+                          className="cursor-pointer bg-bib-black px-4 py-2 rounded border border-bib-white/20 hover:border-bib-red transition text-xs text-center break-all w-full text-bib-gray truncate"
+                        >
+                          {editFile ? editFile.name : (editData.image_url ? "Cambiar imagen principal" : "Seleccionar imagen principal")}
+                        </label>
+                      </div>
+
+                      {/* IMÁGENES SECUNDARIAS (MODO EDICIÓN) */}
+                      <div className="space-y-2 bg-bib-black p-3 rounded border border-bib-white/10">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Fotos adicionales</p>
+                          <label htmlFor={`editExtraInput-${p.id}`} className="cursor-pointer text-xs bg-bib-dark px-3 py-1 rounded border border-bib-white/20 hover:border-bib-red transition">
+                            + Agregar
+                          </label>
+                          <input type="file" id={`editExtraInput-${p.id}`} className="hidden" accept="image/*" multiple onChange={handleEditExtraFilesChange} />
+                        </div>
+
+                        {/* Mostrar imágenes secundarias que ya estaban guardadas */}
+                        {editData.image_urls && editData.image_urls.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-[10px] text-bib-gray">Actuales:</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {editData.image_urls.map((url, i) => (
+                                <div key={i} className="relative aspect-square rounded overflow-hidden border border-bib-white/20">
+                                  <img src={url} alt={`Secundaria ${i}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => quitarImagenUrlExistente(i)}
+                                    className="absolute top-1 right-1 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center"
+                                    title="Eliminar esta foto"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mostrar imágenes secundarias nuevas seleccionadas para subir */}
+                        {editExtraFiles.length > 0 && (
+                          <div className="space-y-1 pt-2 border-t border-bib-white/10">
+                            <p className="text-[10px] text-bib-gray">Nuevas a agregar:</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {editExtraFiles.map((item, i) => (
+                                <div key={i} className="relative aspect-square rounded overflow-hidden border border-green-500">
+                                  <img src={item.preview} alt={`Nueva ${i}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => quitarEditExtraFileLocal(i)}
+                                    className="absolute top-1 right-1 bg-bib-red text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center"
+                                    title="Quitar"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <textarea className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4 resize-none" rows={2} value={editData.description} onChange={(e) => setEditData({...editData, description: e.target.value})} placeholder="Descripción" />
 
                       <select className="w-full bg-bib-black p-2 rounded border border-bib-white/20 text-sm px-4" value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value, subcategory: ''})}>
@@ -1029,33 +1170,6 @@ export default function AdminDashboard() {
                         ¿Mostrar en "Productos Destacados" de la home?
                       </label>
 
-                      <div className="space-y-2 bg-bib-black p-3 rounded border border-bib-white/10">
-                        <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Foto principal</p>
-                        <div className="flex items-center gap-3">
-                          {editData.image_url ? (
-                            <img src={editData.image_url} alt="Principal" className="w-14 h-14 rounded object-cover border border-bib-white/10" />
-                          ) : (
-                            <div className="w-14 h-14 rounded bg-bib-dark border border-bib-white/10 flex items-center justify-center text-[9px] text-bib-gray text-center">Sin foto</div>
-                          )}
-                          <button type="button" onClick={() => abrirPicker('main')} className="text-xs bg-bib-dark px-3 py-2 rounded border border-bib-white/20 hover:border-bib-red transition">
-                            Elegir del storage
-                          </button>
-                        </div>
-
-                        <p className="text-xs text-bib-gray font-medium uppercase tracking-wide pt-2">Fotos adicionales</p>
-                        <div className="flex flex-wrap gap-2">
-                          {editData.image_urls.map(url => (
-                            <div key={url} className="relative">
-                              <img src={url} alt="Extra" className="w-12 h-12 rounded object-cover border border-bib-white/10" />
-                              <button type="button" onClick={() => quitarImagenExtra(url)} className="absolute -top-1 -right-1 bg-bib-red text-bib-white rounded-full w-4 h-4 text-[9px] leading-none flex items-center justify-center">×</button>
-                            </div>
-                          ))}
-                          <button type="button" onClick={() => abrirPicker('extra')} className="text-xs bg-bib-dark px-3 py-2 rounded border border-bib-white/20 hover:border-bib-red transition h-fit self-center">
-                            + Agregar fotos
-                          </button>
-                        </div>
-                      </div>
-
                       <div className="space-y-3 bg-bib-black p-3 rounded border border-bib-white/10">
                         <p className="text-xs text-bib-gray font-medium uppercase tracking-wide">Colores disponibles</p>
 
@@ -1077,7 +1191,6 @@ export default function AdminDashboard() {
                                   defaultValue={v.stock}
                                   onBlur={(e) => handleUpdateVarianteStock(v.id, p.id, e.target.value)}
                                   className="w-16 bg-bib-black p-1.5 rounded border border-bib-white/20 text-xs text-center"
-                                  title="Stock de este color"
                                 />
                                 <button type="button" onClick={() => handleDeleteVariante(v.id, p.id)} className="text-bib-red hover:text-bib-white text-xs shrink-0">×</button>
                               </div>
@@ -1087,7 +1200,7 @@ export default function AdminDashboard() {
 
                         <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-bib-white/10">
                           <input
-                            placeholder="Color (ej: Negro)"
+                            placeholder="Color"
                             value={nuevaVarianteColor}
                             onChange={(e) => setNuevaVarianteColor(e.target.value)}
                             className="flex-1 min-w-[100px] bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-3"
@@ -1100,16 +1213,6 @@ export default function AdminDashboard() {
                             onChange={(e) => setNuevaVarianteStock(e.target.value)}
                             className="w-20 bg-bib-dark p-2 rounded border border-bib-white/20 text-xs px-2"
                           />
-                          <input
-                            type="file"
-                            id={`varianteFile-${p.id}`}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) => setNuevaVarianteFile(e.target.files[0])}
-                          />
-                          <label htmlFor={`varianteFile-${p.id}`} className="cursor-pointer text-[10px] bg-bib-dark px-2 py-2 rounded border border-bib-white/20 hover:border-bib-red transition truncate max-w-[90px]">
-                            {nuevaVarianteFile ? nuevaVarianteFile.name : 'Foto'}
-                          </label>
                           <button
                             type="button"
                             disabled={guardandoVariante}
@@ -1119,9 +1222,6 @@ export default function AdminDashboard() {
                             {guardandoVariante ? '...' : '+ Agregar'}
                           </button>
                         </div>
-                        {variantes.length > 0 && (
-                          <p className="text-[10px] text-bib-gray/70">El stock total del producto se calcula solo, sumando el de cada color.</p>
-                        )}
                       </div>
 
                       <div className="space-y-2 pt-1">
@@ -1145,7 +1245,7 @@ export default function AdminDashboard() {
                           <button type="button" disabled={savingEdit} onClick={() => handleUpdate(p)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-medium uppercase tracking-wide flex-1 disabled:opacity-50">
                             {savingEdit ? 'Guardando...' : 'Guardar'}
                           </button>
-                          <button type="button" disabled={savingEdit} onClick={() => setEditId(null)} className="text-bib-gray border border-bib-white/10 px-3 py-2 rounded text-xs uppercase tracking-wide">Cancelar</button>
+                          <button type="button" disabled={savingEdit} onClick={() => { setEditId(null); setEditFile(null); setEditExtraFiles([]); }} className="text-bib-gray border border-bib-white/10 px-3 py-2 rounded text-xs uppercase tracking-wide">Cancelar</button>
                         </div>
                       </div>
                     </div>
@@ -1193,16 +1293,32 @@ export default function AdminDashboard() {
                           {p.subcategory && (
                             <span className="px-2 py-1 rounded text-[10px] border border-bib-white/20 text-bib-gray uppercase tracking-wide">{p.subcategory}</span>
                           )}
-                          {p.personalizable && (
-                            <span className="px-2 py-1 rounded text-[10px] border border-bib-red/40 text-bib-red uppercase tracking-wide">Personalizable</span>
-                          )}
-                          {p.destacado && (
-                            <span className="px-2 py-1 rounded text-[10px] border border-[#C4A278]/50 text-[#C4A278] uppercase tracking-wide">★ Destacado</span>
-                          )}
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1 border-t border-bib-white/10 mt-1">
-                        <button onClick={() => { setEditId(p.id); setEditData({ name: p.name, price: p.price, price_cash: p.price_cash || p.price, stock: p.stock, description: p.description || '', image_url: p.image_url || '', image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], personalizable: p.personalizable === true, destacado: p.destacado === true, category: p.category, subcategory: p.subcategory || '', descuento_porcentaje: p.descuento_porcentaje || 0 }); setNuevaVarianteColor(''); setNuevaVarianteStock(''); setNuevaVarianteFile(null); fetchVariantes(p.id); }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
+                        <button onClick={() => { 
+                          setEditId(p.id); 
+                          setEditData({ 
+                            name: p.name, 
+                            price: p.price, 
+                            price_cash: p.price_cash || p.price, 
+                            stock: p.stock, 
+                            description: p.description || '', 
+                            image_url: p.image_url || '', 
+                            image_urls: Array.isArray(p.image_urls) ? p.image_urls : [], 
+                            personalizable: p.personalizable === true, 
+                            destacado: p.destacado === true, 
+                            category: p.category, 
+                            subcategory: p.subcategory || '', 
+                            descuento_porcentaje: p.descuento_porcentaje || 0 
+                          }); 
+                          setEditFile(null); 
+                          setEditExtraFiles([]);
+                          setNuevaVarianteColor(''); 
+                          setNuevaVarianteStock(''); 
+                          setNuevaVarianteFile(null); 
+                          fetchVariantes(p.id); 
+                        }} className="text-blue-400 font-medium hover:text-blue-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">Editar</button>
                         <button onClick={() => handleArchive(p.id, p.archivado === true)} className="text-yellow-400 font-medium hover:text-yellow-300 transition text-xs md:text-sm pt-2 uppercase tracking-wide">{p.archivado ? 'Restaurar' : 'Archivar'}</button>
                         <button onClick={() => handleDelete(p.id)} className="text-bib-red font-medium hover:text-bib-white transition text-xs md:text-sm pt-2 uppercase tracking-wide">Eliminar</button>
                       </div>
@@ -1216,44 +1332,6 @@ export default function AdminDashboard() {
 
         {view === 'Categorías' && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-bib-dark p-4 rounded border border-bib-white/10 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-bib-white">¿Migrar subcategorías del código a la BD?</p>
-                <p className="text-xs text-bib-gray">Pasa automáticamente las subcategorías estáticas a Supabase.</p>
-              </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  setLoading(true);
-                  const subcategoriasEstaticas = {
-                    "MATES": ["IMPERIALES", "ALGARROBOS", "CAMIONEROS", "TORPEDOS"],
-                    "BOMBILLAS": ["PICOS DE LORO", "CLASICAS", "DESARMABLES"],
-                    "BOMBILLONES": ["GRANDES", "STANDARD"],
-                    "TERMOS": ["STANLEY", "ACERO INOXIDABLE"],
-                    "CANASTAS": ["CUERO", "ECOCUERO", "TELA"],
-                    "YERBAS": ["BALDO", "CANARIAS", "REI VERDE", "BARAO"],
-                  };
-
-                  let count = 0;
-                  for (const [cat, subs] of Object.entries(subcategoriasEstaticas)) {
-                    for (const sub of subs) {
-                      await supabase.from('subcategorias').insert([
-                        { categoria_nombre: cat, nombre: sub }
-                      ]);
-                      count++;
-                    }
-                  }
-                  mostrarMensaje(`¡Se migraron ${count} subcategorías con éxito!`);
-                  fetchData();
-                  setLoading(false);
-                }}
-                disabled={loading}
-                className="bg-[#C4A278] hover:bg-bib-white text-bib-black px-4 py-2 rounded text-xs font-medium uppercase tracking-wide transition-colors shrink-0"
-              >
-                Migrar subcategorías
-              </button>
-            </div>
-
             <form onSubmit={handleAddCategory} className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
               <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Crear Nueva Categoría Principal</h3>
               <div className="flex gap-2">
@@ -1277,8 +1355,6 @@ export default function AdminDashboard() {
 
             <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-4">
               <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Categorías y Subcategorías</h3>
-              <p className="text-xs text-bib-gray mb-4">Haz clic en una categoría para gestionar sus subcategorías.</p>
-              
               <div className="divide-y divide-bib-white/10">
                 {categorias.map(cat => {
                   const cantidadProductos = productos.filter(p =>
@@ -1364,13 +1440,13 @@ export default function AdminDashboard() {
 
         {view === 'Cupones' && (
           <div className="max-w-4xl mx-auto">
-            <AdminCoupons token={session?.access_token} />
+            <AdminCoupons token={token} />
           </div>
         )}
 
         {view === 'FAQs' && (
           <div className="max-w-4xl mx-auto">
-            <AdminFaqs token={session?.access_token} />
+            <AdminFaqs token={token} />
           </div>
         )}
 
@@ -1405,21 +1481,11 @@ export default function AdminDashboard() {
                       <span className={`px-3 py-1 rounded text-xs border ${estadoColor(o.estado)}`}>
                         {o.estado}
                       </span>
-                      {o.metodo_pago === 'transferencia' && (
-                        <span className="px-3 py-1 rounded text-xs border border-bib-white/20 text-bib-gray uppercase tracking-wide">
-                          Transferencia
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   <div className="text-xs md:text-sm text-bib-gray space-y-0.5">
                     <p>{o.direccion}, {o.ciudad} {o.provincia && `(${o.provincia})`} {o.codigo_postal && `- CP ${o.codigo_postal}`}</p>
-                    {o.creado_en && (
-                      <p className="text-bib-gray/60">
-                        {new Date(o.creado_en).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    )}
                   </div>
 
                   {Array.isArray(o.productos) && o.productos.length > 0 && (
@@ -1443,7 +1509,6 @@ export default function AdminDashboard() {
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-bib-white/10">
                     <div className="text-xs md:text-sm text-bib-gray">
                       Envío: {o.costo_de_envio > 0 ? `$${Number(o.costo_de_envio).toLocaleString('es-AR')}` : 'Sin costo'}
-                      {o.descuento > 0 && ` · Descuento: -$${Number(o.descuento).toLocaleString('es-AR')}`}
                     </div>
                     <div className="font-medium text-lg md:text-xl text-bib-red">
                       ${Number(o.total).toLocaleString('es-AR')}
@@ -1482,7 +1547,7 @@ export default function AdminDashboard() {
 
         {view === 'Carritos' && (
           <div className="max-w-5xl mx-auto">
-            <AdminCarritos />
+            <AdminCarritos token={token} apiUrl={API_URL} />
           </div>
         )}
 
@@ -1580,7 +1645,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
               {grabados.map((g) => (
                 <div key={g.id} className="relative group rounded overflow-hidden border border-bib-white/10 aspect-square">
-                  <img src={g.image_url} alt="Grabado" className="w-full h-full object-cover" />
+                  <img src={g.image_url || g.url || g.imagen || g.foto} alt="Grabado" className="w-full h-full object-cover" />
                   <button
                     onClick={() => handleDeleteGrabado(g.id)}
                     className="absolute top-2 right-2 bg-bib-red text-bib-white rounded-full w-7 h-7 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1591,10 +1656,6 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
-
-            {grabados.length === 0 && (
-              <p className="text-center text-bib-gray py-8">Todavía no subiste ninguna foto.</p>
-            )}
           </div>
         )}
 
@@ -1603,11 +1664,9 @@ export default function AdminDashboard() {
             <form onSubmit={handleSaveSettings} className="space-y-6 md:space-y-8">
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de Contacto (Footer)</h3>
-                <p className="text-xs text-bib-gray">Estos datos aparecerán reflejados en el pie de página de la tienda.</p>
                 <div>
                   <label className="block text-xs text-bib-gray mb-1">Teléfono</label>
                   <input
-                    placeholder="Ej: 11 3258 5236"
                     className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
                     value={settings.telefono}
                     onChange={(e) => setSettings({ ...settings, telefono: e.target.value })}
@@ -1616,7 +1675,6 @@ export default function AdminDashboard() {
                 <div>
                   <label className="block text-xs text-bib-gray mb-1">Correo electrónico</label>
                   <input
-                    placeholder="Ej: ivanezequieljure1997@hotmail.com"
                     className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
                     value={settings.email}
                     onChange={(e) => setSettings({ ...settings, email: e.target.value })}
@@ -1625,7 +1683,6 @@ export default function AdminDashboard() {
                 <div>
                   <label className="block text-xs text-bib-gray mb-1">Instagram</label>
                   <input
-                    placeholder="Ej: @bibmates_"
                     className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
                     value={settings.instagram}
                     onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
@@ -1635,10 +1692,8 @@ export default function AdminDashboard() {
 
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Quiénes somos</h3>
-                <p className="text-xs text-bib-gray">Este texto aparece en la página "Nosotros" de la tienda.</p>
                 <textarea
                   rows={6}
-                  placeholder="Contá la historia del negocio..."
                   className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base resize-none"
                   value={settings.quienes_somos}
                   onChange={(e) => setSettings({ ...settings, quienes_somos: e.target.value })}
@@ -1647,7 +1702,6 @@ export default function AdminDashboard() {
 
               <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
                 <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Datos de transferencia</h3>
-                <p className="text-xs text-bib-gray">Estos datos se muestran al cliente cuando elige pagar por transferencia.</p>
                 <input
                   placeholder="Alias"
                   className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base"
@@ -1666,31 +1720,6 @@ export default function AdminDashboard() {
                   value={settings.transferencia_titular}
                   onChange={(e) => setSettings({ ...settings, transferencia_titular: e.target.value })}
                 />
-              </div>
-
-              <div className="bg-bib-dark p-5 md:p-8 rounded border border-bib-white/10 space-y-3 md:space-y-4">
-                <h3 className="text-sm md:text-base uppercase tracking-widest font-medium">Cartel de "últimas unidades"</h3>
-                <label className="flex items-center gap-3 text-sm text-bib-white cursor-pointer w-fit">
-                  <input
-                    type="checkbox"
-                    checked={settings.mostrar_stock_bajo}
-                    onChange={(e) => setSettings({ ...settings, mostrar_stock_bajo: e.target.checked })}
-                    className="w-4 h-4 accent-bib-red cursor-pointer"
-                  />
-                  Mostrar el cartel cuando queda poco stock
-                </label>
-                {settings.mostrar_stock_bajo && (
-                  <div>
-                    <label className="text-xs text-bib-gray uppercase tracking-wide">Mostrarlo cuando quedan menos de:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      className="w-full bg-bib-black p-3 rounded border border-bib-white/20 px-4 text-sm md:text-base mt-1"
-                      value={settings.umbral_stock_bajo}
-                      onChange={(e) => setSettings({ ...settings, umbral_stock_bajo: e.target.value })}
-                    />
-                  </div>
-                )}
               </div>
 
               <button disabled={savingSettings} className="bg-bib-red hover:bg-bib-white text-bib-white hover:text-bib-black w-full px-8 py-3 rounded font-medium text-sm md:text-base uppercase tracking-widest transition-colors disabled:opacity-40">
@@ -1715,62 +1744,6 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
-
-      {pickerMode && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setPickerMode(null)}>
-          <div className="bg-bib-dark border border-bib-white/10 rounded p-4 md:p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium uppercase tracking-widest">
-                {pickerMode === 'main' ? 'Elegir foto principal' : 'Elegir fotos adicionales'}
-              </h3>
-              <button onClick={() => setPickerMode(null)} className="text-bib-gray hover:text-bib-white text-sm">Cerrar ✕</button>
-            </div>
-
-            {loadingStorage ? (
-              <p className="text-bib-gray text-sm text-center py-8">Cargando fotos del storage...</p>
-            ) : storageFiles.length === 0 ? (
-              <p className="text-bib-gray text-sm text-center py-8">No se encontraron archivos en el storage.</p>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
-                {storageFiles.map(f => {
-                  const seleccionada = pickerMode === 'main'
-                    ? editData.image_url === f.url
-                    : editData.image_urls.includes(f.url);
-                  return (
-                    <button
-                      key={f.name}
-                      type="button"
-                      onClick={() => elegirImagen(f.url)}
-                      className={`relative aspect-square rounded overflow-hidden border-2 transition-all duration-200 ${
-                        seleccionada
-                          ? 'border-green-500'
-                          : 'border-bib-white/10 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-bib-white/30'
-                      }`}
-                    >
-                      <img src={f.url} alt={f.name} className="w-full h-full object-cover" />
-                      {seleccionada ? (
-                        <span className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
-                          <X size={12} strokeWidth={3} />
-                        </span>
-                      ) : pickerMode === 'extra' && (
-                        <span className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow">
-                          <Check size={12} strokeWidth={3} />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-           {pickerMode === 'extra' && (
-              <div className="pt-4 flex justify-end">
-                <button onClick={() => setPickerMode(null)} className="bg-bib-red text-bib-white px-6 py-2 rounded font-medium text-sm uppercase tracking-wide">Listo</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

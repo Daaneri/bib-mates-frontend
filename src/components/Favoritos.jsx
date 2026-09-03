@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ImageOff } from 'lucide-react';
-import { supabase } from '../supabaseClient';
 import { useWishlist } from '../hooks/useWishlist';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
@@ -13,14 +12,31 @@ export default function Favoritos() {
 
   useEffect(() => {
     async function fetchFavoritos() {
-      if (wishlist.length === 0) {
+      if (!wishlist || wishlist.length === 0) {
         setProductos([]);
         setLoading(false);
         return;
       }
-      const { data } = await supabase.from('productos').select('*').in('id', wishlist);
-      setProductos(data || []);
-      setLoading(false);
+
+      try {
+        const response = await fetch('http://localhost:3001/api/productos/favoritos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: wishlist })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al obtener favoritos del servidor');
+        }
+
+        const data = await response.json();
+        setProductos(data || []);
+      } catch (error) {
+        console.error("Error al cargar favoritos:", error);
+        setProductos([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchFavoritos();
   }, [wishlist]);

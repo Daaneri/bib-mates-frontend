@@ -14,26 +14,26 @@ export default function HeroBanner() {
 
       {/* Overlay para dar legibilidad en extremos y dejar centro iluminado */}
       <div className="absolute inset-0 bg-black/20" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/35" />
 
       {/* 1. TÍTULO EN LA PARTE SUPERIOR */}
       <div className="relative z-10 w-full text-center pt-2">
         <FadeIn delay={100}>
           <h1 className="tracking-tight text-bib-white max-w-3xl mx-auto" style={{ fontFamily: "'Anton', sans-serif" }}>
             <span
-              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
+              className="block text-4xl sm:text-6xl md:text-7xl leading-none uppercase"
               style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
               Tomar mate,
             </span>
             <span
-              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
+              className="block text-4xl sm:text-6xl md:text-7xl leading-none uppercase"
               style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
               siempre es una
             </span>
             <span
-              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
+              className="block text-4xl sm:text-6xl md:text-7xl leading-none uppercase"
               style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
               buena idea.
@@ -48,7 +48,7 @@ export default function HeroBanner() {
       {/* 2. TARJETA Y BOTONES EN LA PARTE INFERIOR */}
       <div className="relative z-10 w-full flex flex-col items-center gap-4 text-center pb-2">
         <FadeIn delay={200}>
-          <div className="bg-black/75 backdrop-blur-md px-6 py-3.5 rounded-2xl max-w-xl border border-white/10 shadow-2xl mx-auto">
+          <div className="bg-black/25 backdrop-blur-[1px] px-6 py-3.5 rounded-2xl max-w-xl border border-white/10 shadow-2xl mx-auto">
             <p
               className="text-xs sm:text-sm text-gray-200 tracking-wide leading-relaxed font-medium"
               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}

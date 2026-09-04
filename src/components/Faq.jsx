@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { ChevronDown } from 'lucide-react';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "https://bib-mates-backend.onrender.com";
 
 export default function Faq() {
   const [faqs, setFaqs] = useState([]);
@@ -10,9 +11,10 @@ export default function Faq() {
   useEffect(() => {
     async function fetchFaqs() {
       try {
-        const { data, error } = await supabase.from('faqs').select('*');
-        if (error) throw error;
-        if (data) setFaqs(data);
+        const res = await fetch(`${BACKEND_URL}/api/faqs`);
+        if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data)) setFaqs(data);
       } catch (error) {
         console.error('Error al cargar las preguntas:', error);
       } finally {

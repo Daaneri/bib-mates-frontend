@@ -103,14 +103,18 @@ function ProductCard({ product }) {
           )}
 
           <div className="space-y-0.5 pt-1 border-t border-gray-50">
-            <p className="text-[10px] sm:text-xs text-blue-600 font-medium leading-tight">
-              3 cuotas sin interés de <span className="font-bold">${cuotaMonto.toLocaleString('es-AR')}</span>
+            <p className="text-[10px] sm:text-xs text-gray-500 font-medium leading-tight">
+              3 cuotas sin interés de <span className="font-semibold text-gray-800">${cuotaMonto.toLocaleString('es-AR')}</span>
             </p>
 
-           <p className="text-[10px] sm:text-xs text-emerald-700 font-medium leading-tight">
-  <span className="bg-emerald-50 text-emerald-800 px-1 py-0.5 rounded text-[9px] font-bold mr-1">20% OFF</span>
-  ${precioTransferencia.toLocaleString('es-AR')} por transferencia
-</p>
+          <div className="bg-[#EFECE6] border-l-4 border-[#8B5A2B] px-2.5 py-1.5 rounded-r-md text-left">
+            <p className="text-xs sm:text-sm font-bold text-[#1C1C1C] leading-tight">
+              ${precioTransferencia.toLocaleString('es-AR')} con
+            </p>
+            <p className="text-[10px] sm:text-xs font-semibold text-[#1C1C1C] leading-tight">
+              Transferencia
+            </p>
+          </div>
           </div>
         </div>
       </div>

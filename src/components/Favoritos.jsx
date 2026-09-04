@@ -6,6 +6,7 @@ import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
 export default function Favoritos() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const { wishlist, toggleWishlist } = useWishlist();
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function Favoritos() {
       }
 
       try {
-        const response = await fetch('http://localhost:3001/api/productos/favoritos', {
+        const response = await fetch(`${API_URL}/api/productos/favoritos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: wishlist })

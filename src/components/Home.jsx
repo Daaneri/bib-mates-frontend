@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Sparkles, Hammer, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 import ProductGrid from './ProductGrid';
 import FadeIn from './FadeIn';
+import HeroBanner from './HeroBanner';
 import { CATEGORIES } from '../config/categories';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://bib-mates-backend.onrender.com";
@@ -119,37 +120,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-6 pb-12 md:pt-10 md:pb-20 px-4 text-center overflow-hidden flex flex-col items-center justify-between min-h-[75vh] bg-bib-black">
-        <img
-          src="/banner-mate-cliente.jpg.jpeg"
-          alt="Mate artesanal con sol"
-          className="absolute inset-0 w-full h-full object-cover object-[center_35%] scale-100 transition-transform duration-700"
-        />
-
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" />
-
-        <div className="relative z-10 flex flex-col items-center justify-between w-full max-w-4xl h-full space-y-8 my-auto">
-          <FadeIn delay={100}>
-            <h1 className="font-black uppercase tracking-tight text-white flex flex-col items-center leading-[0.95]">
-              <span className="text-3xl sm:text-5xl md:text-6xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
-                TOMAR MATE,
-              </span>
-              <span className="text-2xl sm:text-4xl md:text-5xl text-gray-200 mt-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
-                SIEMPRE ES UNA BUENA IDEA.
-              </span>
-            </h1>
-          </FadeIn>
-
-          <FadeIn delay={200}>
-            <div className="bg-black/60 backdrop-blur-md border border-white/15 px-5 py-3.5 rounded-2xl max-w-lg mx-auto shadow-2xl">
-              <p className="text-xs sm:text-sm text-gray-100 font-medium tracking-wide leading-relaxed">
-                En esta Tienda vas a encontrar mates imperiales, torpedos, camioneros, algarrobos, termos, canastas materas, yerbas uruguayas y más
-              </p>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+      <HeroBanner />
 
       {/* Productos Destacados */}
       {destacados.length > 0 && (

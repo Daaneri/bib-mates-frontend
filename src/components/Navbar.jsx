@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 import { CATEGORIES as CATEGORIAS_INICIALES } from '../config/categories';
 import { ChevronDown, Heart, ShoppingBag, X, Menu, HelpCircle, Image, MessageSquare, Users } from 'lucide-react';
 import { useWishlist } from '../hooks/useWishlist';
 import { useCart } from '../context/CartContext';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "https://bib-mates-backend.onrender.com";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,23 +20,26 @@ export default function Navbar() {
 
   useEffect(() => {
     async function fetchData() {
-      // 1. Petición a subcategorías con fallback defensivo
-      const { data: subData } = await supabase.from('subcategorias').select('*');
-      if (Array.isArray(subData)) {
-        setSubcategories(subData);
-      } else {
-        setSubcategories([]);
-      }
+      try {
+        // 1. Petición a subcategorías con fallback defensivo
+        const resSub = await fetch(`${BACKEND_URL}/api/subcategorias`);
+        const subData = resSub.ok ? await resSub.json() : [];
+        setSubcategories(Array.isArray(subData) ? subData : []);
 
-      // 2. Petición a categorías con fallback defensivo
-      const { data: catData } = await supabase.from('categorias').select('nombre').order('nombre', { ascending: true });
-      if (Array.isArray(catData) && catData.length > 0) {
-        const nombresDB = catData.map(c => c?.nombre ? c.nombre.trim() : '').filter(Boolean);
-        const combinadas = [...CATEGORIAS_INICIALES, ...nombresDB];
-        const unicas = Array.from(
-          new Map(combinadas.map(c => [c.toLowerCase(), c])).values()
-        );
-        setCategories(unicas);
+        // 2. Petición a categorías con fallback defensivo
+        const resCat = await fetch(`${BACKEND_URL}/api/categorias`);
+        const catData = resCat.ok ? await resCat.json() : [];
+        if (Array.isArray(catData) && catData.length > 0) {
+          const nombresDB = catData.map(c => c?.nombre ? c.nombre.trim() : '').filter(Boolean);
+          const combinadas = [...CATEGORIAS_INICIALES, ...nombresDB];
+          const unicas = Array.from(
+            new Map(combinadas.map(c => [c.toLowerCase(), c])).values()
+          );
+          setCategories(unicas);
+        }
+      } catch (err) {
+        console.error('Error al cargar categorías/subcategorías:', err);
+        setSubcategories([]);
       }
     }
     fetchData();

@@ -19,18 +19,24 @@ export default function HeroBanner() {
       {/* 1. TÍTULO EN LA PARTE SUPERIOR */}
       <div className="relative z-10 w-full text-center pt-2">
         <FadeIn delay={100}>
-          <h1 className="font-heading font-extrabold text-bib-white tracking-tight max-w-3xl mx-auto">
+          <h1 className="tracking-tight text-bib-white max-w-3xl mx-auto" style={{ fontFamily: "'Anton', sans-serif" }}>
             <span
-              className="block text-2xl sm:text-4xl md:text-5xl leading-tight uppercase"
+              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
               style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
               Tomar mate,
             </span>
             <span
-              className="block mt-1 text-2xl sm:text-4xl md:text-5xl leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-white"
-              style={{ filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.9))' }}
+              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
+              style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
             >
-              siempre es una buena idea.
+              siempre es una
+            </span>
+            <span
+              className="block text-3xl sm:text-5xl md:text-6xl leading-none uppercase"
+              style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
+            >
+              buena idea.
             </span>
           </h1>
         </FadeIn>
@@ -61,12 +67,6 @@ export default function HeroBanner() {
               Ver Catálogo
               <ChevronRight size={14} />
             </a>
-            <Link
-              to="/grabados"
-              className="inline-flex items-center justify-center gap-2 bg-black/40 border border-white/20 text-white px-6 py-2.5 rounded-lg font-medium text-xs tracking-[0.15em] uppercase hover:border-white hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg"
-            >
-              Ver Grabados
-            </Link>
           </div>
         </FadeIn>
       </div>

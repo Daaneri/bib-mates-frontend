@@ -7,6 +7,8 @@ import { siteConfig } from '../config/site';
 import FadeIn from './FadeIn';
 import SeoHead from './SeoHead';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://bib-mates-backend.onrender.com";
+
 const PRECIO_GRABADO = 9000;
 const PRECIO_CAJA = 8500;
 
@@ -69,7 +71,7 @@ export default function ProductDetail() {
     async function fetchProductData() {
       try {
         // 1. Obtener producto principal
-        const resProd = await fetch(`/api/productos/${id}`);
+        const resProd = await fetch(`${BACKEND_URL}/api/productos/${id}`);
         if (!resProd.ok) return;
         const prodData = await resProd.json();
         
@@ -78,7 +80,7 @@ export default function ProductDetail() {
 
         // 2. Obtener variantes
         try {
-          const resVar = await fetch(`/api/productos/${id}/variantes`);
+          const resVar = await fetch(`${BACKEND_URL}/api/productos/${id}/variantes`);
           if (resVar.ok) {
             const dataVar = await resVar.json();
             if (dataVar && dataVar.length > 0) {
@@ -94,7 +96,7 @@ export default function ProductDetail() {
 
         // 3. Obtener relacionados (puedes ajustar el endpoint según cómo devuelvas los productos en tu backend)
         try {
-          const resRel = await fetch(`/api/productos`);
+          const resRel = await fetch(`${BACKEND_URL}/api/productos`);
           if (resRel.ok) {
             const allProducts = await resRel.json();
             const filtered = allProducts

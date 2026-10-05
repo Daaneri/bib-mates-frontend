@@ -76,7 +76,7 @@ export default function AdminCoupons({ token }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ is_active: !currentStatus }),
+        body: JSON.stringify({ active: !currentStatus }),
       });
 
       if (res.ok) {
@@ -210,7 +210,7 @@ export default function AdminCoupons({ token }) {
               {coupons.map((c) => (
                 <tr key={c.id} className="border-b border-bib-white/5">
                   <td className="p-3 font-bold tracking-wide text-bib-white">{c.code}</td>
-                  <td className="p-3 text-bib-white">{c.discount_percentage}%</td>
+                  <td className="p-3 text-bib-white">{c.discount_value}%</td>
                   <td className="p-3 text-bib-white">{c.current_uses || 0} / {c.max_uses || "∞"}</td>
                   <td className="p-3 text-bib-white">
                     {c.expires_at ? new Date(c.expires_at).toLocaleDateString("es-AR") : "Sin límite"}
@@ -218,25 +218,25 @@ export default function AdminCoupons({ token }) {
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-[11px] font-bold ${
-                        c.is_active
+                        c.active
                           ? "bg-green-900/30 text-green-400"
                           : "bg-red-900/30 text-red-400"
                       }`}
                     >
-                      {c.is_active ? "Activo" : "Inactivo"}
+                      {c.active ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-2">
                       <button
-                        onClick={() => toggleStatus(c.id, c.is_active)}
+                        onClick={() => toggleStatus(c.id, c.active)}
                         className={`px-3 py-1.5 rounded text-xs transition-colors ${
-                          c.is_active
+                          c.active
                             ? "bg-bib-dark text-bib-white hover:bg-bib-white hover:text-bib-black"
                             : "bg-[#C4A278] text-bib-black hover:bg-bib-white"
                         }`}
                       >
-                        {c.is_active ? "Desactivar" : "Activar"}
+                        {c.active ? "Desactivar" : "Activar"}
                       </button>
                       <button
                         onClick={() => deleteCoupon(c.id, c.code)}
